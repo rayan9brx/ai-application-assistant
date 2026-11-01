@@ -1,7 +1,11 @@
 <main class="workspace">
   <header>
+    <p role="status">{{ backendStatus() }}</p>
+
     <span class="badge">AI Application Assistant</span>
+
     <h1>Your experience. Your next opportunity.</h1>
+
     <p>
       Compare your CV with a job description to prepare a stronger application.
     </p>
@@ -10,56 +14,67 @@
   <section class="input-grid" aria-label="Application details">
     <div class="input-card">
       <label for="cv">Your CV</label>
-      <p>Paste your skills, education, projects, and experience.</p>
+
+      <p id="cv-help">
+        Paste your skills, education, projects, and experience.
+        Maximum 30,000 characters.
+      </p>
+
       <textarea
         id="cv"
+        aria-describedby="cv-help"
         placeholder="Paste your CV here..."
         rows="14"
+        maxlength="30000"
         [(ngModel)]="cvText"
         (ngModelChange)="clearResult()"
+        [disabled]="isLoading()"
       ></textarea>
     </div>
 
     <div class="input-card">
       <label for="job">Job description</label>
-      <p>Paste the requirements for the role you want.</p>
+
+      <p id="job-help">
+        Paste the requirements for the role you want.
+        Maximum 30,000 characters.
+      </p>
+
       <textarea
         id="job"
+        aria-describedby="job-help"
         placeholder="Paste the job description here..."
         rows="14"
+        maxlength="30000"
         [(ngModel)]="jobText"
         (ngModelChange)="clearResult()"
+        [disabled]="isLoading()"
       ></textarea>
     </div>
   </section>
 
   <div class="actions">
-  <p>Demo mode — your text is not sent to an AI service.</p>
-
-  <button
-    type="button"
-    [disabled]="!cvText.trim() || !jobText.trim()"
-    (click)="analyze()"
-  >
-    Preview demo result
-  </button>
-</div>
-
-@if (showDemo()) {
-  <section class="input-card demo-result" aria-live="polite">
-    <h2>Example result</h2>
     <p>
-      This is a fixed demonstration, not an analysis of your text.
+      Connection test — your text is sent to the local backend, without AI.
     </p>
 
-    <h3>Supported qualification</h3>
-    <p>Example: Java experience supported by a listed project.</p>
+    <button
+      type="button"
+      [disabled]="!cvText.trim() || !jobText.trim() || isLoading()"
+      (click)="analyze()"
+    >
+      {{ isLoading() ? 'Sending...' : 'Send to backend' }}
+    </button>
+  </div>
 
-    <h3>Requirement needing clarification</h3>
-    <p>Example: The vacancy asks for German B2; confirm your language level.</p>
+  @if (analysisMessage()) {
+    <section class="input-card demo-result" role="status">
+      <h2>Backend response</h2>
+      <p>{{ analysisMessage() }}</p>
+    </section>
+  }
 
-    <h3>Suggested improvement</h3>
-    <p>Example: Explain your responsibilities and results in your project.</p>
-  </section>
-}
+  @if (analysisError()) {
+    <p role="alert">{{ analysisError() }}</p>
+  }
 </main>
