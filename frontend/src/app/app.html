@@ -1,0 +1,65 @@
+<main class="workspace">
+  <header>
+    <span class="badge">AI Application Assistant</span>
+    <h1>Your experience. Your next opportunity.</h1>
+    <p>
+      Compare your CV with a job description to prepare a stronger application.
+    </p>
+  </header>
+
+  <section class="input-grid" aria-label="Application details">
+    <div class="input-card">
+      <label for="cv">Your CV</label>
+      <p>Paste your skills, education, projects, and experience.</p>
+      <textarea
+        id="cv"
+        placeholder="Paste your CV here..."
+        rows="14"
+        [(ngModel)]="cvText"
+        (ngModelChange)="clearResult()"
+      ></textarea>
+    </div>
+
+    <div class="input-card">
+      <label for="job">Job description</label>
+      <p>Paste the requirements for the role you want.</p>
+      <textarea
+        id="job"
+        placeholder="Paste the job description here..."
+        rows="14"
+        [(ngModel)]="jobText"
+        (ngModelChange)="clearResult()"
+      ></textarea>
+    </div>
+  </section>
+
+  <div class="actions">
+  <p>Demo mode — your text is not sent to an AI service.</p>
+
+  <button
+    type="button"
+    [disabled]="!cvText.trim() || !jobText.trim()"
+    (click)="analyze()"
+  >
+    Preview demo result
+  </button>
+</div>
+
+@if (showDemo()) {
+  <section class="input-card demo-result" aria-live="polite">
+    <h2>Example result</h2>
+    <p>
+      This is a fixed demonstration, not an analysis of your text.
+    </p>
+
+    <h3>Supported qualification</h3>
+    <p>Example: Java experience supported by a listed project.</p>
+
+    <h3>Requirement needing clarification</h3>
+    <p>Example: The vacancy asks for German B2; confirm your language level.</p>
+
+    <h3>Suggested improvement</h3>
+    <p>Example: Explain your responsibilities and results in your project.</p>
+  </section>
+}
+</main>
