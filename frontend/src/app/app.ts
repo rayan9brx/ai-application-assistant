@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule, NgModel } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
 interface DemoPreview {
   demo: true;
@@ -9,6 +9,7 @@ interface DemoPreview {
   motivationLetterDraft?: string;
   demoActions: string[];
 }
+type DraftField = 'cvDraft' | 'motivationLetterDraft';
 type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 'includeLetter' | 'motivation';
 
 @Component({
@@ -27,6 +28,9 @@ export class App {
   readonly uploadMessage = signal('');
   readonly analysisError = signal('');
   readonly preview = signal<DemoPreview | null>(null);
+  readonly exporting = signal<DraftField | null>(null);
+  readonly exportError = signal({ cvDraft: '', motivationLetterDraft: '' });
+  readonly exportStatus = signal({ cvDraft: '', motivationLetterDraft: '' });
   readonly copyStatus = signal({ cvDraft: '', motivationLetterDraft: '' });
   cvText = '';
   jobText = '';
@@ -60,12 +64,12 @@ export class App {
 
   // Enable submission only when every source field is valid.
   canContinue(): boolean {
-    return !this.isExtracting() && !this.validationMessage();
+    return !this.isExtracting() && !this.exporting() && !this.validationMessage();
   }
 
   // Confirm before changing sources that would discard edited documents.
   updateSource<K extends SourceField>(field: K, value: App[K], model?: NgModel): void {
-    if (this.isLoading() || this.isExtracting() || this[field] === value) return;
+    if (this.isLoading() || this.isExtracting() || this.exporting() || this[field] === value) return;
     if (this.hasPreviewEdits() && !window.confirm('Changing application details will discard your unsaved preview edits. Continue?')) {
       model?.control.setValue(this[field], { emitEvent: false, emitViewToModelChange: false });
       return;
@@ -79,13 +83,15 @@ export class App {
     this.original = null;
     this.analysisError.set('');
     this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
   }
 
   // Extract a PDF without changing the current CV or drafts until a valid response arrives.
   uploadCv(input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
-    if (!file || this.isLoading() || this.isExtracting()) return;
+    if (!file || this.isLoading() || this.isExtracting() || this.exporting()) return;
     this.uploadError.set('');
     this.uploadMessage.set('');
     if (file.size > 5 * 1024 * 1024) {
@@ -128,13 +134,15 @@ export class App {
 
   // Send every form field once and display the returned editable demo.
   analyze(): void {
-    if (this.isLoading() || this.isExtracting()) return;
+    if (this.isLoading() || this.isExtracting() || this.exporting()) return;
     this.analysisError.set(this.validationMessage());
     if (this.analysisError()) return;
     if (this.hasPreviewEdits() && !window.confirm('Creating another preview will discard your unsaved edits. Continue?')) return;
     this.preview.set(null);
     this.original = null;
     this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
     this.isLoading.set(true);
     this.http.post<DemoPreview>('http://localhost:8080/api/analyze', {
       cvText: this.cvText, jobText: this.jobText, jobTitle: this.jobTitle,
@@ -157,6 +165,69 @@ export class App {
   editDraft(field: 'cvDraft' | 'motivationLetterDraft', value: string): void {
     this.preview.update(current => current ? { ...current, [field]: value } : null);
     this.copyStatus.update(current => ({ ...current, [field]: '' }));
+    this.exportError.update(current => ({ ...current, [field]: '' }));
+    this.exportStatus.update(current => ({ ...current, [field]: '' }));
+  }
+
+  // Only nonempty editor content can be exported, one document at a time.
+  canExport(field: DraftField): boolean {
+    return !!this.preview()?.[field]?.trim() && !this.exporting() && !this.isLoading() && !this.isExtracting();
+  }
+
+  // Download a snapshot of the latest editor text without modifying any draft.
+  downloadPdf(field: DraftField): void {
+    if (!this.canExport(field)) return;
+    const text = this.preview()![field]!;
+    this.exportError.update(current => ({ ...current, [field]: '' }));
+    this.exportStatus.update(current => ({ ...current, [field]: '' }));
+    if (text.length > 60000) {
+      this.exportError.update(current => ({ ...current, [field]: 'Keep the document within 60,000 characters for PDF export.' }));
+      return;
+    }
+    this.exporting.set(field);
+    this.exportStatus.update(current => ({ ...current, [field]: 'Creating PDF…' }));
+    this.http.post('http://localhost:8080/api/documents/export', {
+      documentType: field === 'cvDraft' ? 'cv' : 'motivationLetter', text,
+    }, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        try {
+          this.savePdf(blob, field === 'cvDraft' ? 'cv-demo.pdf' : 'motivation-letter-demo.pdf');
+          this.exportStatus.update(current => ({ ...current, [field]: 'PDF download started. Review before use.' }));
+        } catch {
+          this.exportError.update(current => ({ ...current, [field]: 'The PDF could not be downloaded. Your draft is unchanged. Please try again.' }));
+        } finally {
+          this.exporting.set(null);
+        }
+      },
+      error: error => { void this.handleExportError(field, error); },
+    });
+  }
+
+  // Allow the browser to consume its download URL before releasing it.
+  private savePdf(blob: Blob, filename: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    try {
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+    } finally {
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+
+  // Read JSON errors delivered as blobs and always unlock the export controls.
+  private async handleExportError(field: DraftField, error: HttpErrorResponse): Promise<void> {
+    let message = 'PDF export failed. Check the backend connection and try again. Your draft is unchanged.';
+    try {
+      const payload = error.error instanceof Blob ? JSON.parse(await error.error.text()) : error.error;
+      if (typeof payload?.message === 'string') message = payload.message;
+    } catch { /* Keep the safe fallback for non-JSON error responses. */ }
+    this.exportStatus.update(current => ({ ...current, [field]: '' }));
+    this.exportError.update(current => ({ ...current, [field]: message }));
+    this.exporting.set(null);
   }
 
   // Report clipboard success or provide a manual-copy fallback.

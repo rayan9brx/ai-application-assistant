@@ -149,4 +149,54 @@ import { App } from './app';
     confirm.mockRestore();
   });
 
+  it('exports the latest edits as a blob and releases download URLs without losing drafts', () => {
+    vi.useFakeTimers();
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:demo');
+    const revokeUrl = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    app.preview.set({ demo: true, notice: 'Demo', cvDraft: 'Original', motivationLetterDraft: 'Original letter', demoActions: [] });
+    app.editDraft('cvDraft', 'Latest edited CV: Grüße');
+    app.editDraft('motivationLetterDraft', 'Latest letter edit');
+    for (const field of ['cvDraft', 'motivationLetterDraft'] as const) {
+      app.downloadPdf(field);
+      expect(app.exporting()).toBe(field);
+      expect(app.canExport(field)).toBe(false);
+      app.downloadPdf(field);
+      const request = http.expectOne('http://localhost:8080/api/documents/export');
+      expect(request.request.responseType).toBe('blob');
+      expect(request.request.body).toEqual({ documentType: field === 'cvDraft' ? 'cv' : 'motivationLetter', text: app.preview()![field] });
+      request.flush(new Blob(['%PDF-1.7 test'], { type: 'application/pdf' }));
+      expect(app.exporting()).toBeNull();
+      expect(app.exportStatus()[field]).toContain('download started');
+      vi.runAllTimers();
+    }
+    expect(revokeUrl).toHaveBeenCalledTimes(2);
+    expect(click).toHaveBeenCalledTimes(2);
+    expect(document.querySelector('a[download]')).toBeNull();
+    expect(app.preview()?.cvDraft).toBe('Latest edited CV: Grüße');
+    expect(app.preview()?.motivationLetterDraft).toBe('Latest letter edit');
+    createUrl.mockRestore(); revokeUrl.mockRestore(); click.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('rejects empty documents and preserves edits after blob errors', async () => {
+    app.preview.set({ demo: true, notice: 'Demo', cvDraft: '  ', demoActions: [] });
+    expect(app.canExport('cvDraft')).toBe(false);
+    expect(app.canExport('motivationLetterDraft')).toBe(false);
+    app.downloadPdf('cvDraft');
+    app.editDraft('cvDraft', 'Current edit');
+    app.downloadPdf('cvDraft');
+    http.expectOne('http://localhost:8080/api/documents/export').flush(
+      new Blob([JSON.stringify({ message: 'Unsupported symbols. Please review.' })], { type: 'application/json' }),
+      { status: 422, statusText: 'Unprocessable Content' });
+    await vi.waitFor(() => expect(app.exporting()).toBeNull());
+    expect(app.exportError().cvDraft).toContain('Unsupported symbols');
+    expect(app.preview()?.cvDraft).toBe('Current edit');
+    app.downloadPdf('cvDraft');
+    http.expectOne('http://localhost:8080/api/documents/export').error(new ProgressEvent('error'));
+    await vi.waitFor(() => expect(app.exporting()).toBeNull());
+    expect(app.exportError().cvDraft).toContain('backend connection');
+    expect(app.preview()?.cvDraft).toBe('Current edit');
+  });
+
 });

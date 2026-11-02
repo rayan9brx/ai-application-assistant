@@ -53,7 +53,7 @@ textarea::placeholder, input::placeholder { color: #6a778a; opacity: 1; }
 button { font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; border-radius: 8px; min-height: 44px; }
 .primary-button { display: flex; align-items: center; justify-content: center; gap: 22px; padding: 13px 22px; border: 1px solid #2855c5; background: #2855c5; color: #fff; flex-shrink: 0; }
 .primary-button:hover:enabled { background: #2046a6; }
-.primary-button:disabled { background: #e0e6f1; border-color: #cbd3df; color: #536176; cursor: not-allowed; }
+.primary-button:disabled, .copy-button:disabled { background: #e0e6f1; border-color: #cbd3df; color: #536176; cursor: not-allowed; }
 .validation-message { margin-top: 12px; font-size: 12px; color: #59677b; }
 .request-status { margin-top: 16px; font-size: 14px; color: #304f8b; }
 .error-message { margin-top: 16px; padding: 14px 18px; border: 1px solid #e1b5b5; border-radius: 8px; background: #fff2f2; color: #8a2525; }
@@ -111,3 +111,6 @@ fieldset:disabled { opacity: .7; }
 .pdf-upload input { display: block; width: 100%; min-width: 0; margin: 10px 0; font: inherit; font-size: 12px; }
 .pdf-upload input::file-selector-button { min-height: 44px; border: 1px solid #cbd6ed; border-radius: 6px; background: #fff; color: #2855b1; padding: 8px 12px; margin-right: 8px; cursor: pointer; }
 .upload-message { color: #304f8b; font-size: 12px; margin-bottom: 14px; }
+
+.export-actions { display: grid; gap: 8px; }
+.export-actions .helper { margin: 0; }
