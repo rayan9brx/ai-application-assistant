@@ -17,8 +17,8 @@
       </aside>
     </section>
 
-    <form (ngSubmit)="analyze()" [attr.aria-busy]="isLoading() || isExtracting()" aria-label="Application details">
-      <fieldset class="source-fields" [disabled]="isLoading() || isExtracting()">
+    <form (ngSubmit)="analyze()" [attr.aria-busy]="isLoading() || isExtracting() || !!exporting()" aria-label="Application details">
+      <fieldset class="source-fields" [disabled]="isLoading() || isExtracting() || !!exporting()">
         <legend class="sr-only">Application details</legend>
         <section class="section-card" aria-labelledby="target-heading">
           <div class="section-heading"><span class="section-number" aria-hidden="true">01</span><div><h2 id="target-heading"><span class="sr-only">01 — </span>Target role</h2><p>Where would you like to go next?</p></div></div>
@@ -97,12 +97,12 @@
         <div class="document-grid" [class.two-documents]="result.motivationLetterDraft !== undefined">
           <article class="document-panel" aria-labelledby="cv-panel-title">
             <div class="document-header"><div><p class="document-kind">Document 01</p><h3 id="cv-panel-title">Your CV</h3></div><button class="copy-button" type="button" (click)="copyDraft('cvDraft')">Copy CV</button></div>
-            <div class="document-body"><label for="cv-draft">Editable CV</label><p class="helper" id="cv-draft-help">Your original CV, unchanged. No tailoring or translation.</p><textarea id="cv-draft" rows="20" aria-describedby="cv-draft-help" [disabled]="isExtracting()" [ngModel]="result.cvDraft" (ngModelChange)="editDraft('cvDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().cvDraft }}</p></div>
+            <div class="document-body"><label for="cv-draft">Editable CV</label><p class="helper" id="cv-draft-help">Your original CV, unchanged. No tailoring or translation.</p><textarea id="cv-draft" rows="20" aria-describedby="cv-draft-help" [disabled]="isExtracting() || !!exporting()" [ngModel]="result.cvDraft" (ngModelChange)="editDraft('cvDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().cvDraft }}</p><div class="export-actions"><button class="copy-button" type="button" [disabled]="!canExport('cvDraft')" (click)="downloadPdf('cvDraft')" aria-describedby="cvDraft-export-help">{{ exporting() === 'cvDraft' ? 'Creating PDF…' : 'Download CV PDF' }}</button><p class="helper" id="cvDraft-export-help">Includes “DEMO — review before use”. Clean text layout; original uploaded formatting is not preserved.</p></div><p class="copy-status" role="status">{{ exportStatus().cvDraft }}</p>@if (exportError().cvDraft) { <p class="error-message" role="alert">{{ exportError().cvDraft }}</p> }</div>
           </article>
           @if (result.motivationLetterDraft !== undefined) {
             <article class="document-panel" aria-labelledby="letter-panel-title">
               <div class="document-header"><div><p class="document-kind">Document 02</p><h3 id="letter-panel-title">Motivation letter</h3></div><button class="copy-button" type="button" (click)="copyDraft('motivationLetterDraft')">Copy letter</button></div>
-              <div class="document-body"><label for="letter-draft">Editable demo template</label><p class="helper" id="letter-draft-help">Replace placeholders and review all text before use.</p><textarea id="letter-draft" rows="20" [attr.lang]="language === 'German' ? 'de' : 'en'" aria-describedby="letter-draft-help" [disabled]="isExtracting()" [ngModel]="result.motivationLetterDraft" (ngModelChange)="editDraft('motivationLetterDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().motivationLetterDraft }}</p></div>
+              <div class="document-body"><label for="letter-draft">Editable demo template</label><p class="helper" id="letter-draft-help">Replace placeholders and review all text before use.</p><textarea id="letter-draft" rows="20" [attr.lang]="language === 'German' ? 'de' : 'en'" aria-describedby="letter-draft-help" [disabled]="isExtracting() || !!exporting()" [ngModel]="result.motivationLetterDraft" (ngModelChange)="editDraft('motivationLetterDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().motivationLetterDraft }}</p><div class="export-actions"><button class="copy-button" type="button" [disabled]="!canExport('motivationLetterDraft')" (click)="downloadPdf('motivationLetterDraft')" aria-describedby="motivationLetterDraft-export-help">{{ exporting() === 'motivationLetterDraft' ? 'Creating PDF…' : 'Download letter PDF' }}</button><p class="helper" id="motivationLetterDraft-export-help">Includes “DEMO — review before use”. Clean text layout; original uploaded formatting is not preserved.</p></div><p class="copy-status" role="status">{{ exportStatus().motivationLetterDraft }}</p>@if (exportError().motivationLetterDraft) { <p class="error-message" role="alert">{{ exportError().motivationLetterDraft }}</p> }</div>
             </article>
           }
         </div>
