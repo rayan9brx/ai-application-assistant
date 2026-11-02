@@ -1,80 +1,114 @@
-<main class="workspace">
-  <header>
-    <p role="status">{{ backendStatus() }}</p>
-
-    <span class="badge">AI Application Assistant</span>
-
-    <h1>Your experience. Your next opportunity.</h1>
-
-    <p>
-      Compare your CV with a job description to prepare a stronger application.
-    </p>
+<div class="app-shell">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">A</span><div><p class="brand-name">ApplyCraft</p><p class="brand-label">Your application workspace</p></div></div>
+      <p class="connection" role="status"><span class="status-dot" [class.connected]="backendStatus() === 'Backend connected'" aria-hidden="true"></span>{{ backendStatus() }}</p>
+    </div>
   </header>
 
-  <section class="input-grid" aria-label="Application details">
-    <div class="input-card">
-      <label for="cv">Your CV</label>
-
-      <p id="cv-help">
-        Paste your skills, education, projects, and experience.
-        Maximum 30,000 characters.
-      </p>
-
-      <textarea
-        id="cv"
-        aria-describedby="cv-help"
-        placeholder="Paste your CV here..."
-        rows="14"
-        maxlength="30000"
-        [(ngModel)]="cvText"
-        (ngModelChange)="clearResult()"
-        [disabled]="isLoading()"
-      ></textarea>
-    </div>
-
-    <div class="input-card">
-      <label for="job">Job description</label>
-
-      <p id="job-help">
-        Paste the requirements for the role you want.
-        Maximum 30,000 characters.
-      </p>
-
-      <textarea
-        id="job"
-        aria-describedby="job-help"
-        placeholder="Paste the job description here..."
-        rows="14"
-        maxlength="30000"
-        [(ngModel)]="jobText"
-        (ngModelChange)="clearResult()"
-        [disabled]="isLoading()"
-      ></textarea>
-    </div>
-  </section>
-
-  <div class="actions">
-    <p>
-      Connection test — your text is sent to the local backend, without AI.
-    </p>
-
-    <button
-      type="button"
-      [disabled]="!cvText.trim() || !jobText.trim() || isLoading()"
-      (click)="analyze()"
-    >
-      {{ isLoading() ? 'Sending...' : 'Send to backend' }}
-    </button>
-  </div>
-
-  @if (analysisMessage()) {
-    <section class="input-card demo-result" role="status">
-      <h2>Backend response</h2>
-      <p>{{ analysisMessage() }}</p>
+  <main class="workspace" id="main-content">
+    <section class="introduction" aria-labelledby="page-title">
+      <p class="eyebrow">A thoughtful next step</p>
+      <h1 id="page-title">Make your experience count.</h1>
+      <p class="intro-copy">Bring your experience and your next opportunity together. Prepare a tailored CV and an optional motivation letter, starting with the details that make you, you.</p>
+      <aside class="demo-notice" aria-label="Demo mode">
+        <span class="notice-label">Demo mode</span>
+        <p>AI tailoring is not connected yet. This preview keeps your CV unchanged and provides an editable letter template. No AI analysis or translation is performed.</p>
+      </aside>
     </section>
-  }
 
-  @if (analysisError()) {
-    <p role="alert">{{ analysisError() }}</p>
-  }
-</main>
+    <form (ngSubmit)="analyze()" [attr.aria-busy]="isLoading() || isExtracting()" aria-label="Application details">
+      <fieldset class="source-fields" [disabled]="isLoading() || isExtracting()">
+        <legend class="sr-only">Application details</legend>
+        <section class="section-card" aria-labelledby="target-heading">
+          <div class="section-heading"><span class="section-number" aria-hidden="true">01</span><div><h2 id="target-heading"><span class="sr-only">01 — </span>Target role</h2><p>Where would you like to go next?</p></div></div>
+          <div class="field-grid">
+            <div class="field">
+              <label for="job-title">Job title</label>
+              <input id="job-title" name="jobTitle" type="text" maxlength="150" required placeholder="e.g. Working Student Software Developer" #jobTitleModel="ngModel" [ngModel]="jobTitle" (ngModelChange)="updateSource('jobTitle', $event, jobTitleModel)" />
+            </div>
+            <div class="field">
+              <label for="company">Company name</label>
+              <input id="company" name="company" type="text" maxlength="150" required placeholder="e.g. Your next company" #companyModel="ngModel" [ngModel]="company" (ngModelChange)="updateSource('company', $event, companyModel)" />
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card" aria-labelledby="experience-heading">
+          <div class="section-heading"><span class="section-number" aria-hidden="true">02</span><div><h2 id="experience-heading"><span class="sr-only">02 — </span>Your experience</h2><p>The starting point is your real experience.</p></div></div>
+          <div class="field-grid">
+            <div class="field">
+              <div class="pdf-upload" [attr.aria-busy]="isExtracting()">
+                <label for="cv-pdf">Upload a CV PDF</label>
+                <p class="helper" id="pdf-help">PDF only, up to 5 MB. Scanned PDFs are not supported yet.</p>
+                <input id="cv-pdf" type="file" accept=".pdf,application/pdf" aria-describedby="pdf-help pdf-purpose" #cvFile (change)="uploadCv(cvFile)" />
+                <p class="helper" id="pdf-purpose">Uploading extracts text; it does not tailor your CV. You can also paste or type below.</p>
+              </div>
+              @if (isExtracting()) { <p class="request-status" role="status">Uploading and extracting PDF text…</p> }
+              @if (uploadError()) { <p class="error-message" role="alert">{{ uploadError() }}</p> }
+              @if (uploadMessage()) { <p class="upload-message" role="status">{{ uploadMessage() }}</p> }
+              <label for="cv">Your CV</label><p class="helper" id="cv-help">Paste your education, skills, projects, and experience.</p>
+              <textarea id="cv" name="cvText" aria-describedby="cv-help cv-count" placeholder="Paste your CV here…" rows="10" maxlength="30000" required #cvTextModel="ngModel" [ngModel]="cvText" (ngModelChange)="updateSource('cvText', $event, cvTextModel)"></textarea>
+              <p class="character-count" id="cv-count">{{ cvText.length.toLocaleString('en-US') }} / 30,000 characters</p>
+            </div>
+            <div class="field">
+              <label for="job">Job description</label><p class="helper" id="job-help">Paste the vacancy and its requirements.</p>
+              <textarea id="job" name="jobText" aria-describedby="job-help job-count" placeholder="Paste the job description here…" rows="10" maxlength="30000" required #jobTextModel="ngModel" [ngModel]="jobText" (ngModelChange)="updateSource('jobText', $event, jobTextModel)"></textarea>
+              <p class="character-count" id="job-count">{{ jobText.length.toLocaleString('en-US') }} / 30,000 characters</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section-card" aria-labelledby="documents-heading">
+          <div class="section-heading"><span class="section-number" aria-hidden="true">03</span><div><h2 id="documents-heading"><span class="sr-only">03 — </span>Your documents</h2><p>Choose what you want to prepare.</p></div></div>
+          <div class="field-grid preferences">
+            <div class="field">
+              <label for="language">Document language</label><p class="helper" id="language-help">Template language only. Your source text stays unchanged.</p>
+              <select id="language" name="language" aria-describedby="language-help" #languageModel="ngModel" [ngModel]="language" (ngModelChange)="updateSource('language', $event, languageModel)"><option value="English">English</option><option value="German">German</option></select>
+            </div>
+            <div class="letter-option">
+              <input id="include-letter" type="checkbox" name="includeLetter" aria-describedby="letter-help" #includeLetterModel="ngModel" [ngModel]="includeLetter" (ngModelChange)="updateSource('includeLetter', $event, includeLetterModel)" />
+              <div><label for="include-letter">Include a motivation letter <span class="optional">Optional</span></label><p class="helper" id="letter-help">An editable template with space for your story.</p></div>
+            </div>
+          </div>
+          @if (includeLetter) {
+            <div class="field motivation-field">
+              <label for="motivation">Why do you want this role?</label><p class="helper" id="motivation-help">Share your interest in the role or company. The demo includes your words unchanged.</p>
+              <textarea id="motivation" name="motivation" aria-describedby="motivation-help motivation-count" placeholder="What draws you to this opportunity?" rows="4" maxlength="3000" required #motivationModel="ngModel" [ngModel]="motivation" (ngModelChange)="updateSource('motivation', $event, motivationModel)"></textarea>
+              <p class="character-count" id="motivation-count">{{ motivation.length.toLocaleString('en-US') }} / 3,000 characters</p>
+            </div>
+          }
+        </section>
+      </fieldset>
+      <div class="form-actions">
+        <div class="submit-help"><p>Ready for a first look?</p><p class="helper">Your details are sent to the local backend to prepare a demo preview.</p></div>
+        <button class="primary-button" type="submit" [disabled]="!canContinue() || isLoading()" aria-describedby="validation-message">{{ isLoading() ? 'Preparing preview…' : 'Preview documents' }}<span aria-hidden="true">→</span></button>
+      </div>
+      <p class="validation-message" id="validation-message" role="status">{{ validationMessage() }}</p>
+      @if (isLoading()) { <p class="request-status" role="status">Preparing your demo preview. Please wait…</p> }
+      @if (analysisError()) { <p class="error-message" role="alert">{{ analysisError() }}</p> }
+    </form>
+
+    @if (preview(); as result) {
+      <section class="preview" aria-labelledby="preview-title">
+        <div class="preview-heading"><div><p class="eyebrow">Review & refine</p><h2 id="preview-title">Your document preview</h2></div><span class="demo-tag">Demo content</span></div>
+        <dl class="target-summary"><div><dt>Role</dt><dd>{{ jobTitle }}</dd></div><div><dt>Company</dt><dd>{{ company }}</dd></div><div><dt>Language</dt><dd>{{ language }}</dd></div></dl>
+        <div class="preview-notice"><h3>Demo preview — no AI tailoring performed</h3><p>{{ result.notice }}</p><p>Edits are not saved after refresh. Copy your documents before leaving this page.</p></div>
+        <div class="document-grid" [class.two-documents]="result.motivationLetterDraft !== undefined">
+          <article class="document-panel" aria-labelledby="cv-panel-title">
+            <div class="document-header"><div><p class="document-kind">Document 01</p><h3 id="cv-panel-title">Your CV</h3></div><button class="copy-button" type="button" (click)="copyDraft('cvDraft')">Copy CV</button></div>
+            <div class="document-body"><label for="cv-draft">Editable CV</label><p class="helper" id="cv-draft-help">Your original CV, unchanged. No tailoring or translation.</p><textarea id="cv-draft" rows="20" aria-describedby="cv-draft-help" [disabled]="isExtracting()" [ngModel]="result.cvDraft" (ngModelChange)="editDraft('cvDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().cvDraft }}</p></div>
+          </article>
+          @if (result.motivationLetterDraft !== undefined) {
+            <article class="document-panel" aria-labelledby="letter-panel-title">
+              <div class="document-header"><div><p class="document-kind">Document 02</p><h3 id="letter-panel-title">Motivation letter</h3></div><button class="copy-button" type="button" (click)="copyDraft('motivationLetterDraft')">Copy letter</button></div>
+              <div class="document-body"><label for="letter-draft">Editable demo template</label><p class="helper" id="letter-draft-help">Replace placeholders and review all text before use.</p><textarea id="letter-draft" rows="20" [attr.lang]="language === 'German' ? 'de' : 'en'" aria-describedby="letter-draft-help" [disabled]="isExtracting()" [ngModel]="result.motivationLetterDraft" (ngModelChange)="editDraft('motivationLetterDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().motivationLetterDraft }}</p></div>
+            </article>
+          }
+        </div>
+        <details class="demo-details"><summary>What this demo did</summary><ul>@for (action of result.demoActions; track $index) { <li>{{ action }}</li> }</ul></details>
+      </section>
+    }
+    <footer class="workspace-footer">ApplyCraft <span aria-hidden="true">·</span> Built around your experience.</footer>
+  </main>
+</div>
