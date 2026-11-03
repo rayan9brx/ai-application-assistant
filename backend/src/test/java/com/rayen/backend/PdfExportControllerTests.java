@@ -26,7 +26,6 @@ class PdfExportControllerTests {
             byte[] bytes = mvc.perform(post("/api/documents/export").contentType(MediaType.APPLICATION_JSON)
                     .header("Origin", "http://localhost:4200").content(payload(type, text)))
                 .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_PDF))
-                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString(type.equals("cv") ? "cv-demo.pdf" : "motivation-letter-demo.pdf")))
                 .andReturn().getResponse().getContentAsByteArray();
             try (var document = Loader.loadPDF(bytes)) {

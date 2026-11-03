@@ -40,11 +40,10 @@ class CvExtractionControllerTests {
 
     // Validate PDF contents independently of extension and browser MIME declarations.
     @Test
-    void extractsRealPdfAndAllowsAngularOrigin() throws Exception {
+    void extractsRealPdf() throws Exception {
         mvc.perform(multipart("/api/cv/extract").file(new MockMultipartFile("file", "cv.bin", "application/octet-stream", pdf("My CV skills", null)))
                 .header("Origin", "http://localhost:4200"))
             .andExpect(status().isOk())
-            .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"))
             .andExpect(jsonPath("$.text").value(org.hamcrest.Matchers.containsString("My CV skills")));
     }
 

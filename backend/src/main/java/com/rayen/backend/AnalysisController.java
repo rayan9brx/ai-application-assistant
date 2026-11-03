@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:4200")
 public class AnalysisController {
     // Validate all source fields without modifying their contents.
     public record AnalysisRequest(

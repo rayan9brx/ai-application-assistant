@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/cv")
-@CrossOrigin(origins = "http://localhost:4200")
 public class CvExtractionController {
     static final long MAX_BYTES = 5L * 1024 * 1024;
     static final int MAX_TEXT = 30000;

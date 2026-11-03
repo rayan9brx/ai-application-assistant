@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule, NgModel } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Auth } from './auth';
 
 interface DemoPreview {
   demo: true;
@@ -21,6 +22,7 @@ type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 
 })
 export class App {
   private readonly http = inject(HttpClient);
+  readonly auth = inject(Auth);
   readonly backendStatus = signal('Checking backend...');
   readonly isLoading = signal(false);
   readonly isExtracting = signal(false);
@@ -43,7 +45,8 @@ export class App {
 
   // Check the existing health endpoint when the page opens.
   constructor() {
-    this.http.get<{ status: string }>('http://localhost:8080/api/health').subscribe({
+    void this.auth.initialize();
+    this.http.get<{ status: string }>('/api/health').subscribe({
       next: response => this.backendStatus.set(response.status === 'ok' ? 'Backend connected' : 'Unexpected backend response'),
       error: () => this.backendStatus.set('Cannot connect to backend'),
     });
@@ -105,7 +108,7 @@ export class App {
     const data = new FormData();
     data.append('file', file);
     this.isExtracting.set(true);
-    this.http.post<{ text: string }>('http://localhost:8080/api/cv/extract', data).subscribe({
+    this.http.post<{ text: string }>('/api/cv/extract', data).subscribe({
       next: response => {
         this.backendStatus.set('Backend connected');
         this.isExtracting.set(false);
@@ -121,7 +124,7 @@ export class App {
       error: error => {
         this.updateBackendStatus(error);
         this.isExtracting.set(false);
-        this.uploadError.set(error.status === 413
+        this.uploadError.set(error.status === 401 ? 'Sign in above, then select your PDF again. Your text is unchanged.' : error.status === 403 ? 'Security check failed. Sign in again, then select your PDF.' : error.status === 413
           ? 'Choose a PDF of 5 MB or smaller.'
           : (error.status !== 0 && typeof error.error?.message === 'string' ? error.error.message : 'PDF extraction failed. Check the backend connection, try another PDF, or paste your CV text.'));
       },
@@ -141,7 +144,7 @@ export class App {
     if (this.analysisError()) return;
     if (this.hasPreviewEdits() && !window.confirm('Creating another preview will discard your unsaved edits. Continue?')) return;
     this.isLoading.set(true);
-    this.http.post<DemoPreview>('http://localhost:8080/api/analyze', {
+    this.http.post<DemoPreview>('/api/analyze', {
       cvText: this.cvText, jobText: this.jobText, jobTitle: this.jobTitle,
       company: this.company, language: this.language, includeLetter: this.includeLetter,
       motivation: this.motivation,
@@ -157,7 +160,7 @@ export class App {
       },
       error: error => {
         this.updateBackendStatus(error);
-        this.analysisError.set(error.status === 400 ? 'The backend rejected the input. Check required fields, lengths, and language.' : 'Request failed. Check that the backend is running and try again.');
+        this.analysisError.set(error.status === 401 ? 'Sign in above, then retry. Your application text and previews are unchanged.' : error.status === 403 ? 'Security check failed. Sign in again above, then retry.' : error.status === 400 ? 'The backend rejected the input. Check required fields, lengths, and language.' : 'Request failed. Check that the backend is running and try again.');
         this.isLoading.set(false);
       },
     });
@@ -188,7 +191,7 @@ export class App {
     }
     this.exporting.set(field);
     this.exportStatus.update(current => ({ ...current, [field]: 'Creating PDF…' }));
-    this.http.post('http://localhost:8080/api/documents/export', {
+    this.http.post('/api/documents/export', {
       documentType: field === 'cvDraft' ? 'cv' : 'motivationLetter', text,
     }, { responseType: 'blob' }).subscribe({
       next: blob => {
@@ -224,10 +227,10 @@ export class App {
   // Read JSON errors delivered as blobs and always unlock the export controls.
   private async handleExportError(field: DraftField, error: HttpErrorResponse): Promise<void> {
     this.updateBackendStatus(error);
-    let message = 'PDF export failed. Check the backend connection and try again. Your draft is unchanged.';
+    let message = error.status === 401 ? 'Sign in above, then retry the download. Your draft is unchanged.' : error.status === 403 ? 'Security check failed. Sign in again above, then retry the download.' : 'PDF export failed. Check the backend connection and try again. Your draft is unchanged.';
     try {
       const payload = error.error instanceof Blob ? JSON.parse(await error.error.text()) : error.error;
-      if (error.status !== 0 && typeof payload?.message === 'string') message = payload.message;
+      if (![0, 401, 403].includes(error.status) && typeof payload?.message === 'string') message = payload.message;
     } catch { /* Keep the safe fallback for non-JSON error responses. */ }
     this.exportStatus.update(current => ({ ...current, [field]: '' }));
     this.exportError.update(current => ({ ...current, [field]: message }));
@@ -236,6 +239,11 @@ export class App {
 
   // Reflect connection failures and recovery from subsequent API requests.
   private updateBackendStatus(error: HttpErrorResponse): void {
+    if (error.status === 401) this.auth.requireLogin();
+    if (error.status === 403) {
+      this.auth.show();
+      this.auth.message.set('Security check failed. Sign in again, then retry. Your application text is unchanged.');
+    }
     this.backendStatus.set(error.status === 0 ? 'Cannot connect to backend' : 'Backend connected');
   }
 

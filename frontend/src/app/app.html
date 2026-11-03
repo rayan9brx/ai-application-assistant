@@ -7,6 +7,37 @@
   </header>
 
   <main class="workspace" id="main-content">
+    <section class="account-card section-card" aria-labelledby="account-heading">
+      <h2 id="account-heading">Your account</h2>
+      @if (auth.user(); as user) {
+        <p>Signed in as <strong>{{ user.email }}</strong></p>
+        <button class="copy-button" type="button" [disabled]="auth.busy() || isLoading() || isExtracting() || !!exporting()" (click)="auth.logout()">Sign out</button>
+      } @else {
+        <p>Sign in to preview documents, extract PDF text, and download PDFs. You can fill in your application first.</p>
+        <div class="account-actions">
+          <button class="copy-button" type="button" [disabled]="auth.busy()" aria-controls="account-form" [attr.aria-expanded]="auth.open() && auth.mode() === 'login'" (click)="auth.show('login')">Sign in</button>
+          <button class="copy-button" type="button" [disabled]="auth.busy()" aria-controls="account-form" [attr.aria-expanded]="auth.open() && auth.mode() === 'register'" (click)="auth.show('register')">Create account</button>
+        </div>
+      }
+      @if (auth.open() && !auth.user()) {
+        <form id="account-form" class="account-form" (ngSubmit)="auth.submit()" #accountForm="ngForm" [attr.aria-busy]="auth.busy()" aria-labelledby="auth-title">
+          <h3 id="auth-title">{{ auth.mode() === 'register' ? 'Create your account' : 'Welcome back' }}</h3>
+          <fieldset class="source-fields" [disabled]="auth.busy()">
+            <legend class="sr-only">Account credentials</legend>
+            <div class="field"><label for="account-email">Email address</label>
+              <input id="account-email" name="email" type="email" required email maxlength="254" autocomplete="username" [(ngModel)]="auth.email" aria-describedby="account-help" /></div>
+            <div class="field"><label for="account-password">Password</label>
+              <input id="account-password" name="password" type="password" required [minlength]="auth.mode() === 'register' ? 12 : 1" maxlength="128" [attr.autocomplete]="auth.mode() === 'register' ? 'new-password' : 'current-password'" [(ngModel)]="auth.password" aria-describedby="account-help" /></div>
+            <p class="helper" id="account-help">{{ auth.mode() === 'register' ? 'Use a password of 12–128 characters. Email verification and password reset are not available yet.' : 'Your application text stays on this page while you sign in.' }}</p>
+            <button class="primary-button" type="submit" [disabled]="accountForm.invalid || !!auth.validationMessage()">{{ auth.busy() ? 'Please wait…' : auth.mode() === 'register' ? 'Register' : 'Log in' }}</button>
+            <button class="copy-button" type="button" (click)="auth.open.set(false); auth.password = ''">Close account form</button>
+          </fieldset>
+        </form>
+      }
+      @if (auth.message()) { <p class="upload-message" role="status">{{ auth.message() }}</p> }
+      @if (auth.error()) { <p class="error-message" role="alert">{{ auth.error() }}</p> }
+    </section>
+
     <section class="introduction" aria-labelledby="page-title">
       <p class="eyebrow">A thoughtful next step</p>
       <h1 id="page-title">Make your experience count.</h1>
