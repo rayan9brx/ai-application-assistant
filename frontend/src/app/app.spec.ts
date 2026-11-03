@@ -193,10 +193,48 @@ import { App } from './app';
     expect(app.exportError().cvDraft).toContain('Unsupported symbols');
     expect(app.preview()?.cvDraft).toBe('Current edit');
     app.downloadPdf('cvDraft');
-    http.expectOne('http://localhost:8080/api/documents/export').error(new ProgressEvent('error'));
+    http.expectOne('http://localhost:8080/api/documents/export').flush(new Blob([JSON.stringify({ message: 'Failed to fetch' })], { type: 'application/json' }), { status: 0, statusText: 'Unknown Error' });
     await vi.waitFor(() => expect(app.exporting()).toBeNull());
     expect(app.exportError().cvDraft).toContain('backend connection');
     expect(app.preview()?.cvDraft).toBe('Current edit');
+  });
+
+  it('retains both edited drafts and all source text when regenerating offline, then recovers', () => {
+    Object.assign(app, { includeLetter: true, motivation: 'Grüße — reason' });
+    app.analyze();
+    const response = { demo: true, notice: 'Demo', cvDraft: 'CV', motivationLetterDraft: 'Letter', demoActions: [] };
+    http.expectOne('http://localhost:8080/api/analyze').flush(response);
+    app.editDraft('cvDraft', 'Edited CV äöü ÄÖÜ ß €');
+    app.editDraft('motivationLetterDraft', 'Edited letter Grüße');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    app.analyze();
+    http.expectOne('http://localhost:8080/api/analyze').error(new ProgressEvent('error'));
+    expect(app.analysisError()).toContain('backend is running');
+    expect(app.backendStatus()).toBe('Cannot connect to backend');
+    expect(app.preview()?.cvDraft).toBe('Edited CV äöü ÄÖÜ ß €');
+    expect(app.preview()?.motivationLetterDraft).toBe('Edited letter Grüße');
+    expect(app.cvText).toBe('  CV\n');
+    expect(app.motivation).toBe('Grüße — reason');
+    expect(app.hasPreviewEdits()).toBe(true);
+    app.analyze();
+    http.expectOne('http://localhost:8080/api/analyze').flush(response);
+    expect(app.backendStatus()).toBe('Backend connected');
+    expect(app.hasPreviewEdits()).toBe(false);
+    confirm.mockRestore();
+  });
+
+  it('copies the latest text from both editors and clears feedback when edited', async () => {
+    app.preview.set({ demo: true, notice: 'Demo', cvDraft: 'CV', motivationLetterDraft: 'Letter', demoActions: [] });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    for (const field of ['cvDraft', 'motivationLetterDraft'] as const) {
+      app.editDraft(field, 'Latest Grüße äöü ÄÖÜ ß €');
+      await app.copyDraft(field);
+      expect(writeText).toHaveBeenLastCalledWith('Latest Grüße äöü ÄÖÜ ß €');
+      expect(app.copyStatus()[field]).toContain('Copied');
+      app.editDraft(field, 'Changed again');
+      expect(app.copyStatus()[field]).toBe('');
+    }
   });
 
 });

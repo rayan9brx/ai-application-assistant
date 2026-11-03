@@ -107,6 +107,7 @@ export class App {
     this.isExtracting.set(true);
     this.http.post<{ text: string }>('http://localhost:8080/api/cv/extract', data).subscribe({
       next: response => {
+        this.backendStatus.set('Backend connected');
         this.isExtracting.set(false);
         if (typeof response.text !== 'string' || !response.text.trim() || response.text.length > 30000) {
           this.uploadError.set('The extracted text could not be used. Please paste your CV text.');
@@ -118,10 +119,11 @@ export class App {
         this.uploadMessage.set('PDF text extracted. Review and edit your CV below. No AI tailoring was performed.');
       },
       error: error => {
+        this.updateBackendStatus(error);
         this.isExtracting.set(false);
         this.uploadError.set(error.status === 413
           ? 'Choose a PDF of 5 MB or smaller.'
-          : (typeof error.error?.message === 'string' ? error.error.message : 'PDF extraction failed. Check the backend connection, try another PDF, or paste your CV text.'));
+          : (error.status !== 0 && typeof error.error?.message === 'string' ? error.error.message : 'PDF extraction failed. Check the backend connection, try another PDF, or paste your CV text.'));
       },
     });
   }
@@ -138,11 +140,6 @@ export class App {
     this.analysisError.set(this.validationMessage());
     if (this.analysisError()) return;
     if (this.hasPreviewEdits() && !window.confirm('Creating another preview will discard your unsaved edits. Continue?')) return;
-    this.preview.set(null);
-    this.original = null;
-    this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
-    this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
-    this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
     this.isLoading.set(true);
     this.http.post<DemoPreview>('http://localhost:8080/api/analyze', {
       cvText: this.cvText, jobText: this.jobText, jobTitle: this.jobTitle,
@@ -150,11 +147,16 @@ export class App {
       motivation: this.motivation,
     }).subscribe({
       next: response => {
+        this.backendStatus.set('Backend connected');
+        this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+        this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
+        this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
         this.original = { ...response };
         this.preview.set({ ...response });
         this.isLoading.set(false);
       },
       error: error => {
+        this.updateBackendStatus(error);
         this.analysisError.set(error.status === 400 ? 'The backend rejected the input. Check required fields, lengths, and language.' : 'Request failed. Check that the backend is running and try again.');
         this.isLoading.set(false);
       },
@@ -190,6 +192,7 @@ export class App {
       documentType: field === 'cvDraft' ? 'cv' : 'motivationLetter', text,
     }, { responseType: 'blob' }).subscribe({
       next: blob => {
+        this.backendStatus.set('Backend connected');
         try {
           this.savePdf(blob, field === 'cvDraft' ? 'cv-demo.pdf' : 'motivation-letter-demo.pdf');
           this.exportStatus.update(current => ({ ...current, [field]: 'PDF download started. Review before use.' }));
@@ -220,23 +223,29 @@ export class App {
 
   // Read JSON errors delivered as blobs and always unlock the export controls.
   private async handleExportError(field: DraftField, error: HttpErrorResponse): Promise<void> {
+    this.updateBackendStatus(error);
     let message = 'PDF export failed. Check the backend connection and try again. Your draft is unchanged.';
     try {
       const payload = error.error instanceof Blob ? JSON.parse(await error.error.text()) : error.error;
-      if (typeof payload?.message === 'string') message = payload.message;
+      if (error.status !== 0 && typeof payload?.message === 'string') message = payload.message;
     } catch { /* Keep the safe fallback for non-JSON error responses. */ }
     this.exportStatus.update(current => ({ ...current, [field]: '' }));
     this.exportError.update(current => ({ ...current, [field]: message }));
     this.exporting.set(null);
   }
 
+  // Reflect connection failures and recovery from subsequent API requests.
+  private updateBackendStatus(error: HttpErrorResponse): void {
+    this.backendStatus.set(error.status === 0 ? 'Cannot connect to backend' : 'Backend connected');
+  }
+
   // Report clipboard success or provide a manual-copy fallback.
   async copyDraft(field: 'cvDraft' | 'motivationLetterDraft'): Promise<void> {
     const value = this.preview()?.[field];
-    if (value === undefined) return;
+    if (value === undefined || this.isLoading()) return;
     try {
       await navigator.clipboard.writeText(value);
-      this.copyStatus.update(current => ({ ...current, [field]: 'Copied to clipboard.' }));
+      if (this.preview()?.[field] === value) this.copyStatus.update(current => ({ ...current, [field]: 'Copied to clipboard.' }));
     } catch {
       this.copyStatus.update(current => ({ ...current, [field]: 'Copy failed. Select the document text and copy it manually.' }));
     }
