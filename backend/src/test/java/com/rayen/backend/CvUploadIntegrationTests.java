@@ -28,4 +28,21 @@ class CvUploadIntegrationTests {
             assertEquals("http://localhost:4200", response.headers().firstValue("Access-Control-Allow-Origin").orElse(""));
         }
     }
+    // Exercise the global filter so browser preflights cannot bypass controller CORS.
+    @Test
+    void browserPreflightsReachEveryApi() throws Exception {
+        for (String path : new String[]{"/api/analyze", "/api/documents/export", "/api/cv/extract", "/api/health"}) {
+            String method = path.endsWith("health") ? "GET" : "POST";
+            var request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+                .header("Origin", "http://localhost:4200")
+                .header("Access-Control-Request-Method", method)
+                .header("Access-Control-Request-Headers", "content-type")
+                .method("OPTIONS", HttpRequest.BodyPublishers.noBody()).build();
+            var response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, response.statusCode());
+            assertEquals("http://localhost:4200", response.headers().firstValue("Access-Control-Allow-Origin").orElse(""));
+            assertTrue(response.headers().firstValue("Access-Control-Allow-Methods").orElse("").contains(method));
+        }
+    }
+
 }
