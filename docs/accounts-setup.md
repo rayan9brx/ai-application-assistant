@@ -1,6 +1,6 @@
 # Accounts milestone
 
-The Angular application uses relative `/api` URLs. Spring Security owns server-side sessions and protects preview, PDF extraction, and PDF export. PostgreSQL stores only account email, a salted/versioned PBKDF2 password hash, and creation time. No CVs, document history, passwords, or session tokens are stored in localStorage or in the account database.
+The Angular application uses relative `/api` URLs. Spring Security owns server-side sessions and protects preview, PDF extraction, PDF export, and saved applications. PostgreSQL stores account email, a salted/versioned PBKDF2 password hash, creation time, and explicitly saved application drafts. No CVs, letters, passwords, or session tokens are stored in localStorage. See [saved application storage](saved-applications.md) for the new migration and API.
 
 ## PostgreSQL setup on Windows
 
@@ -133,4 +133,4 @@ Automated coverage includes registration validation/uniqueness/hashing, generic 
 
 **Email verification and password reset are still required.** Also add login/registration throttling and abuse controls, review password policy/compromised-password checking, account deletion and privacy operations, operational monitoring/backups, and a deployment-specific security review. Duplicate registration currently has a distinct 409 response, so registration can reveal email availability; login errors remain generic. This is an accounts milestone, not a public-launch readiness claim.
 
-Demo document generation remains explicitly labeled. There is no AI integration, application history, or CV persistence. Text and drafts survive inline sign-in/logout but not refresh or navigation; refresh to clear them on a shared device. Physical-device and full assistive-technology testing remain manual.
+Demo document generation remains explicitly labeled. There is no AI integration. Save application / Update application persists the latest draft to PostgreSQL. Unsaved text survives inline sign-in and session expiry, but refresh or navigation loses unsaved changes after a browser warning. Explicit logout clears private application data from the interface. Physical-device and full assistive-technology testing remain manual.

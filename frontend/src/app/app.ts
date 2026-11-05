@@ -1,7 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, effect, inject, signal, untracked } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule, NgModel } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Auth } from './auth';
+import { ApplicationInput, ApplicationPage, ApplicationSummary, SavedApplication } from './applications';
 
 interface DemoPreview {
   demo: true;
@@ -16,7 +18,7 @@ type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, DatePipe],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -42,14 +44,190 @@ export class App {
   includeLetter = false;
   motivation = '';
   private original: DemoPreview | null = null;
+  readonly applicationList = signal<ApplicationPage | null>(null);
+  readonly applicationsOpen = signal(false);
+  readonly listLoading = signal(false);
+  readonly storageBusy = signal(false);
+  readonly storageMessage = signal('');
+  readonly storageError = signal('');
+  readonly activeApplication = signal<SavedApplication | null>(null);
+  private savedSnapshot = '';
+  private workOwner: string | null = null;
+  private seenLogout = 0;
+  private listRequest = 0;
 
   // Check the existing health endpoint when the page opens.
   constructor() {
+    effect(() => {
+      const user = this.auth.user()?.email ?? null;
+      const logout = this.auth.logoutCount();
+      untracked(() => {
+        if (logout !== this.seenLogout || (user && this.workOwner && user !== this.workOwner)) this.clearPrivateWork();
+        this.seenLogout = logout;
+        if (user) this.workOwner = user;
+        if (!user) { this.applicationList.set(null); this.applicationsOpen.set(false); this.listLoading.set(false); this.storageBusy.set(false); this.listRequest++; }
+      });
+    });
     void this.auth.initialize();
     this.http.get<{ status: string }>('/api/health').subscribe({
       next: response => this.backendStatus.set(response.status === 'ok' ? 'Backend connected' : 'Unexpected backend response'),
       error: () => this.backendStatus.set('Cannot connect to backend'),
     });
+  }
+
+  // Capture exactly the current source fields and latest document editor values.
+  private applicationInput(): ApplicationInput {
+    return { jobTitle: this.jobTitle, company: this.company, language: this.language,
+      sourceCv: this.cvText, jobDescription: this.jobText, includeLetter: this.includeLetter,
+      motivation: this.motivation, editedCv: this.preview()?.cvDraft ?? '',
+      editedLetter: this.preview()?.motivationLetterDraft ?? null, demo: true };
+  }
+
+  // Compare content rather than timestamps so edits during a save remain unsaved.
+  hasUnsavedChanges(): boolean {
+    const input = this.applicationInput();
+    return this.savedSnapshot ? JSON.stringify(input) !== this.savedSnapshot
+      : !!(this.cvText || this.jobText || this.jobTitle || this.company || this.motivation || this.preview());
+  }
+
+  // Warn when leaving a page containing work that has not reached the server.
+  @HostListener('window:beforeunload', ['$event'])
+  warnBeforeLeaving(event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges()) { event.preventDefault(); event.returnValue = ''; }
+  }
+
+  // Save a snapshot without replacing ongoing edits when the response arrives.
+  saveApplication(): void {
+    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (!this.auth.user()) { this.auth.requireLogin(); return; }
+    this.storageError.set(this.validationMessage());
+    if (this.storageError()) return;
+    const input = this.applicationInput();
+    if (input.editedCv.length > 60000 || (input.editedLetter?.length ?? 0) > 60000) {
+      this.storageError.set('Keep each edited document within 60,000 characters.'); return;
+    }
+    const active = this.activeApplication();
+    const email = this.auth.user()!.email;
+    const logout = this.auth.logoutCount();
+    this.workOwner = email;
+    this.storageBusy.set(true);
+    this.storageMessage.set('Saving…');
+    const request = active
+      ? this.http.put<SavedApplication>(`/api/applications/${active.id}`, { ...input, version: active.version })
+      : this.http.post<SavedApplication>('/api/applications', input);
+    request.subscribe({
+      next: saved => {
+        if (!this.sameSession(email, logout)) return;
+        this.activeApplication.set(saved);
+        this.savedSnapshot = JSON.stringify(input);
+        this.storageBusy.set(false);
+        this.storageMessage.set('Application saved.');
+        if (this.applicationsOpen()) this.listApplications(this.applicationList()?.page ?? 0);
+      },
+      error: error => { if (this.sameSession(email, logout)) this.storageFailure(error); },
+    });
+  }
+
+  // Fetch only one metadata page and discard responses from an older session.
+  listApplications(page = 0): void {
+    if (!this.auth.user()) { this.auth.requireLogin(); return; }
+    const email = this.auth.user()!.email;
+    const logout = this.auth.logoutCount();
+    const request = ++this.listRequest;
+    this.applicationsOpen.set(true);
+    this.listLoading.set(true);
+    this.storageError.set('');
+    this.http.get<ApplicationPage>(`/api/applications?page=${page}&size=10`).subscribe({
+      next: result => {
+        if (request === this.listRequest && this.sameSession(email, logout)) { this.applicationList.set(result); this.listLoading.set(false); }
+      },
+      error: error => { if (request === this.listRequest && this.sameSession(email, logout)) { this.listLoading.set(false); this.storageFailure(error, false); } },
+    });
+  }
+
+  // Confirm replacement after fetching, preserving edits if loading fails or is cancelled.
+  openApplication(item: ApplicationSummary): void {
+    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting() || !this.auth.user()) return;
+    const email = this.auth.user()!.email;
+    const logout = this.auth.logoutCount();
+    this.storageBusy.set(true);
+    this.storageError.set('');
+    this.http.get<SavedApplication>(`/api/applications/${item.id}`).subscribe({
+      next: saved => {
+        if (!this.sameSession(email, logout)) return;
+        this.storageBusy.set(false);
+        if (this.hasUnsavedChanges() && !window.confirm('Replace your unsaved work with this saved application?')) return;
+        this.clearPrivateWork();
+        this.workOwner = email;
+        Object.assign(this, { jobTitle: saved.jobTitle, company: saved.company, language: saved.language,
+          cvText: saved.sourceCv, jobText: saved.jobDescription, includeLetter: saved.includeLetter, motivation: saved.motivation });
+        const preview: DemoPreview = { demo: true, notice: 'Saved demo documents — no AI tailoring performed.',
+          cvDraft: saved.editedCv, ...(saved.editedLetter !== null ? { motivationLetterDraft: saved.editedLetter } : {}), demoActions: [] };
+        this.preview.set(preview); this.original = { ...preview };
+        this.activeApplication.set(saved);
+        this.savedSnapshot = JSON.stringify(this.applicationInput());
+        this.storageMessage.set('Saved application opened.');
+      },
+      error: error => { if (this.sameSession(email, logout)) this.storageFailure(error); },
+    });
+  }
+
+  // Confirm deletion and retain any open editor contents as a new unsaved draft.
+  deleteApplication(item: ApplicationSummary): void {
+    if (this.storageBusy() || !this.auth.user() || !window.confirm(`Delete the saved application for ${item.jobTitle} at ${item.company}?`)) return;
+    const email = this.auth.user()!.email;
+    const logout = this.auth.logoutCount();
+    this.storageBusy.set(true);
+    this.storageError.set('');
+    this.http.delete(`/api/applications/${item.id}?version=${item.version}`).subscribe({
+      next: () => {
+        if (!this.sameSession(email, logout)) return;
+        if (this.activeApplication()?.id === item.id) { this.activeApplication.set(null); this.savedSnapshot = ''; }
+        this.storageBusy.set(false);
+        this.storageMessage.set('Saved application deleted.');
+        const page = this.applicationList();
+        this.listApplications(page && page.items.length === 1 ? Math.max(0, page.page - 1) : page?.page ?? 0);
+      },
+      error: error => { if (this.sameSession(email, logout)) this.storageFailure(error); },
+    });
+  }
+
+  // Start a separate application only after the user accepts losing unsaved work.
+  newApplication(): void {
+    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (this.hasUnsavedChanges() && !window.confirm('Discard unsaved work and start a new application?')) return;
+    this.clearPrivateWork();
+  }
+
+  // Ignore delayed responses from a signed-out or replaced account.
+  private sameSession(email: string, logout: number): boolean {
+    return this.auth.user()?.email === email && this.auth.logoutCount() === logout;
+  }
+
+  // Report fixed errors and keep the full editor state available for retry or copying.
+  private storageFailure(error: HttpErrorResponse, finishOperation = true): void {
+    if (finishOperation) this.storageBusy.set(false);
+    this.storageMessage.set('');
+    this.storageError.set(error.status === 409 ? 'This application changed elsewhere. Your edits are preserved. Copy them before reopening the latest saved version.'
+      : error.status === 401 ? 'Session expired. Sign in to retry; your current work is preserved.'
+      : error.status === 404 ? 'This application is no longer available. Your current work is preserved.'
+      : error.status === 400 ? 'Check required fields and character limits. Your current work is preserved.'
+      : 'Application request failed. Your current work is preserved. Please retry.');
+    this.updateBackendStatus(error);
+  }
+
+  // Remove private content and all document feedback after logout or explicit replacement.
+  private clearPrivateWork(): void {
+    this.cvText = ''; this.jobText = ''; this.jobTitle = ''; this.company = ''; this.motivation = '';
+    this.language = 'English'; this.includeLetter = false;
+    this.preview.set(null); this.original = null;
+    this.activeApplication.set(null); this.savedSnapshot = ''; this.workOwner = null;
+    this.applicationList.set(null); this.applicationsOpen.set(false); this.listLoading.set(false); this.listRequest++;
+    this.storageBusy.set(false); this.storageMessage.set(''); this.storageError.set('');
+    this.uploadError.set(''); this.uploadMessage.set(''); this.analysisError.set('');
+    this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
   }
 
   // Share source validation between submit availability and error feedback.
@@ -67,7 +245,7 @@ export class App {
 
   // Enable submission only when every source field is valid.
   canContinue(): boolean {
-    return !this.isExtracting() && !this.exporting() && !this.validationMessage();
+    return !this.storageBusy() && !this.isExtracting() && !this.exporting() && !this.validationMessage();
   }
 
   // Confirm before changing sources that would discard edited documents.
@@ -94,7 +272,7 @@ export class App {
   uploadCv(input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
-    if (!file || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (!file || this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
     this.uploadError.set('');
     this.uploadMessage.set('');
     if (file.size > 5 * 1024 * 1024) {
@@ -139,7 +317,7 @@ export class App {
 
   // Send every form field once and display the returned editable demo.
   analyze(): void {
-    if (this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
     this.analysisError.set(this.validationMessage());
     if (this.analysisError()) return;
     if (this.hasPreviewEdits() && !window.confirm('Creating another preview will discard your unsaved edits. Continue?')) return;
@@ -176,7 +354,7 @@ export class App {
 
   // Only nonempty editor content can be exported, one document at a time.
   canExport(field: DraftField): boolean {
-    return !!this.preview()?.[field]?.trim() && !this.exporting() && !this.isLoading() && !this.isExtracting();
+    return !!this.preview()?.[field]?.trim() && !this.storageBusy() && !this.exporting() && !this.isLoading() && !this.isExtracting();
   }
 
   // Download a snapshot of the latest editor text without modifying any draft.

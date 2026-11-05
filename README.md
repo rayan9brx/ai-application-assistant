@@ -4,4 +4,6 @@ Angular 22 + Spring Boot 4.1 application workspace. CV input, text-PDF extractio
 
 Start here: [Windows PostgreSQL setup, environment variables, local commands, API contract, tests, and production notes](docs/accounts-setup.md).
 
-Email verification and password reset are required before a public paid launch. No AI integration or application-history storage is included.
+Signed-in users can save, list, reopen, update, and delete application drafts in PostgreSQL. See [saved applications: setup, API, verification, and limits](docs/saved-applications.md).
+
+Email verification and password reset are required before a public paid launch. No AI integration or payment features are included.
