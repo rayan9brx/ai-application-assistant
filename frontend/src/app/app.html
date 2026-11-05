@@ -1,181 +1,755 @@
 <div class="app-shell">
+  <a class="skip-link" href="#application-details">Skip to application workspace</a>
   <header class="site-header">
     <div class="header-inner">
-      <div class="brand"><span class="brand-mark" aria-hidden="true">A</span><div><p class="brand-name">ApplyCraft</p><p class="brand-label">Your application workspace</p></div></div>
+      <a class="brand" href="#application-details" aria-label="ApplyCraft workspace"
+        ><span class="brand-mark" aria-hidden="true">A</span>
+        <div>
+          <p class="brand-name">ApplyCraft</p>
+          <p class="brand-label">Your application workspace</p>
+        </div></a
+      >
       <div class="header-actions">
-        <nav aria-label="Main navigation"><a class="header-link" href="#about">About</a></nav>
-        <p class="connection" role="status"><span class="status-dot" [class.connected]="backendStatus() === 'Backend connected'" aria-hidden="true"></span>{{ backendStatus() }}</p>
+        <nav aria-label="Main navigation">
+          <a
+            class="header-link"
+            href="#application-details"
+            [class.active]="activeSection() === 'workspace'"
+            [attr.aria-current]="activeSection() === 'workspace' ? 'location' : null"
+            >Workspace</a
+          >
+          <a
+            class="header-link"
+            href="#saved-applications"
+            [class.active]="activeSection() === 'applications'"
+            [attr.aria-current]="activeSection() === 'applications' ? 'location' : null"
+            >My applications</a
+          >
+          <a
+            class="header-link"
+            href="#about"
+            [class.active]="activeSection() === 'about'"
+            [attr.aria-current]="activeSection() === 'about' ? 'location' : null"
+            >About</a
+          >
+        </nav>
       </div>
     </div>
   </header>
 
   <main class="workspace" id="main-content">
-    <section class="account-card section-card" aria-labelledby="account-heading">
-      <h2 id="account-heading">Your account</h2>
-      @if (auth.user(); as user) {
-        <p>Signed in as <strong>{{ user.email }}</strong></p>
-        <button class="copy-button" type="button" [disabled]="auth.busy() || storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="auth.logout()">Sign out</button>
-      } @else {
-        <p>Sign in to preview documents, extract PDF text, and download PDFs. You can fill in your application first.</p>
-        <div class="account-actions">
-          <button class="copy-button" type="button" [disabled]="auth.busy()" aria-controls="account-form" [attr.aria-expanded]="auth.open() && auth.mode() === 'login'" (click)="auth.show('login')">Sign in</button>
-          <button class="copy-button" type="button" [disabled]="auth.busy()" aria-controls="account-form" [attr.aria-expanded]="auth.open() && auth.mode() === 'register'" (click)="auth.show('register')">Create account</button>
+    <app-hero />
+    <section class="account-card" aria-labelledby="account-heading">
+      <div class="account-summary">
+        <div>
+          <h2 id="account-heading">Your account</h2>
+          @if (auth.user(); as user) {
+            <p>
+              Signed in as <strong>{{ user.email }}</strong>
+            </p>
+          } @else {
+            <p>
+              Sign in to preview, upload PDFs, export, and save drafts. You can fill in your details
+              first.
+            </p>
+          }
         </div>
-      }
+        <div class="account-actions">
+          @if (auth.user()) {
+            <button
+              class="quiet-button"
+              type="button"
+              [disabled]="
+                auth.busy() || storageBusy() || isLoading() || isExtracting() || !!exporting()
+              "
+              (click)="auth.logout()"
+            >
+              Sign out
+            </button>
+          } @else {
+            <button
+              class="copy-button"
+              type="button"
+              [disabled]="auth.busy()"
+              aria-controls="account-form"
+              [attr.aria-expanded]="auth.open() && auth.mode() === 'login'"
+              (click)="auth.show('login')"
+            >
+              Sign in
+            </button>
+            <button
+              class="quiet-button"
+              type="button"
+              [disabled]="auth.busy()"
+              aria-controls="account-form"
+              [attr.aria-expanded]="auth.open() && auth.mode() === 'register'"
+              (click)="auth.show('register')"
+            >
+              Create account
+            </button>
+          }
+        </div>
+      </div>
       @if (auth.open() && !auth.user()) {
-        <form id="account-form" class="account-form" (ngSubmit)="auth.submit()" #accountForm="ngForm" [attr.aria-busy]="auth.busy()" aria-labelledby="auth-title">
-          <h3 id="auth-title">{{ auth.mode() === 'register' ? 'Create your account' : 'Welcome back' }}</h3>
+        <form
+          id="account-form"
+          class="account-form"
+          (ngSubmit)="auth.submit()"
+          #accountForm="ngForm"
+          [attr.aria-busy]="auth.busy()"
+          aria-labelledby="auth-title"
+        >
+          <h3 id="auth-title">
+            {{ auth.mode() === 'register' ? 'Create your account' : 'Welcome back' }}
+          </h3>
           <fieldset class="source-fields" [disabled]="auth.busy()">
             <legend class="sr-only">Account credentials</legend>
-            <div class="field"><label for="account-email">Email address</label>
-              <input id="account-email" name="email" type="email" required email maxlength="254" autocomplete="username" [(ngModel)]="auth.email" aria-describedby="account-help" /></div>
-            <div class="field"><label for="account-password">Password</label>
-              <input id="account-password" name="password" type="password" required [minlength]="auth.mode() === 'register' ? 12 : 1" maxlength="128" [attr.autocomplete]="auth.mode() === 'register' ? 'new-password' : 'current-password'" [(ngModel)]="auth.password" aria-describedby="account-help" /></div>
-            <p class="helper" id="account-help">{{ auth.mode() === 'register' ? 'Use a password of 12–128 characters. Email verification and password reset are not available yet.' : 'Your application text stays on this page while you sign in.' }}</p>
-            <button class="primary-button" type="submit" [disabled]="accountForm.invalid || !!auth.validationMessage()">{{ auth.busy() ? 'Please wait…' : auth.mode() === 'register' ? 'Register' : 'Log in' }}</button>
-            <button class="copy-button" type="button" (click)="auth.open.set(false); auth.password = ''">Close account form</button>
+            <div class="field">
+              <label for="account-email">Email address</label>
+              <input
+                id="account-email"
+                name="email"
+                type="email"
+                required
+                email
+                maxlength="254"
+                autocomplete="username"
+                [(ngModel)]="auth.email"
+                aria-describedby="account-help"
+              />
+            </div>
+            <div class="field">
+              <label for="account-password">Password</label>
+              <input
+                id="account-password"
+                name="password"
+                type="password"
+                required
+                [minlength]="auth.mode() === 'register' ? 12 : 1"
+                maxlength="128"
+                [attr.autocomplete]="
+                  auth.mode() === 'register' ? 'new-password' : 'current-password'
+                "
+                [(ngModel)]="auth.password"
+                aria-describedby="account-help"
+              />
+            </div>
+            <p class="helper" id="account-help">
+              {{
+                auth.mode() === 'register'
+                  ? 'Use a password of 12–128 characters. Email verification and password reset are not available yet.'
+                  : 'Your application text stays on this page while you sign in.'
+              }}
+            </p>
+            <button
+              class="primary-button"
+              type="submit"
+              [disabled]="accountForm.invalid || !!auth.validationMessage()"
+            >
+              {{
+                auth.busy() ? 'Please wait…' : auth.mode() === 'register' ? 'Register' : 'Log in'
+              }}
+            </button>
+            <button
+              class="copy-button"
+              type="button"
+              (click)="auth.open.set(false); auth.password = ''"
+            >
+              Close account form
+            </button>
           </fieldset>
         </form>
       }
-      @if (auth.message()) { <p class="upload-message" role="status">{{ auth.message() }}</p> }
-      @if (auth.error()) { <p class="error-message" role="alert">{{ auth.error() }}</p> }
-    </section>
-
-    <section class="section-card saved-applications" aria-labelledby="saved-heading">
-      <h2 id="saved-heading">My applications</h2>
-      <p class="helper">Save drafts securely to your account. Demo documents remain labeled as demos.</p>
-      <div class="account-actions">
-        <button class="primary-button" type="button" [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="saveApplication()">{{ storageBusy() ? 'Please wait…' : activeApplication() ? 'Update application' : 'Save application' }}</button>
-        <button class="copy-button" type="button" [disabled]="storageBusy()" (click)="listApplications()">My applications</button>
-        <button class="copy-button" type="button" [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="newApplication()">New application</button>
-      </div>
-      <p role="status">{{ hasUnsavedChanges() ? 'Unsaved changes' : activeApplication() ? 'All changes saved' : 'No current draft' }}</p>
-      @if (storageBusy()) { <p role="status">Saving or loading application…</p> }
-      @if (storageMessage()) { <p class="upload-message" role="status">{{ storageMessage() }}</p> }
-      @if (storageError()) { <p class="error-message" role="alert">{{ storageError() }}</p> }
-      @if (auth.user() && applicationsOpen()) {
-        @if (applicationList(); as page) {
-          <ul class="application-list">
-            @for (item of page.items; track item.id) {
-              <li>
-                <div><strong>{{ item.company }} — {{ item.jobTitle }}</strong><p>{{ item.language }} · Updated {{ item.updatedAt | date:'medium' }}</p><span class="demo-tag">Demo draft</span></div>
-                <div class="account-actions"><button class="copy-button" type="button" [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="openApplication(item)">Open<span class="sr-only"> {{ item.jobTitle }} at {{ item.company }}</span></button><button class="copy-button" type="button" [disabled]="storageBusy()" (click)="deleteApplication(item)">Delete<span class="sr-only"> {{ item.jobTitle }} at {{ item.company }}</span></button></div>
-              </li>
-            } @empty { <li>No saved applications yet.</li> }
-          </ul>
-          <div class="account-actions" aria-label="Application pages">
-            <button class="copy-button" type="button" [disabled]="storageBusy() || page.page === 0" (click)="listApplications(page.page - 1)">Previous</button>
-            <span>Page {{ page.page + 1 }} · {{ page.total }} applications</span>
-            <button class="copy-button" type="button" [disabled]="storageBusy() || (page.page + 1) * page.size >= page.total" (click)="listApplications(page.page + 1)">Next</button>
-          </div>
-        }
-        @if (listLoading()) { <p role="status">Loading applications…</p> }
+      @if (auth.message()) {
+        <p class="upload-message" role="status">{{ auth.message() }}</p>
+      }
+      @if (auth.error()) {
+        <p class="error-message" role="alert">{{ auth.error() }}</p>
       }
     </section>
 
-    <section class="introduction" aria-labelledby="page-title">
-      <p class="eyebrow">A thoughtful next step</p>
-      <h1 id="page-title">Make your experience count.</h1>
-      <p class="intro-copy">Bring your experience and your next opportunity together. Prepare a tailored CV and an optional motivation letter, starting with the details that make you, you.</p>
-      <aside class="demo-notice" aria-label="Demo mode">
-        <span class="notice-label">Demo mode</span>
-        <p>AI tailoring is not connected yet. This preview keeps your CV unchanged and provides an editable letter template. No AI analysis or translation is performed.</p>
-      </aside>
-    </section>
-
-    <form id="application-details" tabindex="-1" (ngSubmit)="analyze()" [attr.aria-busy]="isLoading() || isExtracting() || !!exporting()" aria-label="Application details">
+    <div class="workspace-toolbar">
+      <div>
+        <h2>Application workspace</h2>
+        <p
+          class="draft-state"
+          [class.unsaved]="hasUnsavedChanges()"
+          [class.saved]="!hasUnsavedChanges() && !!activeApplication()"
+          role="status"
+        >
+          {{
+            hasUnsavedChanges()
+              ? 'Unsaved changes'
+              : activeApplication()
+                ? 'All changes saved'
+                : 'No current draft'
+          }}
+        </p>
+      </div>
+      <div class="account-actions">
+        <button
+          class="copy-button"
+          type="button"
+          [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()"
+          (click)="saveApplication()"
+        >
+          {{
+            storageBusy()
+              ? 'Please wait…'
+              : activeApplication()
+                ? 'Update application'
+                : 'Save application'
+          }}
+        </button>
+        <button
+          class="copy-button"
+          type="button"
+          [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()"
+          (click)="newApplication()"
+        >
+          New application
+        </button>
+      </div>
+    </div>
+    @if (storageBusy()) {
+      <p role="status">Saving or loading application…</p>
+    }
+    @if (storageMessage()) {
+      <p class="upload-message" role="status">{{ storageMessage() }}</p>
+    }
+    @if (storageError()) {
+      <p class="error-message" role="alert">{{ storageError() }}</p>
+    }
+    <form
+      id="application-details"
+      tabindex="-1"
+      (ngSubmit)="analyze()"
+      [attr.aria-busy]="isLoading() || isExtracting() || !!exporting()"
+      aria-label="Application details"
+    >
       <fieldset class="source-fields" [disabled]="isLoading() || isExtracting() || !!exporting()">
         <legend class="sr-only">Application details</legend>
-        <section class="section-card" aria-labelledby="target-heading">
-          <div class="section-heading"><span class="section-number" aria-hidden="true">01</span><div><h2 id="target-heading"><span class="sr-only">01 — </span>Target role</h2><p>Where would you like to go next?</p></div></div>
+        <section class="form-section" aria-labelledby="target-heading">
+          <div class="section-heading">
+            <span class="section-number" aria-hidden="true">01</span>
+            <div>
+              <h2 id="target-heading"><span class="sr-only">01 — </span>Target role</h2>
+              <p>Where would you like to go next?</p>
+            </div>
+          </div>
           <div class="field-grid">
             <div class="field">
               <label for="job-title">Job title</label>
-              <input id="job-title" name="jobTitle" type="text" maxlength="150" required placeholder="e.g. Working Student Software Developer" #jobTitleModel="ngModel" [ngModel]="jobTitle" (ngModelChange)="updateSource('jobTitle', $event, jobTitleModel)" />
+              <input
+                id="job-title"
+                name="jobTitle"
+                type="text"
+                maxlength="150"
+                required
+                placeholder="e.g. Working Student Software Developer"
+                #jobTitleModel="ngModel"
+                [ngModel]="jobTitle"
+                (ngModelChange)="updateSource('jobTitle', $event, jobTitleModel)"
+              />
             </div>
             <div class="field">
               <label for="company">Company name</label>
-              <input id="company" name="company" type="text" maxlength="150" required placeholder="e.g. Your next company" #companyModel="ngModel" [ngModel]="company" (ngModelChange)="updateSource('company', $event, companyModel)" />
+              <input
+                id="company"
+                name="company"
+                type="text"
+                maxlength="150"
+                required
+                placeholder="e.g. Your next company"
+                #companyModel="ngModel"
+                [ngModel]="company"
+                (ngModelChange)="updateSource('company', $event, companyModel)"
+              />
             </div>
           </div>
         </section>
 
-        <section class="section-card" aria-labelledby="experience-heading">
-          <div class="section-heading"><span class="section-number" aria-hidden="true">02</span><div><h2 id="experience-heading"><span class="sr-only">02 — </span>Your experience</h2><p>The starting point is your real experience.</p></div></div>
+        <section class="form-section" aria-labelledby="experience-heading">
+          <div class="section-heading">
+            <span class="section-number" aria-hidden="true">02</span>
+            <div>
+              <h2 id="experience-heading">
+                <span class="sr-only">02 — </span>CV and job description
+              </h2>
+              <p>Use your actual experience and the details of this vacancy.</p>
+            </div>
+          </div>
+          <div class="pdf-upload" [attr.aria-busy]="isExtracting()">
+            <label for="cv-pdf">Upload a CV PDF</label>
+            <p class="helper" id="pdf-help">
+              PDF only, up to 5 MB. Scanned PDFs are not supported yet.
+            </p>
+            <input
+              id="cv-pdf"
+              type="file"
+              [disabled]="storageBusy()"
+              accept=".pdf,application/pdf"
+              aria-describedby="pdf-help pdf-purpose"
+              #cvFile
+              (change)="uploadCv(cvFile)"
+            />
+            <p class="helper" id="pdf-purpose">
+              Uploading extracts text; it does not tailor your CV. You can also paste or type below.
+            </p>
+          </div>
+          @if (isExtracting()) {
+            <p class="request-status" role="status">Uploading and extracting PDF text…</p>
+          }
+          @if (uploadError()) {
+            <p class="error-message" role="alert">{{ uploadError() }}</p>
+          }
+          @if (uploadMessage()) {
+            <p class="upload-message" role="status">{{ uploadMessage() }}</p>
+          }
           <div class="field-grid">
             <div class="field">
-              <div class="pdf-upload" [attr.aria-busy]="isExtracting()">
-                <label for="cv-pdf">Upload a CV PDF</label>
-                <p class="helper" id="pdf-help">PDF only, up to 5 MB. Scanned PDFs are not supported yet.</p>
-                <input id="cv-pdf" type="file" accept=".pdf,application/pdf" aria-describedby="pdf-help pdf-purpose" #cvFile (change)="uploadCv(cvFile)" />
-                <p class="helper" id="pdf-purpose">Uploading extracts text; it does not tailor your CV. You can also paste or type below.</p>
-              </div>
-              @if (isExtracting()) { <p class="request-status" role="status">Uploading and extracting PDF text…</p> }
-              @if (uploadError()) { <p class="error-message" role="alert">{{ uploadError() }}</p> }
-              @if (uploadMessage()) { <p class="upload-message" role="status">{{ uploadMessage() }}</p> }
-              <label for="cv">Your CV</label><p class="helper" id="cv-help">Paste your education, skills, projects, and experience.</p>
-              <textarea id="cv" name="cvText" aria-describedby="cv-help cv-count" placeholder="Paste your CV here…" rows="10" maxlength="30000" required #cvTextModel="ngModel" [ngModel]="cvText" (ngModelChange)="updateSource('cvText', $event, cvTextModel)"></textarea>
-              <p class="character-count" id="cv-count">{{ cvText.length.toLocaleString('en-US') }} / 30,000 characters</p>
+              <label for="cv">Your CV</label>
+              <p class="helper" id="cv-help">
+                Paste your education, skills, projects, and experience.
+              </p>
+              <textarea
+                id="cv"
+                name="cvText"
+                aria-describedby="cv-help cv-count"
+                placeholder="Paste your CV here…"
+                rows="10"
+                maxlength="30000"
+                required
+                #cvTextModel="ngModel"
+                [ngModel]="cvText"
+                (ngModelChange)="updateSource('cvText', $event, cvTextModel)"
+              ></textarea>
+              <p class="character-count" id="cv-count">
+                {{ cvText.length.toLocaleString('en-US') }} / 30,000 characters
+              </p>
             </div>
             <div class="field">
-              <label for="job">Job description</label><p class="helper" id="job-help">Paste the vacancy and its requirements.</p>
-              <textarea id="job" name="jobText" aria-describedby="job-help job-count" placeholder="Paste the job description here…" rows="10" maxlength="30000" required #jobTextModel="ngModel" [ngModel]="jobText" (ngModelChange)="updateSource('jobText', $event, jobTextModel)"></textarea>
-              <p class="character-count" id="job-count">{{ jobText.length.toLocaleString('en-US') }} / 30,000 characters</p>
+              <label for="job">Job description</label>
+              <p class="helper" id="job-help">Paste the vacancy and its requirements.</p>
+              <textarea
+                id="job"
+                name="jobText"
+                aria-describedby="job-help job-count"
+                placeholder="Paste the job description here…"
+                rows="10"
+                maxlength="30000"
+                required
+                #jobTextModel="ngModel"
+                [ngModel]="jobText"
+                (ngModelChange)="updateSource('jobText', $event, jobTextModel)"
+              ></textarea>
+              <p class="character-count" id="job-count">
+                {{ jobText.length.toLocaleString('en-US') }} / 30,000 characters
+              </p>
             </div>
           </div>
         </section>
 
-        <section class="section-card" aria-labelledby="documents-heading">
-          <div class="section-heading"><span class="section-number" aria-hidden="true">03</span><div><h2 id="documents-heading"><span class="sr-only">03 — </span>Your documents</h2><p>Choose what you want to prepare.</p></div></div>
+        <section class="form-section" aria-labelledby="documents-heading">
+          <div class="section-heading">
+            <span class="section-number" aria-hidden="true">03</span>
+            <div>
+              <h2 id="documents-heading"><span class="sr-only">03 — </span>Document preferences</h2>
+              <p>Choose a language and an optional motivation letter.</p>
+            </div>
+          </div>
           <div class="field-grid preferences">
             <div class="field">
-              <label for="language">Document language</label><p class="helper" id="language-help">Template language only. Your source text stays unchanged.</p>
-              <select id="language" name="language" aria-describedby="language-help" #languageModel="ngModel" [ngModel]="language" (ngModelChange)="updateSource('language', $event, languageModel)"><option value="English">English</option><option value="German">German</option></select>
+              <label for="language">Document language</label>
+              <p class="helper" id="language-help">
+                Template language only. Your source text stays unchanged.
+              </p>
+              <select
+                id="language"
+                name="language"
+                aria-describedby="language-help"
+                #languageModel="ngModel"
+                [ngModel]="language"
+                (ngModelChange)="updateSource('language', $event, languageModel)"
+              >
+                <option value="English">English</option>
+                <option value="German">German</option>
+              </select>
             </div>
             <div class="letter-option">
-              <input id="include-letter" type="checkbox" name="includeLetter" aria-describedby="letter-help" #includeLetterModel="ngModel" [ngModel]="includeLetter" (ngModelChange)="updateSource('includeLetter', $event, includeLetterModel)" />
-              <div><label for="include-letter">Include a motivation letter <span class="optional">Optional</span></label><p class="helper" id="letter-help">An editable template with space for your story.</p></div>
+              <input
+                id="include-letter"
+                type="checkbox"
+                name="includeLetter"
+                aria-describedby="letter-help"
+                #includeLetterModel="ngModel"
+                [ngModel]="includeLetter"
+                (ngModelChange)="updateSource('includeLetter', $event, includeLetterModel)"
+              />
+              <div>
+                <label for="include-letter"
+                  >Include a motivation letter <span class="optional">Optional</span></label
+                >
+                <p class="helper" id="letter-help">
+                  An editable template with space for your story.
+                </p>
+              </div>
             </div>
           </div>
           @if (includeLetter) {
             <div class="field motivation-field">
-              <label for="motivation">Why do you want this role?</label><p class="helper" id="motivation-help">Share your interest in the role or company. The demo includes your words unchanged.</p>
-              <textarea id="motivation" name="motivation" aria-describedby="motivation-help motivation-count" placeholder="What draws you to this opportunity?" rows="4" maxlength="3000" required #motivationModel="ngModel" [ngModel]="motivation" (ngModelChange)="updateSource('motivation', $event, motivationModel)"></textarea>
-              <p class="character-count" id="motivation-count">{{ motivation.length.toLocaleString('en-US') }} / 3,000 characters</p>
+              <label for="motivation">Why do you want this role?</label>
+              <p class="helper" id="motivation-help">
+                Share your interest in the role or company. The demo includes your words unchanged.
+              </p>
+              <textarea
+                id="motivation"
+                name="motivation"
+                aria-describedby="motivation-help motivation-count"
+                placeholder="What draws you to this opportunity?"
+                rows="4"
+                maxlength="3000"
+                required
+                #motivationModel="ngModel"
+                [ngModel]="motivation"
+                (ngModelChange)="updateSource('motivation', $event, motivationModel)"
+              ></textarea>
+              <p class="character-count" id="motivation-count">
+                {{ motivation.length.toLocaleString('en-US') }} / 3,000 characters
+              </p>
             </div>
           }
         </section>
       </fieldset>
       <div class="form-actions">
-        <div class="submit-help"><p>Ready for a first look?</p><p class="helper">Your details are sent to the local backend to prepare a demo preview.</p></div>
-        <button class="primary-button" type="submit" [disabled]="!canContinue() || isLoading()" aria-describedby="validation-message">{{ isLoading() ? 'Preparing preview…' : 'Preview documents' }}<span aria-hidden="true">→</span></button>
+        <div class="submit-help">
+          <p>Next: review your documents</p>
+          <p class="helper">Create an editable demo, then review and refine your documents.</p>
+        </div>
+        <button
+          class="primary-button"
+          type="submit"
+          [disabled]="!canContinue() || isLoading()"
+          aria-describedby="validation-message"
+        >
+          {{ isLoading() ? 'Preparing preview…' : 'Preview documents'
+          }}<span aria-hidden="true">→</span>
+        </button>
       </div>
-      <p class="validation-message" id="validation-message" role="status">{{ validationMessage() }}</p>
-      @if (isLoading()) { <p class="request-status" role="status">Preparing your demo preview. Please wait…</p> }
-      @if (analysisError()) { <p class="error-message" role="alert">{{ analysisError() }}</p> }
+      <p class="validation-message" id="validation-message" role="status">
+        {{ validationMessage() }}
+      </p>
+      @if (isLoading()) {
+        <p class="request-status" role="status">Preparing your demo preview. Please wait…</p>
+      }
+      @if (analysisError()) {
+        <p class="error-message" role="alert">{{ analysisError() }}</p>
+      }
     </form>
 
     @if (preview(); as result) {
-      <section class="preview" aria-labelledby="preview-title">
-        <div class="preview-heading"><div><p class="eyebrow">Review & refine</p><h2 id="preview-title">Your document preview</h2></div><span class="demo-tag">Demo content</span></div>
-        <dl class="target-summary"><div><dt>Role</dt><dd>{{ jobTitle }}</dd></div><div><dt>Company</dt><dd>{{ company }}</dd></div><div><dt>Language</dt><dd>{{ language }}</dd></div></dl>
-        <div class="preview-notice"><h3>Demo preview — no AI tailoring performed</h3><p>{{ result.notice }}</p><p>Use Save application or Update application to keep your latest edits after refresh.</p></div>
-        <div class="document-grid" [class.two-documents]="result.motivationLetterDraft !== undefined">
+      <section class="preview" id="document-preview" aria-labelledby="preview-title">
+        <div class="preview-heading">
+          <div>
+            <p class="eyebrow">Review & refine</p>
+            <h2 id="preview-title">Review your documents</h2>
+          </div>
+          <div class="account-actions">
+            <span class="demo-tag">Demo content</span>
+            <button
+              class="copy-button"
+              type="button"
+              [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()"
+              (click)="saveApplication()"
+            >
+              {{
+                storageBusy()
+                  ? 'Please wait…'
+                  : activeApplication()
+                    ? 'Update application'
+                    : 'Save application'
+              }}
+            </button>
+          </div>
+        </div>
+        <dl class="target-summary">
+          <div>
+            <dt>Role</dt>
+            <dd>{{ jobTitle }}</dd>
+          </div>
+          <div>
+            <dt>Company</dt>
+            <dd>{{ company }}</dd>
+          </div>
+          <div>
+            <dt>Language</dt>
+            <dd>{{ language }}</dd>
+          </div>
+        </dl>
+        <div class="preview-notice">
+          <h3>Demo preview — no AI tailoring performed</h3>
+          <p>{{ result.notice }}</p>
+          <p>Use Save application or Update application to keep your latest edits after refresh.</p>
+        </div>
+        <div
+          class="document-grid"
+          [class.two-documents]="result.motivationLetterDraft !== undefined"
+        >
           <article class="document-panel" aria-labelledby="cv-panel-title">
-            <div class="document-header"><div><p class="document-kind">Document 01</p><h3 id="cv-panel-title">Your CV</h3></div><button class="copy-button" type="button" [disabled]="isLoading()" (click)="copyDraft('cvDraft')">Copy CV</button></div>
-            <div class="document-body"><label for="cv-draft">Editable CV</label><p class="helper" id="cv-draft-help">Your original CV, unchanged. No tailoring or translation.</p><textarea id="cv-draft" rows="20" aria-describedby="cv-draft-help" [disabled]="isLoading() || isExtracting() || !!exporting()" [ngModel]="result.cvDraft" (ngModelChange)="editDraft('cvDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().cvDraft }}</p><div class="export-actions"><button class="copy-button" type="button" [disabled]="!canExport('cvDraft')" (click)="downloadPdf('cvDraft')" aria-describedby="cvDraft-export-help">{{ exporting() === 'cvDraft' ? 'Creating PDF…' : 'Download CV PDF' }}</button><p class="helper" id="cvDraft-export-help">Includes “DEMO — review before use”. Clean text layout; original uploaded formatting is not preserved.</p></div><p class="copy-status" role="status">{{ exportStatus().cvDraft }}</p>@if (exportError().cvDraft) { <p class="error-message" role="alert">{{ exportError().cvDraft }}</p> }</div>
+            <div class="document-header" role="group" aria-label="CV editor toolbar">
+              <div>
+                <p class="document-kind">Document 01</p>
+                <h3 id="cv-panel-title">Your CV</h3>
+              </div>
+              <div class="account-actions">
+                <button
+                  class="copy-button"
+                  type="button"
+                  [disabled]="isLoading()"
+                  (click)="copyDraft('cvDraft')"
+                >
+                  Copy CV</button
+                ><button
+                  class="primary-button"
+                  type="button"
+                  [disabled]="!canExport('cvDraft')"
+                  (click)="downloadPdf('cvDraft')"
+                  aria-describedby="cvDraft-export-help"
+                >
+                  {{ exporting() === 'cvDraft' ? 'Creating PDF…' : 'Download CV PDF' }}
+                </button>
+              </div>
+            </div>
+            <div class="document-body">
+              <label for="cv-draft">Editable CV</label>
+              <p class="helper" id="cv-draft-help">
+                Edit the wording below. The demo does not tailor or translate your CV.
+              </p>
+              <textarea
+                id="cv-draft"
+                rows="20"
+                aria-describedby="cv-draft-help"
+                [disabled]="isLoading() || isExtracting() || !!exporting()"
+                [ngModel]="result.cvDraft"
+                (ngModelChange)="editDraft('cvDraft', $event)"
+              ></textarea>
+              <p
+                class="copy-status"
+                [class.feedback-error]="copyStatus().cvDraft.startsWith('Copy failed')"
+                role="status"
+              >
+                {{ copyStatus().cvDraft }}
+              </p>
+              <div class="export-actions">
+                <p class="helper" id="cvDraft-export-help">
+                  Includes “DEMO — review before use”. Clean text layout; original uploaded
+                  formatting is not preserved.
+                </p>
+              </div>
+              <p
+                class="copy-status"
+                [class.feedback-progress]="exporting() === 'cvDraft'"
+                role="status"
+              >
+                {{ exportStatus().cvDraft }}
+              </p>
+              @if (exportError().cvDraft) {
+                <p class="error-message" role="alert">{{ exportError().cvDraft }}</p>
+              }
+            </div>
           </article>
           @if (result.motivationLetterDraft !== undefined) {
             <article class="document-panel" aria-labelledby="letter-panel-title">
-              <div class="document-header"><div><p class="document-kind">Document 02</p><h3 id="letter-panel-title">Motivation letter</h3></div><button class="copy-button" type="button" [disabled]="isLoading()" (click)="copyDraft('motivationLetterDraft')">Copy letter</button></div>
-              <div class="document-body"><label for="letter-draft">Editable demo template</label><p class="helper" id="letter-draft-help">Replace placeholders and review all text before use.</p><textarea id="letter-draft" rows="20" [attr.lang]="language === 'German' ? 'de' : 'en'" aria-describedby="letter-draft-help" [disabled]="isLoading() || isExtracting() || !!exporting()" [ngModel]="result.motivationLetterDraft" (ngModelChange)="editDraft('motivationLetterDraft', $event)"></textarea><p class="copy-status" role="status">{{ copyStatus().motivationLetterDraft }}</p><div class="export-actions"><button class="copy-button" type="button" [disabled]="!canExport('motivationLetterDraft')" (click)="downloadPdf('motivationLetterDraft')" aria-describedby="motivationLetterDraft-export-help">{{ exporting() === 'motivationLetterDraft' ? 'Creating PDF…' : 'Download letter PDF' }}</button><p class="helper" id="motivationLetterDraft-export-help">Includes “DEMO — review before use”. Clean text layout; original uploaded formatting is not preserved.</p></div><p class="copy-status" role="status">{{ exportStatus().motivationLetterDraft }}</p>@if (exportError().motivationLetterDraft) { <p class="error-message" role="alert">{{ exportError().motivationLetterDraft }}</p> }</div>
+              <div
+                class="document-header"
+                role="group"
+                aria-label="Motivation letter editor toolbar"
+              >
+                <div>
+                  <p class="document-kind">Document 02</p>
+                  <h3 id="letter-panel-title">Motivation letter</h3>
+                </div>
+                <div class="account-actions">
+                  <button
+                    class="copy-button"
+                    type="button"
+                    [disabled]="isLoading()"
+                    (click)="copyDraft('motivationLetterDraft')"
+                  >
+                    Copy letter</button
+                  ><button
+                    class="primary-button"
+                    type="button"
+                    [disabled]="!canExport('motivationLetterDraft')"
+                    (click)="downloadPdf('motivationLetterDraft')"
+                    aria-describedby="motivationLetterDraft-export-help"
+                  >
+                    {{
+                      exporting() === 'motivationLetterDraft'
+                        ? 'Creating PDF…'
+                        : 'Download letter PDF'
+                    }}
+                  </button>
+                </div>
+              </div>
+              <div class="document-body">
+                <label for="letter-draft">Editable demo template</label>
+                <p class="helper" id="letter-draft-help">
+                  Replace placeholders and review all text before use.
+                </p>
+                <textarea
+                  id="letter-draft"
+                  rows="20"
+                  [attr.lang]="language === 'German' ? 'de' : 'en'"
+                  aria-describedby="letter-draft-help"
+                  [disabled]="isLoading() || isExtracting() || !!exporting()"
+                  [ngModel]="result.motivationLetterDraft"
+                  (ngModelChange)="editDraft('motivationLetterDraft', $event)"
+                ></textarea>
+                <p
+                  class="copy-status"
+                  [class.feedback-error]="
+                    copyStatus().motivationLetterDraft.startsWith('Copy failed')
+                  "
+                  role="status"
+                >
+                  {{ copyStatus().motivationLetterDraft }}
+                </p>
+                <div class="export-actions">
+                  <p class="helper" id="motivationLetterDraft-export-help">
+                    Includes “DEMO — review before use”. Clean text layout; original uploaded
+                    formatting is not preserved.
+                  </p>
+                </div>
+                <p
+                  class="copy-status"
+                  [class.feedback-progress]="exporting() === 'motivationLetterDraft'"
+                  role="status"
+                >
+                  {{ exportStatus().motivationLetterDraft }}
+                </p>
+                @if (exportError().motivationLetterDraft) {
+                  <p class="error-message" role="alert">
+                    {{ exportError().motivationLetterDraft }}
+                  </p>
+                }
+              </div>
             </article>
           }
         </div>
-        <details class="demo-details"><summary>What this demo did</summary><ul>@for (action of result.demoActions; track $index) { <li>{{ action }}</li> }</ul></details>
+        <details class="demo-details">
+          <summary>What this demo did</summary>
+          <ul>
+            @for (action of result.demoActions; track $index) {
+              <li>{{ action }}</li>
+            }
+          </ul>
+        </details>
       </section>
     }
+    <section
+      class="saved-applications"
+      id="saved-applications"
+      tabindex="-1"
+      aria-labelledby="saved-heading"
+    >
+      <div class="list-heading">
+        <div>
+          <p class="eyebrow">Pick up where you left off</p>
+          <h2 id="saved-heading">My applications</h2>
+          <p class="helper">Your saved drafts, organized by their last update.</p>
+        </div>
+        <button
+          class="copy-button"
+          type="button"
+          [disabled]="storageBusy() || listLoading()"
+          (click)="listApplications()"
+        >
+          {{ listLoading() ? 'Loading…' : applicationList() ? 'Refresh list' : 'My applications' }}
+        </button>
+      </div>
+      @if (auth.user() && applicationsOpen()) {
+        @if (applicationList(); as page) {
+          <ul class="application-list">
+            @for (item of page.items; track item.id) {
+              <li>
+                <div>
+                  <strong>{{ item.company }} — {{ item.jobTitle }}</strong>
+                  <p>{{ item.language }} · Updated {{ item.updatedAt | date: 'medium' }}</p>
+                  <span class="demo-tag">Demo draft</span>
+                </div>
+                <div class="account-actions">
+                  <button
+                    class="copy-button"
+                    type="button"
+                    [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()"
+                    (click)="openApplication(item)"
+                  >
+                    Open<span class="sr-only">
+                      {{ item.jobTitle }} at {{ item.company }}</span
+                    ></button
+                  ><button
+                    class="quiet-button danger-button"
+                    type="button"
+                    [disabled]="storageBusy()"
+                    (click)="deleteApplication(item)"
+                  >
+                    Delete<span class="sr-only"> {{ item.jobTitle }} at {{ item.company }}</span>
+                  </button>
+                </div>
+              </li>
+            } @empty {
+              <li>No saved applications yet.</li>
+            }
+          </ul>
+          <div class="account-actions pagination" aria-label="Application pages">
+            <button
+              class="copy-button"
+              type="button"
+              [disabled]="storageBusy() || page.page === 0"
+              (click)="listApplications(page.page - 1)"
+            >
+              Previous
+            </button>
+            <span>Page {{ page.page + 1 }} · {{ page.total }} applications</span>
+            <button
+              class="copy-button"
+              type="button"
+              [disabled]="storageBusy() || (page.page + 1) * page.size >= page.total"
+              (click)="listApplications(page.page + 1)"
+            >
+              Next
+            </button>
+          </div>
+        }
+        @if (listLoading()) {
+          <p role="status">Loading applications…</p>
+        }
+      } @else {
+        <p class="empty-state">
+          {{
+            auth.user()
+              ? 'Open My applications to load your saved drafts. Your current work stays here.'
+              : 'Sign in to view your saved applications.'
+          }}
+        </p>
+      }
+      @if (storageError() && applicationsOpen()) {
+        <p class="error-message">{{ storageError() }}</p>
+      }
+    </section>
+
     <app-about />
-    <footer class="workspace-footer">ApplyCraft <span aria-hidden="true">·</span> Built around your experience.</footer>
+    <footer class="workspace-footer">
+      <p>ApplyCraft · Built around your experience.</p>
+      <p class="connection" role="status">
+        <span
+          class="status-dot"
+          [class.connected]="backendStatus() === 'Backend connected'"
+          aria-hidden="true"
+        ></span
+        >{{ backendStatus() }}
+      </p>
+    </footer>
   </main>
 </div>

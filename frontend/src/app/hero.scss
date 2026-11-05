@@ -1,0 +1,53 @@
+:host { display: block; margin-bottom: var(--space-5); }
+.hero { display: grid; grid-template-columns: 1.08fr 1fr; align-items: center; gap: var(--space-7); padding-block: var(--space-5) var(--space-6); }
+.hero-copy, .hero-example { min-width: 0; }
+.eyebrow { margin-bottom: var(--space-4); }
+h1 { max-width: 20ch; font-size: clamp(2rem, 3.3vw, 2.75rem); line-height: 1.15; letter-spacing: -1.3px; text-wrap: balance; }
+h1 span { display: block; }
+.hero-description { max-width: 46ch; margin-top: var(--space-5); color: var(--muted); font-size: 1rem; line-height: 1.75; }
+.hero-demo { display: inline-block; margin-top: var(--space-4); padding: 6px 10px; border: 1px solid #dcd8ee; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--accent); font-size: var(--text-sm); }
+.hero-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-3) var(--space-5); margin-top: var(--space-5); }
+.hero-primary { min-height: 48px; gap: var(--space-4); padding-inline: 20px; background: var(--accent); border-color: var(--accent); color: var(--surface); font-size: var(--text-base); }
+.hero-primary:hover { color: var(--surface); background: var(--accent-hover); border-color: var(--accent-hover); }
+.hero-secondary { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--text-sm); font-weight: 600; }
+.hero-assurance { margin-top: var(--space-4); font-size: var(--text-sm); color: var(--muted); }
+.hero-example { margin: 0; }
+figcaption { margin-bottom: var(--space-4); text-align: center; color: var(--muted); font-size: .75rem; }
+figcaption span { white-space: nowrap; }
+.document-composition { position: relative; isolation: isolate; min-height: 420px; }
+.document-composition::before { content: ''; position: absolute; z-index: -1; inset: 16px -12px 0; border-radius: 48%; background: radial-gradient(ellipse, #e9e5f4 0, #efedf6 35%, transparent 70%); }
+.sample-document { padding: 22px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); box-shadow: 0 12px 32px #20293d0b, 0 2px 5px #20293d05; font-size: .8125rem; line-height: 1.6; }
+.sample-cv { width: 68%; min-height: 370px; }
+.sample-label { color: var(--accent); font-size: .6875rem; font-weight: 650; letter-spacing: .7px; text-transform: uppercase; }
+.sample-cv h2 { margin-top: 10px; font-size: 1.375rem; letter-spacing: -.4px; }
+.sample-role { color: var(--muted); font-size: .8125rem; }
+.sample-rule { height: 1px; background: var(--line); margin-block: var(--space-4); }
+.sample-document h3 { margin-block: var(--space-4) 6px; font-size: .75rem; color: var(--accent); }
+.sample-cv > p:not(.sample-label):not(.sample-role) { max-width: 21ch; }
+.sample-employer { font-weight: 600; margin-bottom: 4px; }
+.sample-letter { position: absolute; right: 0; bottom: 0; width: 54%; }
+.sample-letter h2 { margin-top: 10px; font-size: 1rem; line-height: 1.4; letter-spacing: -.2px; }
+.sample-letter > p:not(.sample-label) { margin-top: var(--space-3); }
+.sample-signature { color: var(--muted); }
+@media (max-width: 960px) {
+  .hero { gap: var(--space-5); }
+  .sample-document { padding: var(--space-4); }
+}
+@media (max-width: 800px) {
+  .hero { grid-template-columns: 1fr; gap: var(--space-6); padding-top: var(--space-3); }
+  h1 { max-width: 24ch; font-size: clamp(2rem, 5vw, 2.5rem); }
+  .hero-description { max-width: 52ch; margin-top: var(--space-4); }
+  .hero-example { width: min(100%, 480px); margin-inline: auto; }
+}
+@media (max-width: 520px) {
+  h1 { font-size: 2rem; letter-spacing: -.8px; }
+  .hero-actions { align-items: stretch; gap: var(--space-2); }
+  .hero-primary { width: 100%; }
+  .hero-secondary { justify-content: center; width: 100%; }
+  .hero-assurance { text-align: center; }
+  .document-composition { display: grid; gap: var(--space-4); min-height: 0; padding: 8px; }
+  .document-composition::before { inset: 0; border-radius: var(--radius); }
+  .sample-cv { width: calc(100% - 20px); min-height: 0; }
+  .sample-cv > p:not(.sample-label):not(.sample-role) { max-width: none; }
+  .sample-letter { position: static; width: calc(100% - 20px); margin-left: 20px; }
+}

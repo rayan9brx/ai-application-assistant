@@ -1,0 +1,31 @@
+.preview { margin-top: var(--space-7); }
+.preview-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.target-summary { display: grid; grid-template-columns: 1fr 1fr auto; gap: var(--space-5); margin: var(--space-5) 0; }
+.target-summary div { min-width: 0; overflow-wrap: anywhere; }
+.target-summary dt { font-size: .6875rem; color: var(--muted); }
+.target-summary dd { margin: 4px 0 0; font-size: var(--text-sm); font-weight: 600; }
+.preview-notice { padding: var(--space-4); margin-bottom: var(--space-5); background: var(--accent-soft); border-radius: var(--radius-sm); }
+.preview-notice h3 { color: var(--accent); font-size: var(--text-sm); }
+.preview-notice p { color: var(--muted); font-size: var(--text-sm); margin-top: var(--space-1); }
+.document-grid { display: grid; gap: var(--space-5); }
+.document-grid.two-documents { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.document-panel { min-width: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+.document-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--line); background: var(--surface-muted); border-radius: var(--radius) var(--radius) 0 0; }
+.document-kind { color: var(--muted); font-size: .6875rem; }
+.document-header h3 { font-size: var(--text-base); }
+.document-header .account-actions { gap: var(--space-2); }
+.document-header button { padding-inline: 12px; }
+.document-body { padding: var(--space-5); }
+.document-body .helper { margin: 6px 0 var(--space-4); }
+.document-body textarea { min-height: 560px; line-height: 1.85; padding: 20px; border-color: var(--line); }
+.document-body .copy-status:not(:empty) { margin-top: var(--space-3); }
+.export-actions { border-top: 1px solid var(--line); padding-top: var(--space-3); margin-top: var(--space-4); }
+.export-actions .helper { margin: 0; font-size: .75rem; }
+.demo-details { color: var(--muted); margin-top: var(--space-4); }
+.demo-details ul { font-size: var(--text-sm); padding-left: 20px; }
+@media (max-width: 1000px) { .document-grid.two-documents { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .target-summary { grid-template-columns: 1fr; gap: var(--space-3); }
+  .document-header, .document-body { padding: var(--space-4); }
+  .document-body textarea { padding: var(--space-3); min-height: 440px; }
+}

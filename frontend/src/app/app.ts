@@ -4,6 +4,7 @@ import { FormsModule, NgModel } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Auth } from './auth';
 import { About } from './about';
+import { Hero } from './hero';
 import { ApplicationInput, ApplicationPage, ApplicationSummary, SavedApplication } from './applications';
 
 interface DemoPreview {
@@ -19,7 +20,7 @@ type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FormsModule, DatePipe, About],
+  imports: [FormsModule, DatePipe, About, Hero],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -27,6 +28,7 @@ export class App {
   private readonly http = inject(HttpClient);
   readonly auth = inject(Auth);
   readonly backendStatus = signal('Checking backend...');
+  readonly activeSection = signal<'workspace' | 'applications' | 'about'>('workspace');
   readonly isLoading = signal(false);
   readonly isExtracting = signal(false);
   readonly uploadError = signal('');
@@ -59,6 +61,7 @@ export class App {
 
   // Check the existing health endpoint when the page opens.
   constructor() {
+    this.syncNavigation();
     effect(() => {
       const user = this.auth.user()?.email ?? null;
       const logout = this.auth.logoutCount();
@@ -74,6 +77,13 @@ export class App {
       next: response => this.backendStatus.set(response.status === 'ok' ? 'Backend connected' : 'Unexpected backend response'),
       error: () => this.backendStatus.set('Cannot connect to backend'),
     });
+  }
+
+  // Reflect in-page navigation without replacing the editor or its unsaved state.
+  @HostListener('window:hashchange')
+  syncNavigation(): void {
+    this.activeSection.set(window.location.hash === '#about' ? 'about'
+      : window.location.hash === '#saved-applications' ? 'applications' : 'workspace');
   }
 
   // Capture exactly the current source fields and latest document editor values.

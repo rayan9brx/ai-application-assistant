@@ -178,4 +178,65 @@ describe('Saved applications', () => {
     expect(text).toContain('Unsaved changes');
     expect(text).toContain('Demo draft');
   });
+
+  it('exports text entered through the redesigned editor toolbar and preserves it on failure', async () => {
+    fixture.detectChanges();
+    const editor = fixture.nativeElement.querySelector('#cv-draft') as HTMLTextAreaElement;
+    editor.value = 'Edited through the document surface';
+    editor.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(app.preview()?.cvDraft).toBe(editor.value);
+    const toolbar = fixture.nativeElement.querySelector('[aria-label="CV editor toolbar"]') as HTMLElement;
+    const download = Array.from(toolbar.querySelectorAll('button')).find(button => button.textContent?.includes('Download CV PDF'))!;
+    download.click();
+    fixture.detectChanges();
+    expect(download.disabled).toBe(true);
+    expect(download.textContent).toContain('Creating PDF');
+    const request = http.expectOne('/api/documents/export');
+    expect(request.request.body).toEqual({ documentType: 'cv', text: editor.value });
+    request.flush(new Blob(['{}'], { type: 'application/json' }), { status: 500, statusText: 'Failure' });
+    await vi.waitFor(() => expect(app.exporting()).toBeNull());
+    fixture.detectChanges();
+    expect(app.preview()?.cvDraft).toBe('Edited through the document surface');
+    expect(fixture.nativeElement.querySelector('.document-body [role="alert"]').textContent).toContain('PDF export failed');
+  });
+
+  it('keeps labels, PDF upload and the optional letter wired to the form', async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const root = fixture.nativeElement as HTMLElement;
+    for (const label of Array.from(root.querySelectorAll('label[for]'))) {
+      expect(root.querySelector(`[id="${label.getAttribute('for')}"]`)).not.toBeNull();
+    }
+    expect((root.querySelector('#cv-pdf') as HTMLInputElement).accept).toBe('.pdf,application/pdf');
+    expect(root.querySelector('#motivation')).not.toBeNull();
+    (root.querySelector('#include-letter') as HTMLInputElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(app.includeLetter).toBe(false);
+    expect(root.querySelector('#motivation')).toBeNull();
+    (root.querySelector('#include-letter') as HTMLInputElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(app.includeLetter).toBe(true);
+    expect(root.querySelector('#motivation')).not.toBeNull();
+  });
+
+  it('updates navigation state without replacing the form or unsaved documents', () => {
+    fixture.detectChanges();
+    const form = fixture.nativeElement.querySelector('#application-details');
+    const previousUrl = window.location.href;
+    try {
+      for (const [hash, section] of [['#about', 'about'], ['#saved-applications', 'applications'], ['#application-details', 'workspace']]) {
+        window.history.replaceState(null, '', hash);
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        fixture.detectChanges();
+        expect(app.activeSection()).toBe(section);
+        expect(fixture.nativeElement.querySelector('nav [aria-current="location"]').getAttribute('href')).toBe(hash);
+        expect(fixture.nativeElement.querySelector('#application-details')).toBe(form);
+        expect(app.cvText).toBe('Source CV');
+        expect(app.preview()?.cvDraft).toBe('Edited CV');
+      }
+    } finally { window.history.replaceState(null, '', previousUrl); }
+  });
 });
