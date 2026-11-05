@@ -15,6 +15,7 @@ export class Auth {
   readonly message = signal('');
   readonly error = signal('');
   readonly ready = signal(false);
+  readonly logoutCount = signal(0);
   email = '';
   password = '';
 
@@ -112,8 +113,9 @@ export class Auth {
       await this.refreshCsrf();
       await firstValueFrom(this.http.post('/api/auth/logout', {}));
       this.user.set(null);
+      this.logoutCount.update(value => value + 1);
       this.password = '';
-      this.message.set('Signed out. Your application text remains on this page; refresh to clear it on a shared device.');
+      this.message.set('Signed out. Private application data has been cleared from this page.');
       await this.refreshCsrf();
     } catch {
       this.error.set('Could not finish signing out. Check the connection and retry.');

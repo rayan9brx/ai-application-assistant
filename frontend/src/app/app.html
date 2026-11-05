@@ -11,7 +11,7 @@
       <h2 id="account-heading">Your account</h2>
       @if (auth.user(); as user) {
         <p>Signed in as <strong>{{ user.email }}</strong></p>
-        <button class="copy-button" type="button" [disabled]="auth.busy() || isLoading() || isExtracting() || !!exporting()" (click)="auth.logout()">Sign out</button>
+        <button class="copy-button" type="button" [disabled]="auth.busy() || storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="auth.logout()">Sign out</button>
       } @else {
         <p>Sign in to preview documents, extract PDF text, and download PDFs. You can fill in your application first.</p>
         <div class="account-actions">
@@ -36,6 +36,38 @@
       }
       @if (auth.message()) { <p class="upload-message" role="status">{{ auth.message() }}</p> }
       @if (auth.error()) { <p class="error-message" role="alert">{{ auth.error() }}</p> }
+    </section>
+
+    <section class="section-card saved-applications" aria-labelledby="saved-heading">
+      <h2 id="saved-heading">My applications</h2>
+      <p class="helper">Save drafts securely to your account. Demo documents remain labeled as demos.</p>
+      <div class="account-actions">
+        <button class="primary-button" type="button" [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="saveApplication()">{{ storageBusy() ? 'Please wait…' : activeApplication() ? 'Update application' : 'Save application' }}</button>
+        <button class="copy-button" type="button" [disabled]="storageBusy()" (click)="listApplications()">My applications</button>
+        <button class="copy-button" type="button" [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="newApplication()">New application</button>
+      </div>
+      <p role="status">{{ hasUnsavedChanges() ? 'Unsaved changes' : activeApplication() ? 'All changes saved' : 'No current draft' }}</p>
+      @if (storageBusy()) { <p role="status">Saving or loading application…</p> }
+      @if (storageMessage()) { <p class="upload-message" role="status">{{ storageMessage() }}</p> }
+      @if (storageError()) { <p class="error-message" role="alert">{{ storageError() }}</p> }
+      @if (auth.user() && applicationsOpen()) {
+        @if (applicationList(); as page) {
+          <ul class="application-list">
+            @for (item of page.items; track item.id) {
+              <li>
+                <div><strong>{{ item.company }} — {{ item.jobTitle }}</strong><p>{{ item.language }} · Updated {{ item.updatedAt | date:'medium' }}</p><span class="demo-tag">Demo draft</span></div>
+                <div class="account-actions"><button class="copy-button" type="button" [disabled]="storageBusy() || isLoading() || isExtracting() || !!exporting()" (click)="openApplication(item)">Open<span class="sr-only"> {{ item.jobTitle }} at {{ item.company }}</span></button><button class="copy-button" type="button" [disabled]="storageBusy()" (click)="deleteApplication(item)">Delete<span class="sr-only"> {{ item.jobTitle }} at {{ item.company }}</span></button></div>
+              </li>
+            } @empty { <li>No saved applications yet.</li> }
+          </ul>
+          <div class="account-actions" aria-label="Application pages">
+            <button class="copy-button" type="button" [disabled]="storageBusy() || page.page === 0" (click)="listApplications(page.page - 1)">Previous</button>
+            <span>Page {{ page.page + 1 }} · {{ page.total }} applications</span>
+            <button class="copy-button" type="button" [disabled]="storageBusy() || (page.page + 1) * page.size >= page.total" (click)="listApplications(page.page + 1)">Next</button>
+          </div>
+        }
+        @if (listLoading()) { <p role="status">Loading applications…</p> }
+      }
     </section>
 
     <section class="introduction" aria-labelledby="page-title">
@@ -124,7 +156,7 @@
       <section class="preview" aria-labelledby="preview-title">
         <div class="preview-heading"><div><p class="eyebrow">Review & refine</p><h2 id="preview-title">Your document preview</h2></div><span class="demo-tag">Demo content</span></div>
         <dl class="target-summary"><div><dt>Role</dt><dd>{{ jobTitle }}</dd></div><div><dt>Company</dt><dd>{{ company }}</dd></div><div><dt>Language</dt><dd>{{ language }}</dd></div></dl>
-        <div class="preview-notice"><h3>Demo preview — no AI tailoring performed</h3><p>{{ result.notice }}</p><p>Edits are not saved after refresh. Copy your documents before leaving this page.</p></div>
+        <div class="preview-notice"><h3>Demo preview — no AI tailoring performed</h3><p>{{ result.notice }}</p><p>Use Save application or Update application to keep your latest edits after refresh.</p></div>
         <div class="document-grid" [class.two-documents]="result.motivationLetterDraft !== undefined">
           <article class="document-panel" aria-labelledby="cv-panel-title">
             <div class="document-header"><div><p class="document-kind">Document 01</p><h3 id="cv-panel-title">Your CV</h3></div><button class="copy-button" type="button" [disabled]="isLoading()" (click)="copyDraft('cvDraft')">Copy CV</button></div>
