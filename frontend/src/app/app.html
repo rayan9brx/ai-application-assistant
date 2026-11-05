@@ -2,7 +2,10 @@
   <header class="site-header">
     <div class="header-inner">
       <div class="brand"><span class="brand-mark" aria-hidden="true">A</span><div><p class="brand-name">ApplyCraft</p><p class="brand-label">Your application workspace</p></div></div>
-      <p class="connection" role="status"><span class="status-dot" [class.connected]="backendStatus() === 'Backend connected'" aria-hidden="true"></span>{{ backendStatus() }}</p>
+      <div class="header-actions">
+        <nav aria-label="Main navigation"><a class="header-link" href="#about">About</a></nav>
+        <p class="connection" role="status"><span class="status-dot" [class.connected]="backendStatus() === 'Backend connected'" aria-hidden="true"></span>{{ backendStatus() }}</p>
+      </div>
     </div>
   </header>
 
@@ -80,7 +83,7 @@
       </aside>
     </section>
 
-    <form (ngSubmit)="analyze()" [attr.aria-busy]="isLoading() || isExtracting() || !!exporting()" aria-label="Application details">
+    <form id="application-details" tabindex="-1" (ngSubmit)="analyze()" [attr.aria-busy]="isLoading() || isExtracting() || !!exporting()" aria-label="Application details">
       <fieldset class="source-fields" [disabled]="isLoading() || isExtracting() || !!exporting()">
         <legend class="sr-only">Application details</legend>
         <section class="section-card" aria-labelledby="target-heading">
@@ -172,6 +175,7 @@
         <details class="demo-details"><summary>What this demo did</summary><ul>@for (action of result.demoActions; track $index) { <li>{{ action }}</li> }</ul></details>
       </section>
     }
+    <app-about />
     <footer class="workspace-footer">ApplyCraft <span aria-hidden="true">·</span> Built around your experience.</footer>
   </main>
 </div>
