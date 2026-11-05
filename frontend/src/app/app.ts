@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { FormsModule, NgModel } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Auth } from './auth';
+import { About } from './about';
 import { ApplicationInput, ApplicationPage, ApplicationSummary, SavedApplication } from './applications';
 
 interface DemoPreview {
@@ -18,7 +19,7 @@ type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe, About],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

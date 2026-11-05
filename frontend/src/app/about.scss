@@ -1,0 +1,31 @@
+:host { display: block; margin-top: 56px; }
+* { box-sizing: border-box; }
+p, h2, h3 { margin: 0; }
+.about { position: relative; padding: 36px 32px; border: 1px solid #d4e0f5; border-radius: 14px; background: linear-gradient(135deg, #edf3ff, #fff 65%); scroll-margin-block: 24px; }
+.about::before { content: ''; position: absolute; top: 0; left: 32px; width: 56px; height: 3px; border-radius: 0 0 3px 3px; background: #2855c5; }
+.about-intro { max-width: 700px; }
+.eyebrow { color: #3458a3; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+h2 { max-width: 600px; font-size: clamp(26px, 3.4vw, 36px); line-height: 1.2; letter-spacing: -1px; text-wrap: balance; }
+.about-copy { margin-top: 16px; color: #59677b; line-height: 1.75; }
+.workflow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; padding: 0; margin: 28px 0; list-style: none; }
+.workflow-card { min-width: 0; padding: 22px; border: 1px solid #e0e5ed; border-radius: 12px; background: #fff; box-shadow: 0 3px 10px #192a4204; }
+.step-number { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 18px; border-radius: 9px; background: #eff3fb; color: #3158aa; font-size: 12px; font-weight: 700; }
+h3 { font-size: 15px; line-height: 1.5; letter-spacing: -.2px; }
+.workflow-card p, .about-principles p { margin-top: 8px; color: #59677b; font-size: 13px; line-height: 1.7; }
+.about-principles { display: grid; grid-template-columns: 1.2fr 1fr; align-items: start; gap: 28px; }
+.demo-note { padding: 18px 20px; border: 1px solid #d4e0f5; border-radius: 10px; background: #edf3ff; }
+.demo-note h3 { color: #304f8b; font-size: 13px; }
+.demo-note p { color: #374d75; }
+.return-link { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; margin-top: 20px; color: #2855b1; font-size: 13px; font-weight: 650; text-underline-offset: 4px; }
+.return-link:hover { color: #2046a6; }
+:where(a, section):focus-visible { outline: 3px solid #315dc9; outline-offset: 4px; }
+@media (max-width: 760px) {
+  :host { margin-top: 40px; }
+  .about { padding: 28px 24px; }
+  .workflow, .about-principles { grid-template-columns: 1fr; }
+  .workflow { gap: 12px; margin-block: 24px; }
+  .workflow-card { padding: 20px; }
+  .step-number { margin-bottom: 12px; }
+  .about-principles { gap: 20px; }
+}
+@media (max-width: 440px) { .about { padding: 28px 20px; } }
