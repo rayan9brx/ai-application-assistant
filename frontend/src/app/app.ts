@@ -79,7 +79,6 @@ export class App {
   private seenLogout = 0;
   private listRequest = 0;
 
-  // Check the existing health endpoint when the page opens.
   constructor() {
     this.syncNavigation();
     effect(() => {
@@ -106,7 +105,6 @@ export class App {
       : window.location.hash === '#saved-applications' ? 'applications' : 'workspace');
   }
 
-  // Capture exactly the current source fields and latest document editor values.
   private applicationInput(): ApplicationInput {
     return { jobTitle: this.jobTitle, company: this.company, language: this.language,
       sourceCv: this.cvText, jobDescription: this.jobText, includeLetter: this.includeLetter,
@@ -121,7 +119,6 @@ export class App {
       : !!(this.cvText || this.jobText || this.jobTitle || this.company || this.motivation || this.preview());
   }
 
-  // Warn when leaving a page containing work that has not reached the server.
   @HostListener('window:beforeunload', ['$event'])
   warnBeforeLeaving(event: BeforeUnloadEvent): void {
     if (this.hasUnsavedChanges()) { event.preventDefault(); event.returnValue = ''; }
@@ -223,7 +220,6 @@ export class App {
     });
   }
 
-  // Start a separate application only after the user accepts losing unsaved work.
   newApplication(): void {
     if (this.busy()) return;
     if (this.hasUnsavedChanges() && !window.confirm('Discard unsaved work and start a new application?')) return;
@@ -260,7 +256,6 @@ export class App {
     this.resetFeedback();
   }
 
-  // Share source validation between submit availability and error feedback.
   validationMessage(): string {
     if (![this.cvText, this.jobText, this.jobTitle, this.company].every(value => value.trim())) {
       return 'Enter a CV, job description, job title, and company name.';
@@ -277,7 +272,6 @@ export class App {
     return this.storageBusy() ? 'Please wait…' : this.activeApplication() ? 'Update application' : 'Save application';
   }
 
-  // Enable submission only when every source field is valid.
   canContinue(): boolean {
     return !this.storageBusy() && !this.isExtracting() && !this.exporting() && !this.validationMessage();
   }
@@ -344,13 +338,11 @@ export class App {
     });
   }
 
-  // Compare editor contents with the last received demo response.
   hasPreviewEdits(): boolean {
     const current = this.preview();
     return !!current && !!this.original && (current.cvDraft !== this.original.cvDraft || current.motivationLetterDraft !== this.original.motivationLetterDraft);
   }
 
-  // Send every form field once and display the returned editable demo.
   analyze(): void {
     if (this.busy()) return;
     this.analysisError.set(this.validationMessage());
@@ -381,7 +373,6 @@ export class App {
     });
   }
 
-  // Update a document as plain text and clear outdated copy feedback.
   editDraft(field: DraftField, value: string): void {
     this.preview.update(current => current ? { ...current, [field]: value } : null);
     this.setFeedback(this.copyStatus, field, '');
@@ -389,12 +380,10 @@ export class App {
     this.setFeedback(this.exportStatus, field, '');
   }
 
-  // Only nonempty editor content can be exported, one document at a time.
   canExport(field: DraftField): boolean {
     return !!this.preview()?.[field]?.trim() && !this.busy();
   }
 
-  // Download a snapshot of the latest editor text without modifying any draft.
   downloadPdf(field: DraftField): void {
     if (!this.canExport(field)) return;
     const text = this.preview()![field]!;
@@ -465,7 +454,6 @@ export class App {
     target.update(current => ({ ...current, [field]: message }));
   }
 
-  // Reflect connection failures and recovery from subsequent API requests.
   private updateBackendStatus(error: HttpErrorResponse): void {
     if (error.status === 401) this.auth.requireLogin();
     if (error.status === 403) {
@@ -475,7 +463,6 @@ export class App {
     this.backendStatus.set(error.status === 0 ? 'Cannot connect to backend' : 'Backend connected');
   }
 
-  // Report clipboard success or provide a manual-copy fallback.
   async copyDraft(field: DraftField): Promise<void> {
     const value = this.preview()?.[field];
     if (value === undefined || this.isLoading()) return;

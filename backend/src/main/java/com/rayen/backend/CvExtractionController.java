@@ -94,11 +94,8 @@ public class CvExtractionController {
             text.append(buffer, offset, length);
         }
 
-        // This in-memory writer has no external buffer to flush.
         @Override public void flush() {}
-        // PDFBox and the request own all resources; no file is created.
         @Override public void close() {}
-        // Return only the extracted text, never parser diagnostics.
         @Override public String toString() { return text.toString(); }
     }
 }

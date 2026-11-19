@@ -36,7 +36,6 @@ public class ApplicationController {
         boolean demo, long version, OffsetDateTime updatedAt) {}
     public record Page(List<Summary> items, int page, int size, long total) {}
 
-    // Use the shared datasource so Flyway owns the storage schema.
     public ApplicationController(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     // Resolve ownership exclusively from the authenticated session's email.

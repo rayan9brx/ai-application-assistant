@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 public class PdfExportController {
     private final PdfExportService pdfExport;
 
-    // Inject the shared in-memory PDF renderer.
     public PdfExportController(PdfExportService pdfExport) {
         this.pdfExport = pdfExport;
     }

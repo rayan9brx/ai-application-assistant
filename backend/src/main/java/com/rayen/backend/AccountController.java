@@ -19,7 +19,6 @@ public class AccountController {
     public record Registration(@NotBlank @Email @Size(max = 254) String email,
                                @NotBlank @Size(min = 12, max = 128) String password) {}
 
-    // Inject persistence and the shared versioned password encoder.
     public AccountController(AccountRepository accounts, PasswordEncoder encoder) {
         this.accounts = accounts;
         this.encoder = encoder;

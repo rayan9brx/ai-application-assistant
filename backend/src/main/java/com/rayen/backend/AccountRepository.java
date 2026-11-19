@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 public class AccountRepository implements UserDetailsService {
     private final JdbcTemplate jdbc;
 
-    // Keep account persistence separate from HTTP and authentication handling.
     public AccountRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     // Use one email representation for registration and authentication.
