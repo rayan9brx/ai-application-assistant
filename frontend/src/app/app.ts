@@ -18,6 +18,8 @@ interface DemoPreview {
 type DraftField = 'cvDraft' | 'motivationLetterDraft';
 type DraftFeedback = Record<DraftField, string>;
 const noFeedback = (): DraftFeedback => ({ cvDraft: '', motivationLetterDraft: '' });
+const byStatus = (error: HttpErrorResponse, messages: Record<number, string>, fallback: string): string =>
+  messages[error.status] ?? fallback;
 type Section = 'workspace' | 'applications' | 'about';
 type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 'includeLetter' | 'motivation';
 
@@ -237,11 +239,12 @@ export class App {
   private storageFailure(error: HttpErrorResponse, finishOperation = true): void {
     if (finishOperation) this.storageBusy.set(false);
     this.storageMessage.set('');
-    this.storageError.set(error.status === 409 ? 'This application changed elsewhere. Your edits are preserved. Copy them before reopening the latest saved version.'
-      : error.status === 401 ? 'Session expired. Sign in to retry; your current work is preserved.'
-      : error.status === 404 ? 'This application is no longer available. Your current work is preserved.'
-      : error.status === 400 ? 'Check required fields and character limits. Your current work is preserved.'
-      : 'Application request failed. Your current work is preserved. Please retry.');
+    this.storageError.set(byStatus(error, {
+      409: 'This application changed elsewhere. Your edits are preserved. Copy them before reopening the latest saved version.',
+      401: 'Session expired. Sign in to retry; your current work is preserved.',
+      404: 'This application is no longer available. Your current work is preserved.',
+      400: 'Check required fields and character limits. Your current work is preserved.',
+    }, 'Application request failed. Your current work is preserved. Please retry.'));
     this.updateBackendStatus(error);
   }
 
@@ -331,9 +334,12 @@ export class App {
       error: error => {
         this.updateBackendStatus(error);
         this.isExtracting.set(false);
-        this.uploadError.set(error.status === 401 ? 'Sign in above, then select your PDF again. Your text is unchanged.' : error.status === 403 ? 'Security check failed. Sign in again, then select your PDF.' : error.status === 413
-          ? 'Choose a PDF of 5 MB or smaller.'
-          : (error.status !== 0 && typeof error.error?.message === 'string' ? error.error.message : 'PDF extraction failed. Check the backend connection, try another PDF, or paste your CV text.'));
+        this.uploadError.set(byStatus(error, {
+          401: 'Sign in above, then select your PDF again. Your text is unchanged.',
+          403: 'Security check failed. Sign in again, then select your PDF.',
+          413: 'Choose a PDF of 5 MB or smaller.',
+        }, error.status !== 0 && typeof error.error?.message === 'string' ? error.error.message
+          : 'PDF extraction failed. Check the backend connection, try another PDF, or paste your CV text.'));
       },
     });
   }
@@ -365,7 +371,11 @@ export class App {
       },
       error: error => {
         this.updateBackendStatus(error);
-        this.analysisError.set(error.status === 401 ? 'Sign in above, then retry. Your application text and previews are unchanged.' : error.status === 403 ? 'Security check failed. Sign in again above, then retry.' : error.status === 400 ? 'The backend rejected the input. Check required fields, lengths, and language.' : 'Request failed. Check that the backend is running and try again.');
+        this.analysisError.set(byStatus(error, {
+          401: 'Sign in above, then retry. Your application text and previews are unchanged.',
+          403: 'Security check failed. Sign in again above, then retry.',
+          400: 'The backend rejected the input. Check required fields, lengths, and language.',
+        }, 'Request failed. Check that the backend is running and try again.'));
         this.isLoading.set(false);
       },
     });
@@ -432,7 +442,10 @@ export class App {
   // Read JSON errors delivered as blobs and always unlock the export controls.
   private async handleExportError(field: DraftField, error: HttpErrorResponse): Promise<void> {
     this.updateBackendStatus(error);
-    let message = error.status === 401 ? 'Sign in above, then retry the download. Your draft is unchanged.' : error.status === 403 ? 'Security check failed. Sign in again above, then retry the download.' : 'PDF export failed. Check the backend connection and try again. Your draft is unchanged.';
+    let message = byStatus(error, {
+      401: 'Sign in above, then retry the download. Your draft is unchanged.',
+      403: 'Security check failed. Sign in again above, then retry the download.',
+    }, 'PDF export failed. Check the backend connection and try again. Your draft is unchanged.');
     try {
       const payload = error.error instanceof Blob ? JSON.parse(await error.error.text()) : error.error;
       if (![0, 401, 403].includes(error.status) && typeof payload?.message === 'string') message = payload.message;
