@@ -18,6 +18,7 @@ interface DemoPreview {
 type DraftField = 'cvDraft' | 'motivationLetterDraft';
 type DraftFeedback = Record<DraftField, string>;
 const noFeedback = (): DraftFeedback => ({ cvDraft: '', motivationLetterDraft: '' });
+type Section = 'workspace' | 'applications' | 'about';
 type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 'includeLetter' | 'motivation';
 
 @Component({
@@ -31,7 +32,21 @@ export class App {
   private readonly http = inject(HttpClient);
   readonly auth = inject(Auth);
   readonly backendStatus = signal('Checking backend...');
-  readonly activeSection = signal<'workspace' | 'applications' | 'about'>('workspace');
+  readonly activeSection = signal<Section>('workspace');
+  readonly navLinks: { href: string; section: Section; label: string }[] = [
+    { href: '#application-details', section: 'workspace', label: 'Workspace' },
+    { href: '#saved-applications', section: 'applications', label: 'My applications' },
+    { href: '#about', section: 'about', label: 'About' },
+  ];
+  readonly documents = [
+    { field: 'cvDraft', id: 'cv', kind: 'Document 01', title: 'Your CV', toolbar: 'CV editor toolbar',
+      copy: 'Copy CV', download: 'Download CV PDF', label: 'Editable CV', localized: false,
+      help: 'Edit the wording below. The demo does not tailor or translate your CV.' },
+    { field: 'motivationLetterDraft', id: 'letter', kind: 'Document 02', title: 'Motivation letter',
+      toolbar: 'Motivation letter editor toolbar', copy: 'Copy letter', download: 'Download letter PDF',
+      label: 'Editable demo template', localized: true,
+      help: 'Replace placeholders and review all text before use.' },
+  ] as const;
   readonly isLoading = signal(false);
   readonly isExtracting = signal(false);
   readonly uploadError = signal('');
@@ -254,6 +269,10 @@ export class App {
     if (this.motivation.length > 3000) return 'Keep motivation within 3,000 characters.';
     if (this.includeLetter && !this.motivation.trim()) return 'Enter your motivation to include a letter.';
     return '';
+  }
+
+  saveLabel(): string {
+    return this.storageBusy() ? 'Please wait…' : this.activeApplication() ? 'Update application' : 'Save application';
   }
 
   // Enable submission only when every source field is valid.

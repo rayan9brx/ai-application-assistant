@@ -11,27 +11,15 @@
       >
       <div class="header-actions">
         <nav aria-label="Main navigation">
-          <a
-            class="header-link"
-            href="#application-details"
-            [class.active]="activeSection() === 'workspace'"
-            [attr.aria-current]="activeSection() === 'workspace' ? 'location' : null"
-            >Workspace</a
-          >
-          <a
-            class="header-link"
-            href="#saved-applications"
-            [class.active]="activeSection() === 'applications'"
-            [attr.aria-current]="activeSection() === 'applications' ? 'location' : null"
-            >My applications</a
-          >
-          <a
-            class="header-link"
-            href="#about"
-            [class.active]="activeSection() === 'about'"
-            [attr.aria-current]="activeSection() === 'about' ? 'location' : null"
-            >About</a
-          >
+          @for (link of navLinks; track link.section) {
+            <a
+              class="header-link"
+              [href]="link.href"
+              [class.active]="activeSection() === link.section"
+              [attr.aria-current]="activeSection() === link.section ? 'location' : null"
+              >{{ link.label }}</a
+            >
+          }
         </nav>
       </div>
     </div>
@@ -194,13 +182,7 @@
           [disabled]="busy()"
           (click)="saveApplication()"
         >
-          {{
-            storageBusy()
-              ? 'Please wait…'
-              : activeApplication()
-                ? 'Update application'
-                : 'Save application'
-          }}
+          {{ saveLabel() }}
         </button>
         <button
           class="copy-button"
@@ -463,13 +445,7 @@
               [disabled]="busy()"
               (click)="saveApplication()"
             >
-              {{
-                storageBusy()
-                  ? 'Please wait…'
-                  : activeApplication()
-                    ? 'Update application'
-                    : 'Save application'
-              }}
+              {{ saveLabel() }}
             </button>
           </div>
         </div>
@@ -496,146 +472,71 @@
           class="document-grid"
           [class.two-documents]="result.motivationLetterDraft !== undefined"
         >
-          <article class="document-panel" aria-labelledby="cv-panel-title">
-            <div class="document-header" role="group" aria-label="CV editor toolbar">
-              <div>
-                <p class="document-kind">Document 01</p>
-                <h3 id="cv-panel-title">Your CV</h3>
-              </div>
-              <div class="account-actions">
-                <button
-                  class="copy-button"
-                  type="button"
-                  [disabled]="isLoading()"
-                  (click)="copyDraft('cvDraft')"
-                >
-                  Copy CV</button
-                ><button
-                  class="primary-button"
-                  type="button"
-                  [disabled]="!canExport('cvDraft')"
-                  (click)="downloadPdf('cvDraft')"
-                  aria-describedby="cvDraft-export-help"
-                >
-                  {{ exporting() === 'cvDraft' ? 'Creating PDF…' : 'Download CV PDF' }}
-                </button>
-              </div>
-            </div>
-            <div class="document-body">
-              <label for="cv-draft">Editable CV</label>
-              <p class="helper" id="cv-draft-help">
-                Edit the wording below. The demo does not tailor or translate your CV.
-              </p>
-              <textarea
-                id="cv-draft"
-                rows="20"
-                aria-describedby="cv-draft-help"
-                [disabled]="isLoading() || isExtracting() || !!exporting()"
-                [ngModel]="result.cvDraft"
-                (ngModelChange)="editDraft('cvDraft', $event)"
-              ></textarea>
-              <p
-                class="copy-status"
-                [class.feedback-error]="copyStatus().cvDraft.startsWith('Copy failed')"
-                role="status"
-              >
-                {{ copyStatus().cvDraft }}
-              </p>
-              <div class="export-actions">
-                <p class="helper" id="cvDraft-export-help">
-                  Includes “DEMO — review before use”. Clean text layout; original uploaded
-                  formatting is not preserved.
-                </p>
-              </div>
-              <p
-                class="copy-status"
-                [class.feedback-progress]="exporting() === 'cvDraft'"
-                role="status"
-              >
-                {{ exportStatus().cvDraft }}
-              </p>
-              @if (exportError().cvDraft) {
-                <p class="error-message" role="alert">{{ exportError().cvDraft }}</p>
-              }
-            </div>
-          </article>
-          @if (result.motivationLetterDraft !== undefined) {
-            <article class="document-panel" aria-labelledby="letter-panel-title">
-              <div
-                class="document-header"
-                role="group"
-                aria-label="Motivation letter editor toolbar"
-              >
-                <div>
-                  <p class="document-kind">Document 02</p>
-                  <h3 id="letter-panel-title">Motivation letter</h3>
+          @for (doc of documents; track doc.field) {
+            @if (result[doc.field] !== undefined) {
+              <article class="document-panel" [attr.aria-labelledby]="doc.id + '-panel-title'">
+                <div class="document-header" role="group" [attr.aria-label]="doc.toolbar">
+                  <div>
+                    <p class="document-kind">{{ doc.kind }}</p>
+                    <h3 [id]="doc.id + '-panel-title'">{{ doc.title }}</h3>
+                  </div>
+                  <div class="account-actions">
+                    <button
+                      class="copy-button"
+                      type="button"
+                      [disabled]="isLoading()"
+                      (click)="copyDraft(doc.field)"
+                    >
+                      {{ doc.copy }}</button
+                    ><button
+                      class="primary-button"
+                      type="button"
+                      [disabled]="!canExport(doc.field)"
+                      (click)="downloadPdf(doc.field)"
+                      [attr.aria-describedby]="doc.field + '-export-help'"
+                    >
+                      {{ exporting() === doc.field ? 'Creating PDF…' : doc.download }}
+                    </button>
+                  </div>
                 </div>
-                <div class="account-actions">
-                  <button
-                    class="copy-button"
-                    type="button"
-                    [disabled]="isLoading()"
-                    (click)="copyDraft('motivationLetterDraft')"
+                <div class="document-body">
+                  <label [for]="doc.id + '-draft'">{{ doc.label }}</label>
+                  <p class="helper" [id]="doc.id + '-draft-help'">{{ doc.help }}</p>
+                  <textarea
+                    [id]="doc.id + '-draft'"
+                    rows="20"
+                    [attr.lang]="doc.localized ? (language === 'German' ? 'de' : 'en') : null"
+                    [attr.aria-describedby]="doc.id + '-draft-help'"
+                    [disabled]="isLoading() || isExtracting() || !!exporting()"
+                    [ngModel]="result[doc.field]"
+                    (ngModelChange)="editDraft(doc.field, $event)"
+                  ></textarea>
+                  <p
+                    class="copy-status"
+                    [class.feedback-error]="copyStatus()[doc.field].startsWith('Copy failed')"
+                    role="status"
                   >
-                    Copy letter</button
-                  ><button
-                    class="primary-button"
-                    type="button"
-                    [disabled]="!canExport('motivationLetterDraft')"
-                    (click)="downloadPdf('motivationLetterDraft')"
-                    aria-describedby="motivationLetterDraft-export-help"
+                    {{ copyStatus()[doc.field] }}
+                  </p>
+                  <div class="export-actions">
+                    <p class="helper" [id]="doc.field + '-export-help'">
+                      Includes “DEMO — review before use”. Clean text layout; original uploaded
+                      formatting is not preserved.
+                    </p>
+                  </div>
+                  <p
+                    class="copy-status"
+                    [class.feedback-progress]="exporting() === doc.field"
+                    role="status"
                   >
-                    {{
-                      exporting() === 'motivationLetterDraft'
-                        ? 'Creating PDF…'
-                        : 'Download letter PDF'
-                    }}
-                  </button>
-                </div>
-              </div>
-              <div class="document-body">
-                <label for="letter-draft">Editable demo template</label>
-                <p class="helper" id="letter-draft-help">
-                  Replace placeholders and review all text before use.
-                </p>
-                <textarea
-                  id="letter-draft"
-                  rows="20"
-                  [attr.lang]="language === 'German' ? 'de' : 'en'"
-                  aria-describedby="letter-draft-help"
-                  [disabled]="isLoading() || isExtracting() || !!exporting()"
-                  [ngModel]="result.motivationLetterDraft"
-                  (ngModelChange)="editDraft('motivationLetterDraft', $event)"
-                ></textarea>
-                <p
-                  class="copy-status"
-                  [class.feedback-error]="
-                    copyStatus().motivationLetterDraft.startsWith('Copy failed')
-                  "
-                  role="status"
-                >
-                  {{ copyStatus().motivationLetterDraft }}
-                </p>
-                <div class="export-actions">
-                  <p class="helper" id="motivationLetterDraft-export-help">
-                    Includes “DEMO — review before use”. Clean text layout; original uploaded
-                    formatting is not preserved.
+                    {{ exportStatus()[doc.field] }}
                   </p>
+                  @if (exportError()[doc.field]) {
+                    <p class="error-message" role="alert">{{ exportError()[doc.field] }}</p>
+                  }
                 </div>
-                <p
-                  class="copy-status"
-                  [class.feedback-progress]="exporting() === 'motivationLetterDraft'"
-                  role="status"
-                >
-                  {{ exportStatus().motivationLetterDraft }}
-                </p>
-                @if (exportError().motivationLetterDraft) {
-                  <p class="error-message" role="alert">
-                    {{ exportError().motivationLetterDraft }}
-                  </p>
-                }
-              </div>
-            </article>
+              </article>
+            }
           }
         </div>
         <details class="demo-details">
