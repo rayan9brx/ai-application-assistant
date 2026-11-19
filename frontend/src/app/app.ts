@@ -1,4 +1,4 @@
-import { Component, HostListener, effect, inject, signal, untracked } from '@angular/core';
+import { Component, HostListener, WritableSignal, computed, effect, inject, signal, untracked } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule, NgModel } from '@angular/forms';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -16,6 +16,8 @@ interface DemoPreview {
   demoActions: string[];
 }
 type DraftField = 'cvDraft' | 'motivationLetterDraft';
+type DraftFeedback = Record<DraftField, string>;
+const noFeedback = (): DraftFeedback => ({ cvDraft: '', motivationLetterDraft: '' });
 type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 'includeLetter' | 'motivation';
 
 @Component({
@@ -37,9 +39,9 @@ export class App {
   readonly analysisError = signal('');
   readonly preview = signal<DemoPreview | null>(null);
   readonly exporting = signal<DraftField | null>(null);
-  readonly exportError = signal({ cvDraft: '', motivationLetterDraft: '' });
-  readonly exportStatus = signal({ cvDraft: '', motivationLetterDraft: '' });
-  readonly copyStatus = signal({ cvDraft: '', motivationLetterDraft: '' });
+  readonly exportError = signal(noFeedback());
+  readonly exportStatus = signal(noFeedback());
+  readonly copyStatus = signal(noFeedback());
   cvText = '';
   jobText = '';
   jobTitle = '';
@@ -55,6 +57,7 @@ export class App {
   readonly storageMessage = signal('');
   readonly storageError = signal('');
   readonly activeApplication = signal<SavedApplication | null>(null);
+  readonly busy = computed(() => this.storageBusy() || this.isLoading() || this.isExtracting() || !!this.exporting());
   private savedSnapshot = '';
   private workOwner: string | null = null;
   private seenLogout = 0;
@@ -110,7 +113,7 @@ export class App {
 
   // Save a snapshot without replacing ongoing edits when the response arrives.
   saveApplication(): void {
-    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (this.busy()) return;
     if (!this.auth.user()) { this.auth.requireLogin(); return; }
     this.storageError.set(this.validationMessage());
     if (this.storageError()) return;
@@ -159,7 +162,7 @@ export class App {
 
   // Confirm replacement after fetching, preserving edits if loading fails or is cancelled.
   openApplication(item: ApplicationSummary): void {
-    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting() || !this.auth.user()) return;
+    if (this.busy() || !this.auth.user()) return;
     const email = this.auth.user()!.email;
     const logout = this.auth.logoutCount();
     this.storageBusy.set(true);
@@ -206,7 +209,7 @@ export class App {
 
   // Start a separate application only after the user accepts losing unsaved work.
   newApplication(): void {
-    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (this.busy()) return;
     if (this.hasUnsavedChanges() && !window.confirm('Discard unsaved work and start a new application?')) return;
     this.clearPrivateWork();
   }
@@ -237,9 +240,7 @@ export class App {
     this.applicationList.set(null); this.applicationsOpen.set(false); this.listLoading.set(false); this.listRequest++;
     this.storageBusy.set(false); this.storageMessage.set(''); this.storageError.set('');
     this.uploadError.set(''); this.uploadMessage.set(''); this.analysisError.set('');
-    this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
-    this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
-    this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.resetFeedback();
   }
 
   // Share source validation between submit availability and error feedback.
@@ -275,16 +276,14 @@ export class App {
     this.preview.set(null);
     this.original = null;
     this.analysisError.set('');
-    this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
-    this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
-    this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+    this.resetFeedback();
   }
 
   // Extract a PDF without changing the current CV or drafts until a valid response arrives.
   uploadCv(input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
-    if (!file || this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (!file || this.busy()) return;
     this.uploadError.set('');
     this.uploadMessage.set('');
     if (file.size > 5 * 1024 * 1024) {
@@ -329,7 +328,7 @@ export class App {
 
   // Send every form field once and display the returned editable demo.
   analyze(): void {
-    if (this.storageBusy() || this.isLoading() || this.isExtracting() || this.exporting()) return;
+    if (this.busy()) return;
     this.analysisError.set(this.validationMessage());
     if (this.analysisError()) return;
     if (this.hasPreviewEdits() && !window.confirm('Creating another preview will discard your unsaved edits. Continue?')) return;
@@ -341,9 +340,7 @@ export class App {
     }).subscribe({
       next: response => {
         this.backendStatus.set('Backend connected');
-        this.copyStatus.set({ cvDraft: '', motivationLetterDraft: '' });
-        this.exportError.set({ cvDraft: '', motivationLetterDraft: '' });
-        this.exportStatus.set({ cvDraft: '', motivationLetterDraft: '' });
+        this.resetFeedback();
         this.original = { ...response };
         this.preview.set({ ...response });
         this.isLoading.set(false);
@@ -357,30 +354,30 @@ export class App {
   }
 
   // Update a document as plain text and clear outdated copy feedback.
-  editDraft(field: 'cvDraft' | 'motivationLetterDraft', value: string): void {
+  editDraft(field: DraftField, value: string): void {
     this.preview.update(current => current ? { ...current, [field]: value } : null);
-    this.copyStatus.update(current => ({ ...current, [field]: '' }));
-    this.exportError.update(current => ({ ...current, [field]: '' }));
-    this.exportStatus.update(current => ({ ...current, [field]: '' }));
+    this.setFeedback(this.copyStatus, field, '');
+    this.setFeedback(this.exportError, field, '');
+    this.setFeedback(this.exportStatus, field, '');
   }
 
   // Only nonempty editor content can be exported, one document at a time.
   canExport(field: DraftField): boolean {
-    return !!this.preview()?.[field]?.trim() && !this.storageBusy() && !this.exporting() && !this.isLoading() && !this.isExtracting();
+    return !!this.preview()?.[field]?.trim() && !this.busy();
   }
 
   // Download a snapshot of the latest editor text without modifying any draft.
   downloadPdf(field: DraftField): void {
     if (!this.canExport(field)) return;
     const text = this.preview()![field]!;
-    this.exportError.update(current => ({ ...current, [field]: '' }));
-    this.exportStatus.update(current => ({ ...current, [field]: '' }));
+    this.setFeedback(this.exportError, field, '');
+    this.setFeedback(this.exportStatus, field, '');
     if (text.length > 60000) {
-      this.exportError.update(current => ({ ...current, [field]: 'Keep the document within 60,000 characters for PDF export.' }));
+      this.setFeedback(this.exportError, field, 'Keep the document within 60,000 characters for PDF export.');
       return;
     }
     this.exporting.set(field);
-    this.exportStatus.update(current => ({ ...current, [field]: 'Creating PDF…' }));
+    this.setFeedback(this.exportStatus, field, 'Creating PDF…');
     this.http.post('/api/documents/export', {
       documentType: field === 'cvDraft' ? 'cv' : 'motivationLetter', text,
     }, { responseType: 'blob' }).subscribe({
@@ -388,9 +385,9 @@ export class App {
         this.backendStatus.set('Backend connected');
         try {
           this.savePdf(blob, field === 'cvDraft' ? 'cv-demo.pdf' : 'motivation-letter-demo.pdf');
-          this.exportStatus.update(current => ({ ...current, [field]: 'PDF download started. Review before use.' }));
+          this.setFeedback(this.exportStatus, field, 'PDF download started. Review before use.');
         } catch {
-          this.exportError.update(current => ({ ...current, [field]: 'The PDF could not be downloaded. Your draft is unchanged. Please try again.' }));
+          this.setFeedback(this.exportError, field, 'The PDF could not be downloaded. Your draft is unchanged. Please try again.');
         } finally {
           this.exporting.set(null);
         }
@@ -422,9 +419,19 @@ export class App {
       const payload = error.error instanceof Blob ? JSON.parse(await error.error.text()) : error.error;
       if (![0, 401, 403].includes(error.status) && typeof payload?.message === 'string') message = payload.message;
     } catch { /* Keep the safe fallback for non-JSON error responses. */ }
-    this.exportStatus.update(current => ({ ...current, [field]: '' }));
-    this.exportError.update(current => ({ ...current, [field]: message }));
+    this.setFeedback(this.exportStatus, field, '');
+    this.setFeedback(this.exportError, field, message);
     this.exporting.set(null);
+  }
+
+  private resetFeedback(): void {
+    this.copyStatus.set(noFeedback());
+    this.exportError.set(noFeedback());
+    this.exportStatus.set(noFeedback());
+  }
+
+  private setFeedback(target: WritableSignal<DraftFeedback>, field: DraftField, message: string): void {
+    target.update(current => ({ ...current, [field]: message }));
   }
 
   // Reflect connection failures and recovery from subsequent API requests.
@@ -438,14 +445,14 @@ export class App {
   }
 
   // Report clipboard success or provide a manual-copy fallback.
-  async copyDraft(field: 'cvDraft' | 'motivationLetterDraft'): Promise<void> {
+  async copyDraft(field: DraftField): Promise<void> {
     const value = this.preview()?.[field];
     if (value === undefined || this.isLoading()) return;
     try {
       await navigator.clipboard.writeText(value);
-      if (this.preview()?.[field] === value) this.copyStatus.update(current => ({ ...current, [field]: 'Copied to clipboard.' }));
+      if (this.preview()?.[field] === value) this.setFeedback(this.copyStatus, field, 'Copied to clipboard.');
     } catch {
-      this.copyStatus.update(current => ({ ...current, [field]: 'Copy failed. Select the document text and copy it manually.' }));
+      this.setFeedback(this.copyStatus, field, 'Copy failed. Select the document text and copy it manually.');
     }
   }
 }
