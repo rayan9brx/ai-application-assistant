@@ -23,7 +23,6 @@ type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 
 
 @Component({
   selector: 'app-root',
-  standalone: true,
   imports: [FormsModule, DatePipe, About, Hero, Showcase],
   templateUrl: './app.html',
   styleUrl: './app.scss',

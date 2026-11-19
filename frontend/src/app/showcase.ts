@@ -63,7 +63,6 @@ const RING_RADIUS = 15;
 
 @Component({
   selector: 'app-showcase',
-  standalone: true,
   templateUrl: './showcase.html',
   styleUrl: './showcase.scss',
 })

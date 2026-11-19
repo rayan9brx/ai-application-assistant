@@ -9,7 +9,6 @@ export interface ApplicationInput {
   editedCv: string;
   editedLetter: string | null;
   demo: boolean;
-  version?: number;
 }
 
 export interface SavedApplication extends ApplicationInput {
