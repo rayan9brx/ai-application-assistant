@@ -1,0 +1,192 @@
+<section class="showcase" aria-labelledby="showcase-heading">
+  <p class="badge">ApplyCraft in Action</p>
+  <h2 id="showcase-heading">Create the CV that lands <span>your dream job</span></h2>
+
+  <div class="showcase-grid">
+    <div class="showcase-left">
+      <div
+        class="features"
+        [class.is-paused]="paused()"
+        (mouseenter)="setHovered(true)"
+        (mouseleave)="setHovered(false)"
+        (focusin)="onFocusIn()"
+        (focusout)="onFocusOut($event)"
+      >
+        @for (feature of features; track feature.id; let i = $index) {
+          <div class="feature" [class.active]="i === active()">
+            <h3>
+              <button
+                type="button"
+                class="feature-toggle"
+                [id]="'feature-tab-' + feature.id"
+                [attr.aria-expanded]="i === active()"
+                [attr.aria-controls]="'feature-panel-' + feature.id"
+                (click)="select(i)"
+              >
+                {{ feature.title }}
+              </button>
+            </h3>
+            <div
+              class="feature-panel"
+              role="region"
+              [id]="'feature-panel-' + feature.id"
+              [attr.aria-labelledby]="'feature-tab-' + feature.id"
+            >
+              <div class="feature-panel-inner">
+                <p class="feature-copy">
+                  <span class="lead">{{ feature.lead }}</span> {{ feature.rest }}
+                </p>
+                <a class="learn-more" [href]="feature.href"
+                  >Learn more <span class="sr-only">about {{ feature.title }}</span></a
+                >
+              </div>
+            </div>
+            @if (i === active() && !reducedMotion) {
+              @for (c of [cycle()]; track c) {
+                <span
+                  class="progress"
+                  aria-hidden="true"
+                  [style.animation-duration.ms]="intervalMs"
+                ></span>
+              }
+            }
+          </div>
+        }
+        @if (!reducedMotion) {
+          <button
+            type="button"
+            class="autoplay-toggle"
+            [attr.aria-pressed]="userPaused()"
+            (click)="togglePause()"
+          >
+            {{ userPaused() ? 'Resume autoplay' : 'Pause autoplay' }}
+          </button>
+        }
+      </div>
+
+      <!-- PLACEHOLDER testimonial: replace with real user feedback before launch. -->
+      <figure class="testimonial">
+        <div class="stars" role="img" aria-label="Placeholder rating: 5 out of 5 stars">
+          @for (s of [1, 2, 3, 4, 5]; track s) {
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path
+                d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L10 14.8l-5.2 2.8 1-5.8L1.5 7.7l5.9-.8z"
+              />
+            </svg>
+          }
+        </div>
+        <blockquote>
+          <p>
+            <span class="quote-muted">PLACEHOLDER: your first user review here.</span>&ngsp;<span class="quote-strong">Replace this text with real feedback from a real user.</span>
+          </p>
+        </blockquote>
+        <figcaption>
+          <span class="avatar" aria-hidden="true">?</span>
+          <span>
+            <span class="person-name">PLACEHOLDER name</span>
+            <span class="person-role">Role, company</span>
+          </span>
+        </figcaption>
+      </figure>
+    </div>
+
+    <figure class="showcase-visual">
+      <figcaption class="sr-only">
+        Illustrative example: a fictional CV with sample scores. Scoring is not available yet.
+      </figcaption>
+
+      <article class="cv-paper" aria-label="Fictional sample CV">
+        <header>
+          <p class="visual-caption" aria-hidden="true">Illustrative example · Fictional CV and sample scores</p>
+          <p class="cv-name">Jordan Ellis</p>
+          <p class="cv-title">Marketing Coordinator</p>
+          <p class="cv-contact">
+            jordan.ellis&#64;example.com · Berlin, Germany · linkedin.com/in/jordan-ellis-example
+          </p>
+        </header>
+
+        <h4>Summary</h4>
+        <p>
+          Marketing coordinator with four years of experience planning campaigns for B2B software
+          brands. Comfortable working across content, events and analytics.
+        </p>
+
+        <h4>Experience</h4>
+        <div class="cv-role">
+          <p class="cv-role-head"><strong>Marketing Coordinator</strong>, Brightline Software <span>2022 – Present</span></p>
+          <ul>
+            <li>Planned and launched 12 email campaigns, lifting the average open rate from 21% to 29%.</li>
+            <li><mark><span class="sr-only">Flagged line: </span>Responsible for social media.</mark></li>
+            <li>Coordinated three trade-show booths with a team of five.</li>
+          </ul>
+        </div>
+        <div class="cv-role">
+          <p class="cv-role-head"><strong>Marketing Assistant</strong>, Harbor &amp; Pine Agency <span>2020 – 2022</span></p>
+          <ul>
+            <li><mark><span class="sr-only">Flagged line: </span>Helped with various marketing tasks for clients.</mark></li>
+            <li>Wrote weekly performance reports for eight client accounts.</li>
+            <li><mark><span class="sr-only">Flagged line: </span>Worked on the company website.</mark></li>
+          </ul>
+        </div>
+
+        <h4>Education</h4>
+        <p class="cv-role-head"><strong>B.A. Media &amp; Communication</strong>, Lakeside University <span>2016 – 2020</span></p>
+
+        <h4>Skills</h4>
+        <p>HubSpot · Google Analytics · Copywriting · Canva · Event planning · A/B testing</p>
+      </article>
+
+      <div class="score-card" aria-label="Sample CV score">
+        <div class="gauge">
+          <svg viewBox="0 0 200 112" aria-hidden="true">
+            <defs>
+              <linearGradient id="showcase-gauge-gradient" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#f0524f" />
+                <stop offset="0.45" stop-color="#f59e2c" />
+                <stop offset="0.65" stop-color="#f3cf3c" />
+                <stop offset="1" stop-color="#2dd4bf" />
+              </linearGradient>
+            </defs>
+            <path
+              [attr.d]="gaugePath"
+              fill="none"
+              stroke="url(#showcase-gauge-gradient)"
+              stroke-width="14"
+              stroke-linecap="round"
+            />
+            <circle class="knob" [attr.cx]="knob.x" [attr.cy]="knob.y" r="9" />
+            <text class="gauge-value" x="100" y="96" text-anchor="middle">{{ score.overall }}</text>
+          </svg>
+          <p class="gauge-label">
+            <span class="sr-only">Overall score {{ score.overall }} out of 100: </span>{{ score.verdict }}
+          </p>
+        </div>
+        <p class="score-hint">
+          Improve your score by making the suggested adjustments in each category.
+        </p>
+        <ul class="categories">
+          @for (category of score.categories; track category.label) {
+            <li>
+              <span class="ring" [attr.data-tone]="ringTone(category.score)">
+                <svg viewBox="0 0 36 36" aria-hidden="true">
+                  <circle class="ring-track" cx="18" cy="18" [attr.r]="ringRadius" />
+                  <circle
+                    class="ring-value"
+                    cx="18"
+                    cy="18"
+                    [attr.r]="ringRadius"
+                    [attr.stroke-dasharray]="ringCircumference"
+                    [attr.stroke-dashoffset]="ringOffset(category.score)"
+                  />
+                </svg>
+                <span class="ring-number">{{ category.score }}</span>
+              </span>
+              <span class="category-label">{{ category.label }}</span>
+              <span class="sr-only">: {{ category.score }} out of 100</span>
+            </li>
+          }
+        </ul>
+      </div>
+    </figure>
+  </div>
+</section>

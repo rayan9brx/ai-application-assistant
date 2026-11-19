@@ -5,6 +5,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Auth } from './auth';
 import { About } from './about';
 import { Hero } from './hero';
+import { Showcase } from './showcase';
 import { ApplicationInput, ApplicationPage, ApplicationSummary, SavedApplication } from './applications';
 
 interface DemoPreview {
@@ -20,7 +21,7 @@ type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [FormsModule, DatePipe, About, Hero],
+  imports: [FormsModule, DatePipe, About, Hero, Showcase],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
