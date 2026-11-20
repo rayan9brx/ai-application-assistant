@@ -3,10 +3,11 @@ import { RouterOutlet } from '@angular/router';
 import { CvLibrary } from './cv-library';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
+import { SiteFooter } from './site-footer';
 
 @Component({
   selector: 'app-root',
-  imports: [Navbar, RouterOutlet],
+  imports: [Navbar, RouterOutlet, SiteFooter],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

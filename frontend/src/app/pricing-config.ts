@@ -21,9 +21,14 @@ export interface Plan {
   cta: { label: string; href: string; style: 'primary' | 'secondary' };
 }
 
-/** Where plan buttons lead until accounts exist again. */
-// TODO(database): paid plans need accounts, a database and Stripe Checkout before they can be sold.
-const SIGNUP_HREF = '/check';
+/** The Free plan needs no account: it starts the CV Checker right away. */
+const FREE_HREF = '/check';
+/**
+ * Paid plans lead to sign-up for now; nothing is charged yet.
+ * TODO(stripe): send Pro and Lifetime to Stripe Checkout (after sign-up) and set profiles.plan
+ * from the Stripe webhook on the backend.
+ */
+const PAID_HREF = '/signup';
 
 export const PLANS: readonly Plan[] = [
   {
@@ -38,7 +43,7 @@ export const PLANS: readonly Plan[] = [
       'Basic templates',
       'PDF download',
     ],
-    cta: { label: 'Get started', href: SIGNUP_HREF, style: 'secondary' },
+    cta: { label: 'Get started', href: FREE_HREF, style: 'secondary' },
   },
   {
     id: 'pro',
@@ -55,7 +60,7 @@ export const PLANS: readonly Plan[] = [
       'PDF & DOCX export',
     ],
     highlight: 'Most popular',
-    cta: { label: 'Start Pro', href: SIGNUP_HREF, style: 'primary' },
+    cta: { label: 'Start Pro', href: PAID_HREF, style: 'primary' },
   },
   {
     id: 'lifetime',
@@ -63,7 +68,7 @@ export const PLANS: readonly Plan[] = [
     tagline: 'Pay once, use forever',
     price: { kind: 'once', amount: 49 },
     features: ['Everything in Pro', 'All future features', 'Priority support'],
-    cta: { label: 'Get lifetime access', href: SIGNUP_HREF, style: 'secondary' },
+    cta: { label: 'Get lifetime access', href: PAID_HREF, style: 'secondary' },
   },
 ];
 
@@ -102,9 +107,6 @@ export interface FaqItem {
   link?: { label: string; href: string };
 }
 
-// TODO: replace with the real support address before launch.
-const CONTACT_HREF = 'mailto:hello@example.com';
-
 export const FAQ: readonly FaqItem[] = [
   {
     question: 'Can I really use it for free?',
@@ -118,10 +120,10 @@ export const FAQ: readonly FaqItem[] = [
   },
   {
     // TODO (GDPR/DSGVO): check this against the privacy policy before launch, including how
-    // long Anthropic retains API inputs, and add a data-deletion flow once accounts store CVs.
+    // long Anthropic retains API inputs and the region of the Supabase project.
     question: 'Is my data safe?',
     answer:
-      'We are building ApplyCraft to follow the GDPR (DSGVO). When you check your CV, it is sent over an encrypted connection to our server to read the text, and to our AI provider (Anthropic) for the analysis. We don’t store it on our servers: your progress is kept only in your browser on this device, until you start over. We never sell your data.',
+      'We are building ApplyCraft to follow the GDPR (DSGVO). When you check your CV, it is sent over an encrypted connection to our server to read the text, and to our AI provider (Anthropic) for the analysis. Without an account, your CV is never stored: your progress stays in your browser on this device. If you save CVs to your account, they are stored securely in the EU and you can delete them, or your whole account, anytime in Settings. We never sell your data.',
   },
   {
     question: 'Will my CV pass ATS systems?',
@@ -135,8 +137,8 @@ export const FAQ: readonly FaqItem[] = [
   },
   {
     question: 'Do you offer student discounts?',
-    answer: 'We would like to help students. Get in touch and tell us about your situation.',
-    link: { label: 'Contact us', href: CONTACT_HREF },
+    // TODO: add a "Contact us" link here once there is a real support address.
+    answer: 'We would like to help students. Contact details for discount requests will be added here soon.',
   },
 ];
 

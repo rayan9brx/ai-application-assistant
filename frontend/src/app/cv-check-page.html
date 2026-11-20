@@ -123,8 +123,12 @@
       <h1 id="check-title">Check your CV in under a minute</h1>
       <p class="lede">
         Get an ATS score, see what’s missing and fix it with AI. We send your CV to our AI provider
-        for the analysis but never store it on our servers. Your progress is kept in this browser
-        until you start over.
+        for the analysis.
+        @if (auth.signedIn()) {
+          Saved CVs are stored securely in the EU and can be deleted anytime.
+        } @else {
+          Your CV is never stored.
+        }
       </p>
     </section>
 

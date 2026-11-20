@@ -3,7 +3,10 @@ import { MAX_FILE_BYTES } from './cv-flow';
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
-/** Click or drop a PDF/DOCX CV. Emits `selected` on every valid pick and `submitted` on its button. */
+/**
+ * Click or drop a PDF/DOCX CV. Emits `selected` on every valid pick and `submitted` on its button,
+ * or right after a valid pick when `autoSubmit` is set.
+ */
 @Component({
   selector: 'app-upload-bar',
   templateUrl: './upload-bar.html',
@@ -13,6 +16,8 @@ export class UploadBar {
   /** Hide the built-in "Score my CV" button when the page has its own. */
   readonly showSubmit = input(true);
   readonly busy = input(false);
+  /** Submit as soon as a valid file is picked or dropped (the button stays as a fallback). */
+  readonly autoSubmit = input(false);
   readonly selected = output<File | null>();
   readonly submitted = output<File>();
 
@@ -65,5 +70,6 @@ export class UploadBar {
     this.error.set(error);
     this.file.set(error ? null : file);
     this.selected.emit(this.file());
+    if (!error && this.autoSubmit()) this.submit();
   }
 }

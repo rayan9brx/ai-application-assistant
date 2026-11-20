@@ -9,7 +9,7 @@ const SWAP_DELAY_MS = 700;
   template: `
     <figure class="mock" [class.rewritten]="rewritten()">
       <figcaption class="head">
-        Experience · one bullet point <span class="hint">Sample</span>
+        Experience · one bullet point <span class="hint example-badge">Example</span>
       </figcaption>
       <div class="line before">
         <span class="tag">Before</span>

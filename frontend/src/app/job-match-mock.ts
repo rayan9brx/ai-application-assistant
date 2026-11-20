@@ -8,7 +8,7 @@ import { SAMPLE_JOBS } from './hurdles-config';
     <figure class="mock" [class.play]="play()">
       <figcaption class="head">
         <span>Jobs for you</span>
-        <span class="hint">Sample · sorted by match</span>
+        <span class="hint"><span class="example-badge">Example</span> sorted by match</span>
       </figcaption>
       <ul role="list">
         @for (job of jobs; track job.title; let i = $index) {

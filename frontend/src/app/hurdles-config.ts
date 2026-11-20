@@ -110,6 +110,6 @@ export const SAMPLE_ATS_SCORE = {
 
 export const HURDLES_CLOSING = {
   title: 'One tool. Three hurdles. Your next interview.',
-  cta: { label: 'Start for free', href: '/#get-started' },
+  cta: { label: 'Start for free', href: CHECK_HREF },
   note: 'No credit card required',
 };

@@ -1,6 +1,6 @@
 @let r = result();
 <div class="ats" [class.revealed]="revealed()">
-  <p class="ats-tab">Applicant Tracking System</p>
+  <p class="ats-tab">Applicant Tracking System <span class="example-badge">Example</span></p>
   <div class="ats-panel">
     <div class="platforms">
       <ul role="list" aria-label="Common ATS platforms">
@@ -14,7 +14,7 @@
     <div class="ats-inner">
       <figure class="cv-column">
         <figcaption class="sr-only">
-          Illustrative example: a fictional CV and a sample ATS result.
+          Example only: a fictional CV and a sample ATS result, not your result.
         </figcaption>
         @if (!r.passed) {
           <p class="filtered-badge"><span aria-hidden="true">✗</span> Filtered out by ATS</p>
@@ -25,7 +25,7 @@
           [class.failed]="!r.passed"
           aria-label="Fictional sample CV"
           [cv]="cv()"
-          caption="Illustrative example · Fictional CV"
+          caption="Fictional CV"
         ></article>
       </figure>
 
@@ -36,7 +36,7 @@
             <path d="M6 8h10M6 13h16M6 17h16M6 21h12M6 25h14" />
           </svg>
           <div>
-            <p class="submission-title">Your CV</p>
+            <p class="submission-title">Example CV</p>
             <p class="submission-state">Submitted</p>
           </div>
           <p class="status" [class.passed]="r.passed">

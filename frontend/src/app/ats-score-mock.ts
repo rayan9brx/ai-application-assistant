@@ -21,13 +21,13 @@ const COUNT_MS = 1600;
   template: `
     <figure class="mock">
       <figcaption class="sr-only">
-        Sample: the ATS score rises from {{ sample.from }}% to {{ sample.to }}% once the missing
+        Example only: the ATS score rises from {{ sample.from }}% to {{ sample.to }}% once the missing
         keywords are added.
       </figcaption>
       <div class="score-row" aria-hidden="true">
         <app-score-ring class="ring" [value]="score()" suffix="%" />
         <div>
-          <p class="title">ATS score</p>
+          <p class="title">ATS score <span class="example-badge">Example</span></p>
           <p class="status" [class.ready]="finished()">
             {{ finished() ? 'Ready to apply' : 'Keywords missing' }}
           </p>

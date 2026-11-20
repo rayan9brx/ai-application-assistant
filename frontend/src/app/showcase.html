@@ -64,38 +64,16 @@
         }
       </div>
 
-      <!-- PLACEHOLDER testimonial: replace with real user feedback before launch. -->
-      <figure class="testimonial">
-        <div class="stars" role="img" aria-label="Placeholder rating: 5 out of 5 stars">
-          @for (s of [1, 2, 3, 4, 5]; track s) {
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <path
-                d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L10 14.8l-5.2 2.8 1-5.8L1.5 7.7l5.9-.8z"
-              />
-            </svg>
-          }
-        </div>
-        <blockquote>
-          <p>
-            <span class="quote-muted">PLACEHOLDER: your first user review here.</span>&ngsp;<span
-              class="quote-strong"
-              >Replace this text with real feedback from a real user.</span
-            >
-          </p>
-        </blockquote>
-        <figcaption>
-          <span class="avatar" aria-hidden="true">?</span>
-          <span>
-            <span class="person-name">PLACEHOLDER name</span>
-            <span class="person-role">Role, company</span>
-          </span>
-        </figcaption>
-      </figure>
+      <!-- A testimonial goes here once there is real, verifiable user feedback. No placeholders. -->
+      <div class="section-cta">
+        <a class="cta" href="/check">Score my CV</a>
+        <span>Free, no account needed</span>
+      </div>
     </div>
 
     <figure class="showcase-visual">
       <figcaption class="sr-only">
-        Illustrative example: a fictional CV with sample scores.
+        Example only: a fictional CV with sample scores, not your result.
       </figcaption>
 
       <article
@@ -103,10 +81,11 @@
         class="cv-paper"
         aria-label="Fictional sample CV"
         [cv]="cv"
-        caption="Illustrative example · Fictional CV and sample scores"
+        caption="Fictional CV"
       ></article>
 
-      <div class="score-card" aria-label="Sample CV score">
+      <div class="score-card" aria-label="Example CV score">
+        <span class="example-badge" aria-hidden="true">Example</span>
         <div class="gauge">
           <app-score-gauge [score]="score.overall" />
           <p class="gauge-label">

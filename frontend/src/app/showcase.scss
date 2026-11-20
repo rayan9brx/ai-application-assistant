@@ -122,27 +122,8 @@ h2 span { display: block; }
 }
 .autoplay-toggle:hover { color: var(--sc-muted); text-decoration: underline; }
 
-/* Testimonial (placeholder content) */
-.testimonial { margin: 40px 0 0; }
-.stars { display: flex; gap: 4px; }
-.stars svg { width: 18px; height: 18px; fill: var(--sc-star); }
-blockquote { margin: 14px 0 0; font-size: 1rem; line-height: 1.6; }
-.quote-muted { color: var(--sc-muted); }
-.quote-strong { color: var(--sc-text); }
-.testimonial figcaption { display: flex; align-items: center; gap: 12px; margin-top: 20px; }
-.avatar {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--sc-raised);
-  color: var(--sc-muted);
-  font-weight: 700;
-}
-.person-name { display: block; color: var(--sc-text); font-size: .875rem; font-weight: 600; }
-.person-role { display: block; color: var(--sc-dim); font-size: .8125rem; }
+.section-cta { margin-top: 40px; color: var(--sc-muted); }
+.score-card .example-badge { position: absolute; top: 14px; right: 14px; }
 
 /* Right column: CV preview + score card */
 .showcase-visual {

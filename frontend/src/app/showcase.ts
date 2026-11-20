@@ -2,6 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CvData, CvPreview } from './cv-preview';
 import { ScoreGauge } from './score-gauge';
 import { ScoreRing } from './score-ring';
+import { CHECK_HREF } from './menu-config';
 
 export interface ShowcaseFeature {
   id: string;
@@ -27,21 +28,21 @@ export const SHOWCASE_FEATURES: readonly ShowcaseFeature[] = [
     title: 'Build',
     lead: 'Start from the experience you already have.',
     rest: 'Bring your CV and the job description into one workspace, then review and edit every line before you download.',
-    href: '#get-started',
+    href: CHECK_HREF,
   },
   {
     id: 'score',
     title: 'Score',
     lead: 'Know exactly where you stand.',
     rest: "The ApplyCraft Score breaks down your CV section by section. No guessing what's weak. You see it, then fix it.",
-    href: '#get-started',
+    href: CHECK_HREF,
   },
   {
     id: 'target',
     title: 'Target',
     lead: 'Fit every application to the role.',
     rest: 'Compare your CV with the job description and see which of your real skills to bring forward. Nothing is invented.',
-    href: '#get-started',
+    href: CHECK_HREF,
   },
 ];
 

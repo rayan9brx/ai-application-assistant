@@ -1,6 +1,6 @@
 :host { display: block; }
 .ats { position: relative; margin-top: 64px; }
-.ats-tab { position: absolute; z-index: 1; top: 0; left: 50%; padding: 7px 16px; border: 1px solid var(--sc-line); border-radius: 999px; background: var(--sc-raised); color: var(--sc-muted); font-size: .8125rem; font-weight: 600; white-space: nowrap; transform: translate(-50%, -50%); }
+.ats-tab { position: absolute; z-index: 1; top: 0; left: 50%; padding: 7px 16px; border: 1px solid var(--sc-line); border-radius: 999px; background: var(--sc-raised); color: var(--sc-muted); font-size: .8125rem; font-weight: 600; white-space: nowrap; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 8px; }
 .ats-panel { padding: 40px 32px 32px; border: 1px solid var(--sc-line); border-radius: 24px; background: var(--sc-surface); }
 
 .platforms ul { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 28px; margin: 0; padding: 0 12px; list-style: none; }

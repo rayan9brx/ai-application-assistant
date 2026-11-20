@@ -14,7 +14,7 @@ import { UploadBar } from './upload-bar';
   imports: [Hero, HurdlesSection, ProblemSection, Showcase, UploadBar],
   template: `
     <app-hero />
-    <app-upload-bar id="get-started" (submitted)="startCheck($event)" />
+    <app-upload-bar id="get-started" [autoSubmit]="true" (submitted)="startCheck($event)" />
     <app-showcase />
     <app-problem-section />
     <app-hurdles-section />
