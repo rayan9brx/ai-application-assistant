@@ -4,7 +4,9 @@
 
   <main class="workspace" id="main" tabindex="-1">
     @let p = page();
-    @if (p.kind === 'pricing') {
+    @if (p.kind === 'check') {
+      <app-cv-check-page />
+    } @else if (p.kind === 'pricing') {
       <app-pricing-page />
     } @else if (p.kind === 'tools') {
       <app-tools-page />
@@ -12,7 +14,7 @@
       <app-coming-soon [item]="p.item" />
     } @else {
       <app-hero />
-      <app-upload-bar id="get-started" />
+      <app-upload-bar id="get-started" (submitted)="startCheck($event)" />
       <app-showcase />
       <app-problem-section />
       <app-hurdles-section />

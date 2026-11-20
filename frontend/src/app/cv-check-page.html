@@ -1,0 +1,167 @@
+@switch (flow.phase()) {
+  @case ('results') {
+    <section class="results" aria-labelledby="results-title">
+      <header class="results-head">
+        <div>
+          <p class="pill-badge">CV Checker</p>
+          <h1 id="results-title">Your CV report</h1>
+        </div>
+        <div class="toolbar">
+          <button
+            class="cta cta-small cta-secondary"
+            type="button"
+            [class.attention]="flow.stale()"
+            [disabled]="!!flow.busy()"
+            (click)="flow.rescore()"
+          >
+            {{ flow.busy() === 'rescore' ? 'Re-scoring…' : 'Re-score' }}
+          </button>
+          <button
+            class="cta cta-small"
+            type="button"
+            [disabled]="!!flow.busy()"
+            (click)="flow.download()"
+          >
+            {{ flow.busy() === 'download' ? 'Creating PDF…' : 'Download PDF' }}
+          </button>
+          <button class="link-button" type="button" (click)="startOver()">Start over</button>
+        </div>
+      </header>
+      @if (flow.stale()) {
+        <p class="hint" role="status">You changed your CV. Re-score to see your new score.</p>
+      }
+      @if (flow.error()) {
+        <p class="error" role="alert">{{ flow.error() }}</p>
+      }
+
+      <div class="results-grid">
+        <aside class="report-column">
+          <app-score-report [score]="flow.score()!" [previous]="flow.previousOverall()" />
+        </aside>
+
+        <div class="work-column">
+          <section aria-labelledby="issues-title">
+            <h2 id="issues-title">
+              Fix these issues <span class="count">{{ flow.score()!.issues.length }}</span>
+            </h2>
+            <div class="issues">
+              @for (issue of flow.score()!.issues; track issue.problem) {
+                <app-issue-card [issue]="issue" />
+              } @empty {
+                <p class="muted">No issues found. Nice work.</p>
+              }
+            </div>
+          </section>
+
+          <section aria-labelledby="tailor-title">
+            <h2 id="tailor-title">Tailor to the job</h2>
+            <p class="muted">
+              We rewrite your summary and bullet points to fit the job, using only what’s already in
+              your CV.
+            </p>
+            <label class="field-label" for="results-job">Job description</label>
+            <textarea
+              id="results-job"
+              rows="5"
+              placeholder="Paste the job description here"
+              [value]="flow.jobDescription()"
+              (input)="flow.jobDescription.set(value($event))"
+            ></textarea>
+            <button
+              class="cta cta-small"
+              type="button"
+              [disabled]="!!flow.busy() || !flow.jobDescription().trim()"
+              (click)="flow.tailor()"
+            >
+              @if (flow.busy() === 'tailor') {
+                <span class="spinner" aria-hidden="true"></span> Tailoring…
+              } @else {
+                <span aria-hidden="true">✦</span> Tailor to job description
+              }
+            </button>
+            <app-tailor-panel />
+          </section>
+
+          <section aria-labelledby="editor-title">
+            <h2 id="editor-title">Your CV text</h2>
+            <p class="muted">
+              Edit anything here. Accepted fixes appear in this text, and the PDF is made from it.
+            </p>
+            <textarea
+              id="cv-editor"
+              class="editor"
+              rows="22"
+              aria-labelledby="editor-title"
+              [value]="flow.cvText()"
+              (input)="flow.setText(value($event))"
+            ></textarea>
+            <p class="count-line">{{ flow.cvText().length }} / 30,000 characters</p>
+          </section>
+        </div>
+      </div>
+    </section>
+  }
+  @case ('input') {
+    <section class="intro" aria-labelledby="check-title">
+      <p class="pill-badge">CV Checker</p>
+      <h1 id="check-title">Check your CV in under a minute</h1>
+      <p class="lede">
+        Get an ATS score, see what’s missing and fix it with AI. We send your CV to our AI provider
+        for the analysis but never store it on our servers. Your progress is kept in this browser
+        until you start over.
+      </p>
+    </section>
+
+    <div class="input-card">
+      <div class="modes" role="group" aria-label="How to add your CV">
+        <button type="button" [attr.aria-pressed]="mode() === 'file'" (click)="mode.set('file')">
+          Upload a file
+        </button>
+        <button type="button" [attr.aria-pressed]="mode() === 'paste'" (click)="mode.set('paste')">
+          Paste text
+        </button>
+      </div>
+
+      @if (mode() === 'file') {
+        <app-upload-bar class="upload" [showSubmit]="false" (selected)="file.set($event)" />
+      } @else {
+        <label class="field-label" for="cv-paste">Your CV</label>
+        <textarea
+          id="cv-paste"
+          rows="12"
+          placeholder="Paste the full text of your CV"
+          [value]="pasted()"
+          (input)="pasted.set(value($event))"
+        ></textarea>
+      }
+
+      <label class="field-label" for="job"
+        >Job description <span class="optional">(optional, for a match score)</span></label
+      >
+      <textarea
+        id="job"
+        rows="5"
+        placeholder="Paste the job you're applying for"
+        [value]="flow.jobDescription()"
+        (input)="flow.jobDescription.set(value($event))"
+      ></textarea>
+
+      @if (flow.error()) {
+        <p class="error" role="alert">{{ flow.error() }}</p>
+      }
+      <button class="cta score-button" type="button" [disabled]="!canScore()" (click)="score()">
+        Score my CV
+      </button>
+      @if (mode() === 'paste' && pasted().trim().length < 50) {
+        <p class="muted small">Paste at least a few lines of your CV.</p>
+      }
+    </div>
+  }
+  @default {
+    <section class="working" aria-live="polite" aria-busy="true">
+      <span class="spinner big" aria-hidden="true"></span>
+      <h1>{{ progress() }}</h1>
+      <p class="muted">This usually takes 20–40 seconds. Keep this tab open.</p>
+    </section>
+  }
+}

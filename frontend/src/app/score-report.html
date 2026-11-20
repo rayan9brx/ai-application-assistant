@@ -1,0 +1,60 @@
+@let s = score();
+<section class="report" aria-labelledby="report-title">
+  <h2 id="report-title" class="sr-only">Your CV score</h2>
+  <div class="overall">
+    <app-score-gauge [score]="s.overall" />
+    <p class="label" [attr.data-label]="s.label">
+      <span class="sr-only">Overall score {{ s.overall }} out of 100: </span>{{ s.label }}
+    </p>
+    @if (delta(); as d) {
+      <p class="delta" [class.down]="d < 0" role="status">
+        {{ d > 0 ? '+' : '' }}{{ d }} since your last score
+      </p>
+    } @else if (delta() === 0) {
+      <p class="delta" role="status">Same as your last score</p>
+    }
+  </div>
+
+  <ul class="categories" role="list" aria-label="Category scores">
+    @for (category of categories(); track category.label) {
+      <li>
+        <app-score-ring [value]="category.value" />
+        <span>{{ category.label }}</span>
+        <span class="sr-only">: {{ category.value }} out of 100</span>
+      </li>
+    }
+  </ul>
+
+  @if (s.jobMatch; as match) {
+    <div class="match" [attr.data-tone]="matchTone()">
+      <div class="match-head">
+        <h3>Job match</h3>
+        <p class="match-value">{{ match.matchPercent }}%</p>
+      </div>
+      <div class="bar" aria-hidden="true"><span [style.width.%]="match.matchPercent"></span></div>
+      @if (match.matchedKeywords.length) {
+        <h4>Matched keywords</h4>
+        <ul class="pills" role="list">
+          @for (keyword of match.matchedKeywords; track keyword) {
+            <li app-skill-pill tone="matched" [label]="keyword"></li>
+          }
+        </ul>
+      }
+      @if (match.missingKeywords.length) {
+        <h4>Missing keywords</h4>
+        <ul class="pills" role="list">
+          @for (keyword of match.missingKeywords; track keyword) {
+            <li app-skill-pill tone="missing" [label]="keyword"></li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <h3 class="group">What the ATS found</h3>
+  <ul class="fields" role="list">
+    @for (field of fields(); track field.label) {
+      <li app-parsed-field-row [field]="field"></li>
+    }
+  </ul>
+</section>

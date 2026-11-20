@@ -47,6 +47,13 @@ class CvExtractionControllerTests {
             .andExpect(jsonPath("$.text").value(org.hamcrest.Matchers.containsString("My CV skills")));
     }
 
+    // PDFBox output uses the platform line separator and trailing spaces; clients get plain \n lines.
+    @Test
+    void normalizesLineEndingsAndTrailingSpaces() {
+        org.junit.jupiter.api.Assertions.assertEquals("Sam Rivera\n\n- Responsible for updates\nSkills",
+            CvExtractionController.normalize("Sam Rivera \r\n\r\n- Responsible for updates   \r\nSkills\r\n"));
+    }
+
     // Reject corrupt, disguised, empty, encrypted, scanned, and oversized uploads.
     @Test
     void rejectsInvalidUploadsWithSafeHelpfulMessages() throws Exception {

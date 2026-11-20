@@ -7,7 +7,9 @@ import { MenuItemConfig } from './menu-config';
   template: `
     <span class="title"
       >{{ item().title }}
-      @if (item().badge) {
+      @if (item().soon) {
+        <span class="badge soon">Soon</span>
+      } @else if (item().badge) {
         <span class="badge">{{ item().badge }}</span>
       }
     </span>

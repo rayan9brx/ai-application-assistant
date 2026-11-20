@@ -19,17 +19,21 @@ public class CvExtractionController {
 
     public record ExtractionResponse(String text) {}
 
-    // Parse uploaded bytes in memory; neither file names nor MIME types prove PDF validity.
+    // Parse uploaded bytes in memory and never store them; neither file names nor MIME types
+    // prove validity, so the format is decided from the file's first bytes.
     @PostMapping(value = "/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ExtractionResponse extract(@RequestParam("file") MultipartFile file) {
         if (file.getSize() > MAX_BYTES) {
-            throw new ExtractionException(HttpStatus.CONTENT_TOO_LARGE, "FILE_TOO_LARGE", "PDF must be 5 MB or smaller.");
+            throw new ExtractionException(HttpStatus.CONTENT_TOO_LARGE, "FILE_TOO_LARGE", "Your file must be 5 MB or smaller.");
         }
         if (file.isEmpty()) {
             throw invalidPdf();
         }
         try {
             byte[] bytes = file.getBytes();
+            if (DocxText.looksLikeZip(bytes)) {
+                return new ExtractionResponse(usable(docxText(bytes)));
+            }
             if (bytes.length < 5 || bytes[0] != '%' || bytes[1] != 'P' || bytes[2] != 'D' || bytes[3] != 'F' || bytes[4] != '-') {
                 throw invalidPdf();
             }
@@ -39,18 +43,42 @@ public class CvExtractionController {
                 }
                 var output = new LimitedTextWriter();
                 new PDFTextStripper().writeText(document, output);
-                String text = output.toString();
-                if (text.codePoints().noneMatch(Character::isLetterOrDigit)) {
-                    throw new ExtractionException(HttpStatus.UNPROCESSABLE_CONTENT, "NO_TEXT",
-                        "No useful text was found. Scanned PDFs are not supported yet. Please paste your CV text instead.");
-                }
-                return new ExtractionResponse(text);
+                return new ExtractionResponse(usable(output.toString()));
             }
         } catch (InvalidPasswordException exception) {
             throw protectedPdf();
         } catch (IOException | IllegalArgumentException exception) {
             throw invalidPdf();
         }
+    }
+
+    // Scanned (image-only) documents have no text layer to extract.
+    private String usable(String text) {
+        if (text.codePoints().noneMatch(Character::isLetterOrDigit)) {
+            throw new ExtractionException(HttpStatus.UNPROCESSABLE_CONTENT, "NO_TEXT",
+                "No readable text was found. It looks like a scanned image, which we can't read yet. Please paste your CV text instead.");
+        }
+        return normalize(text);
+    }
+
+    // PDFBox uses the platform line separator and pads lines with spaces; return plain \n lines.
+    static String normalize(String text) {
+        return text.lines().map(String::stripTrailing).collect(java.util.stream.Collectors.joining("\n")).strip();
+    }
+
+    private String docxText(byte[] bytes) {
+        try {
+            return DocxText.extract(bytes, MAX_TEXT);
+        } catch (DocxText.TooLongException exception) {
+            throw tooLong();
+        } catch (IOException | RuntimeException exception) {
+            throw new ExtractionException(HttpStatus.BAD_REQUEST, "INVALID_DOCX",
+                "This Word file couldn't be read. Save it again as .docx or PDF, or paste your CV text.");
+        }
+    }
+
+    private static ExtractionException tooLong() {
+        return new ExtractionException(HttpStatus.UNPROCESSABLE_CONTENT, "TEXT_TOO_LONG", "Extracted CV text exceeds 30,000 characters. Paste a shorter CV instead.");
     }
 
     // Return safe messages without exposing parser errors or document contents.
@@ -62,7 +90,7 @@ public class CvExtractionController {
 
     // Give corrupt and non-PDF uploads the same actionable response.
     private ExtractionException invalidPdf() {
-        return new ExtractionException(HttpStatus.BAD_REQUEST, "INVALID_PDF", "This file is not a readable PDF. Choose another PDF or paste your CV text.");
+        return new ExtractionException(HttpStatus.BAD_REQUEST, "INVALID_PDF", "This file isn't a readable PDF or Word (.docx) document. Choose another file or paste your CV text.");
     }
 
     // Reject encryption even when a document can be opened with an empty password.
@@ -89,7 +117,7 @@ public class CvExtractionController {
         @Override
         public void write(char[] buffer, int offset, int length) {
             if (text.length() + length > MAX_TEXT) {
-                throw new ExtractionException(HttpStatus.UNPROCESSABLE_CONTENT, "TEXT_TOO_LONG", "Extracted CV text exceeds 30,000 characters. Paste a shorter CV instead.");
+                throw tooLong();
             }
             text.append(buffer, offset, length);
         }

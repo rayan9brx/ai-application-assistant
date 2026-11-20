@@ -28,7 +28,9 @@ describe('ServicesMenu', () => {
     const { root, trigger } = setup();
     const items = Array.from(root.querySelectorAll<HTMLAnchorElement>('a[app-menu-item]'));
     expect(items.map((a) => a.querySelector('.title')!.textContent!.trim())).toEqual(
-      MENU_ITEMS.map((item) => item.title + (item.badge ? ` ${item.badge}` : '')),
+      MENU_ITEMS.map(
+        (item) => item.title + (item.soon ? ' Soon' : item.badge ? ` ${item.badge}` : ''),
+      ),
     );
     expect(items.map((a) => a.getAttribute('href'))).toEqual(MENU_ITEMS.map((item) => item.href));
     expect(root.querySelector('.view-all')!.getAttribute('href')).toBe('/tools');

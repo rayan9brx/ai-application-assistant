@@ -1,0 +1,27 @@
+:host { display: block; }
+.issue { padding: 18px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.issue.done { background: var(--surface-muted); }
+.issue.done .problem, .issue.done .suggestion { color: var(--muted); }
+.head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.severity { padding: 2px 8px; border-radius: 999px; background: #fdecec; color: #a12b2b; font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.severity[data-severity='medium'] { background: #fff4e0; color: #8a5300; }
+.severity[data-severity='low'] { background: var(--surface-muted); color: var(--muted); }
+.section { color: var(--muted); font-size: var(--text-sm); font-weight: 600; }
+.status { margin-left: auto; color: var(--muted); font-size: var(--text-sm); font-weight: 650; }
+.status.ok { color: var(--success); }
+.problem { margin-top: 10px; font-size: 1rem; font-weight: 600; line-height: 1.45; }
+.suggestion { margin-top: 4px; color: #424a59; font-size: var(--text-base); line-height: 1.55; }
+.cta { margin-top: 14px; gap: 8px; }
+.proposal { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--page); }
+.tag { color: var(--muted); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+.tag.ai { margin-top: 12px; color: var(--accent); }
+.before, .after { margin-top: 4px; font-size: var(--text-base); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.before { color: var(--muted); text-decoration: line-through; text-decoration-color: #c5c8d2; }
+.after { padding: 8px 10px; border-left: 3px solid var(--accent); border-radius: 4px; background: var(--accent-soft); color: var(--ink); }
+.why { margin-top: 8px; color: var(--muted); font-size: var(--text-sm); }
+.note { margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: #fff4e0; color: #6b4300; font-size: var(--text-sm); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .cta { margin-top: 14px; }
+.error { margin-top: 10px; color: var(--danger); font-size: var(--text-sm); }
+.spinner { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }

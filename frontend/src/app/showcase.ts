@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CvData, CvPreview } from './cv-preview';
+import { ScoreGauge } from './score-gauge';
 import { ScoreRing } from './score-ring';
 
 export interface ShowcaseFeature {
@@ -103,11 +104,9 @@ export const SAMPLE_CV: CvData = {
   skills: 'HubSpot · Google Analytics · Copywriting · Canva · Event planning · A/B testing',
 };
 
-const GAUGE = { cx: 100, cy: 100, r: 80 };
-
 @Component({
   selector: 'app-showcase',
-  imports: [CvPreview, ScoreRing],
+  imports: [CvPreview, ScoreGauge, ScoreRing],
   templateUrl: './showcase.html',
   styleUrl: './showcase.scss',
 })
@@ -116,8 +115,6 @@ export class Showcase {
   readonly score = SAMPLE_SCORE;
   readonly cv = SAMPLE_CV;
   readonly intervalMs = SHOWCASE_INTERVAL_MS;
-  readonly gaugePath = `M${GAUGE.cx - GAUGE.r} ${GAUGE.cy} A${GAUGE.r} ${GAUGE.r} 0 0 1 ${GAUGE.cx + GAUGE.r} ${GAUGE.cy}`;
-  readonly knob = Showcase.gaugePoint(SAMPLE_SCORE.overall);
 
   /** Users who ask for reduced motion get no auto-advance. */
   readonly reducedMotion =
@@ -140,11 +137,6 @@ export class Showcase {
   constructor() {
     this.sync();
     inject(DestroyRef).onDestroy(() => clearTimeout(this.timer));
-  }
-
-  static gaugePoint(score: number): { x: number; y: number } {
-    const angle = Math.PI * (1 - Math.min(100, Math.max(0, score)) / 100);
-    return { x: GAUGE.cx + GAUGE.r * Math.cos(angle), y: GAUGE.cy - GAUGE.r * Math.sin(angle) };
   }
 
   /** Switch immediately and give the new feature a full interval. */

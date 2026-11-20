@@ -1,9 +1,11 @@
 import { Component, HostListener, computed, effect, inject } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ComingSoon } from './coming-soon';
+import { CvCheckPage } from './cv-check-page';
+import { CvFlow } from './cv-flow';
 import { Hero } from './hero';
 import { HurdlesSection } from './hurdles-section';
-import { TOOLS_HREF, itemBySlug } from './menu-config';
+import { CHECK_HREF, TOOLS_HREF, itemBySlug } from './menu-config';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
 import { PricingPage } from './pricing-page';
@@ -18,6 +20,7 @@ const SITE_TITLE = 'ApplyCraft — Your application workspace';
   selector: 'app-root',
   imports: [
     ComingSoon,
+    CvCheckPage,
     Hero,
     HurdlesSection,
     Navbar,
@@ -32,6 +35,7 @@ const SITE_TITLE = 'ApplyCraft — Your application workspace';
 })
 export class App {
   private readonly navigation = inject(Navigation);
+  private readonly flow = inject(CvFlow);
   readonly navLinks: NavLink[] = [
     { href: '/#features', label: 'Features' },
     { href: '/#problem', label: 'Why ATS matters' },
@@ -42,6 +46,7 @@ export class App {
   readonly page = computed(() => {
     const path = this.navigation.path().replace(/\/+$/, '') || '/';
     if (path === '/pricing') return { kind: 'pricing' as const };
+    if (path === CHECK_HREF) return { kind: 'check' as const };
     if (path === TOOLS_HREF) return { kind: 'tools' as const };
     if (path.startsWith(`${TOOLS_HREF}/`)) {
       return { kind: 'coming-soon' as const, item: itemBySlug(path.slice(TOOLS_HREF.length + 1)) };
@@ -54,15 +59,24 @@ export class App {
     effect(() => {
       const page = this.page();
       title.setTitle(
-        page.kind === 'pricing'
-          ? 'Pricing — ApplyCraft'
-          : page.kind === 'tools'
-            ? `All tools — ApplyCraft`
-            : page.kind === 'coming-soon'
-              ? `${page.item?.title ?? 'Coming soon'} — ApplyCraft`
-              : SITE_TITLE,
+        page.kind === 'check'
+          ? 'CV Checker — ApplyCraft'
+          : page.kind === 'pricing'
+            ? 'Pricing — ApplyCraft'
+            : page.kind === 'tools'
+              ? `All tools — ApplyCraft`
+              : page.kind === 'coming-soon'
+                ? `${page.item?.title ?? 'Coming soon'} — ApplyCraft`
+                : SITE_TITLE,
       );
     });
+  }
+
+  /** The landing upload bar hands its file to the checker and opens it. */
+  startCheck(file: File): void {
+    this.flow.reset();
+    this.navigation.go(CHECK_HREF);
+    void this.flow.startWithFile(file);
   }
 
   @HostListener('document:click', ['$event'])

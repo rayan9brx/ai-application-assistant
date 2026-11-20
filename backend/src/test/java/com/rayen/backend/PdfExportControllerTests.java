@@ -26,13 +26,14 @@ class PdfExportControllerTests {
             byte[] bytes = mvc.perform(post("/api/documents/export").contentType(MediaType.APPLICATION_JSON)
                     .header("Origin", "http://localhost:4200").content(payload(type, text)))
                 .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_PDF))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString(type.equals("cv") ? "cv-demo.pdf" : "motivation-letter-demo.pdf")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString(type.equals("cv") ? "cv.pdf" : "motivation-letter-demo.pdf")))
                 .andReturn().getResponse().getContentAsByteArray();
             try (var document = Loader.loadPDF(bytes)) {
                 String extracted = new PDFTextStripper().getText(document);
                 assertTrue(extracted.contains("Latest edited CV: Grüße aus Köln — äöü ÄÖÜ ß €"));
                 assertTrue(extracted.replace("\r\n", "\n").contains("Second paragraph\nFinal line"));
-                assertTrue(extracted.contains("DEMO — review before use"));
+                // Only the letter is still a demo template; the CV export is the real document.
+                assertEquals(!type.equals("cv"), extracted.contains("DEMO — review before use"));
                 for (var name : document.getPage(0).getResources().getFontNames()) {
                     assertTrue(document.getPage(0).getResources().getFont(name).isEmbedded());
                 }
@@ -57,7 +58,7 @@ class PdfExportControllerTests {
             String extracted = new PDFTextStripper().getText(document);
             assertEquals(12000, extracted.chars().filter(c -> c == 'W').count());
             assertTrue(extracted.contains("LATEST EDIT AT END"));
-            assertEquals(document.getNumberOfPages(), extracted.split("DEMO — review before use", -1).length - 1);
+            assertFalse(extracted.contains("DEMO"));
             new BoundsChecker().getText(document);
             assertNotNull(new PDFRenderer(document).renderImageWithDPI(0, 72));
             // Optional local visual-QA artifacts contain synthetic test content only.
@@ -70,6 +71,26 @@ class PdfExportControllerTests {
                     javax.imageio.ImageIO.write(renderer.renderImageWithDPI(page, 90), "png", directory.resolve("page-" + (page + 1) + ".png").toFile());
                 }
             }
+        }
+    }
+
+    // The CV template keeps every word as real, selectable text in reading order.
+    @Test
+    void cvTemplateKeepsHeadingsAndBulletsAsPlainText() throws Exception {
+        String text = "Taylor Brooks\ntaylor@example.com · Hamburg\n\nSummary\nFrontend developer.\n\n"
+            + "EXPERIENCE\nFrontend Developer, Northwind Labs  2022 – Present\n- Built a dashboard used by 40 teams\n"
+            + "• Cut load time by [add result, e.g. 20%]\n\nSkills:\nReact, TypeScript";
+        byte[] bytes = mvc.perform(post("/api/documents/export").contentType(MediaType.APPLICATION_JSON).content(payload("cv", text)))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        try (var document = Loader.loadPDF(bytes)) {
+            String extracted = new PDFTextStripper().getText(document).replace("\r\n", "\n");
+            assertEquals("Taylor Brooks", document.getDocumentInformation().getTitle());
+            for (String part : new String[]{"Taylor Brooks", "SUMMARY", "EXPERIENCE", "SKILLS", "• Built a dashboard used by 40 teams",
+                    "• Cut load time by [add result, e.g. 20%]", "React, TypeScript"}) {
+                assertTrue(extracted.contains(part), part);
+            }
+            assertTrue(extracted.indexOf("SUMMARY") < extracted.indexOf("EXPERIENCE"));
+            new BoundsChecker().getText(document);
         }
     }
 

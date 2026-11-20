@@ -2,7 +2,7 @@
  * All copy and sample data for the "3 hurdles" section. Edit text here; the components only
  * lay it out. Sample jobs, bullets and scores are fictional illustrations, not real results.
  */
-import { itemBySlug } from './menu-config';
+import { CHECK_HREF, itemBySlug } from './menu-config';
 
 export type HurdleVisual = 'jobs' | 'rewrite' | 'ats';
 
@@ -55,7 +55,7 @@ export const HURDLES: readonly Hurdle[] = [
       'Stronger bullet points that show impact, not just tasks',
       'Clean, professional templates recruiters love',
     ],
-    cta: { label: 'Build my tailored CV', href: toolHref('ai-cv-builder') },
+    cta: { label: 'Build my tailored CV', href: CHECK_HREF },
     visual: 'rewrite',
   },
   {
@@ -70,7 +70,7 @@ export const HURDLES: readonly Hurdle[] = [
       "See exactly which keywords you're missing",
       'Fix formatting issues with one click',
     ],
-    cta: { label: 'Check my CV for free', href: '/#get-started' },
+    cta: { label: 'Check my CV for free', href: CHECK_HREF },
     visual: 'ats',
   },
 ];

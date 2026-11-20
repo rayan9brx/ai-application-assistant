@@ -9,28 +9,36 @@ const dropEvent = (file: File) => {
 };
 
 describe('UploadBar', () => {
-  it('enables scoring only after a PDF is dropped and rejects other files', () => {
+  it('accepts PDF and DOCX, rejects other files and oversized ones, and submits the file', () => {
     const fixture = TestBed.createComponent(UploadBar);
+    const submitted: File[] = [];
+    fixture.componentInstance.submitted.subscribe((file) => submitted.push(file));
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;
     const bar = root.querySelector('.upload-bar')!;
     const score = root.querySelector<HTMLButtonElement>('.score')!;
+    const alert = () => root.querySelector('[role="alert"]')?.textContent ?? '';
     expect(score.disabled).toBe(true);
 
-    bar.dispatchEvent(dropEvent(new File(['x'], 'cv.docx')));
+    bar.dispatchEvent(dropEvent(new File(['x'], 'photo.png', { type: 'image/png' })));
     fixture.detectChanges();
     expect(score.disabled).toBe(true);
-    expect(root.querySelector('[role="alert"]')?.textContent).toContain('Only PDF');
+    expect(alert()).toContain('PDF or Word');
 
-    bar.dispatchEvent(dropEvent(new File(['%PDF-'], 'cv.pdf', { type: 'application/pdf' })));
+    const big = new File(['x'], 'cv.pdf', { type: 'application/pdf' });
+    Object.defineProperty(big, 'size', { value: 5 * 1024 * 1024 + 1 });
+    bar.dispatchEvent(dropEvent(big));
+    fixture.detectChanges();
+    expect(score.disabled).toBe(true);
+    expect(alert()).toContain('5 MB');
+
+    bar.dispatchEvent(dropEvent(new File(['PK'], 'cv.docx')));
     fixture.detectChanges();
     expect(score.disabled).toBe(false);
-    expect(root.querySelector('#upload-bar-status')?.textContent).toContain('cv.pdf is ready');
+    expect(root.querySelector('#upload-bar-status')?.textContent).toContain('cv.docx is ready');
 
     score.click();
-    fixture.detectChanges();
-    expect(score.disabled).toBe(true);
-    expect(root.querySelector('#upload-bar-status')?.textContent).toContain("isn't available yet");
+    expect(submitted.map((file) => file.name)).toEqual(['cv.docx']);
   });
 });
 

@@ -13,13 +13,13 @@ public class UploadExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.CONTENT_TOO_LARGE)
     public Map<String, String> tooLarge() {
-        return Map.of("code", "FILE_TOO_LARGE", "message", "Upload exceeds the size limit. Choose a PDF of 5 MB or smaller.");
+        return Map.of("code", "FILE_TOO_LARGE", "message", "Upload exceeds the size limit. Choose a file of 5 MB or smaller.");
     }
 
     // Avoid logging malformed multipart requests or reflecting their contents.
     @ExceptionHandler({MultipartException.class, MissingServletRequestPartException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<String, String> invalidUpload() {
-        return Map.of("code", "INVALID_UPLOAD", "message", "Select a PDF and upload it using the file field.");
+        return Map.of("code", "INVALID_UPLOAD", "message", "Select a PDF or Word file and upload it using the file field.");
     }
 }

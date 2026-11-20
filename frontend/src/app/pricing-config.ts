@@ -22,8 +22,8 @@ export interface Plan {
 }
 
 /** Where plan buttons lead until accounts exist again. */
-// TODO: point paid plans at a Stripe Checkout session once payments are integrated.
-const SIGNUP_HREF = '/#get-started';
+// TODO(database): paid plans need accounts, a database and Stripe Checkout before they can be sold.
+const SIGNUP_HREF = '/check';
 
 export const PLANS: readonly Plan[] = [
   {
@@ -117,11 +117,11 @@ export const FAQ: readonly FaqItem[] = [
       'Yes. Pro is billed monthly or yearly and you can cancel whenever you like. You keep Pro until the end of the period you already paid for. Lifetime is a single payment, so there is nothing to cancel.',
   },
   {
-    // TODO: have this answer checked against the privacy policy (GDPR/DSGVO) before launch,
-    // and update it once CVs are uploaded to and stored on our servers.
+    // TODO (GDPR/DSGVO): check this against the privacy policy before launch, including how
+    // long Anthropic retains API inputs, and add a data-deletion flow once accounts store CVs.
     question: 'Is my data safe?',
     answer:
-      'We are building ApplyCraft to follow the GDPR (DSGVO). Right now, a CV you pick on the home page stays in your browser and is not uploaded. When we store CVs, they will be kept securely, never sold, and you will be able to delete them at any time.',
+      'We are building ApplyCraft to follow the GDPR (DSGVO). When you check your CV, it is sent over an encrypted connection to our server to read the text, and to our AI provider (Anthropic) for the analysis. We don’t store it on our servers: your progress is kept only in your browser on this device, until you start over. We never sell your data.',
   },
   {
     question: 'Will my CV pass ATS systems?',

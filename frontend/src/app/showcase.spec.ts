@@ -1,13 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SHOWCASE_INTERVAL_MS, Showcase } from './showcase';
+import { ScoreGauge } from './score-gauge';
 
 describe('Showcase', () => {
   let fixture: ComponentFixture<Showcase>;
   let showcase: Showcase;
   const expanded = () =>
-    Array.from(fixture.nativeElement.querySelectorAll('.feature-toggle') as NodeListOf<HTMLElement>).map(
-      (b) => b.getAttribute('aria-expanded'),
-    );
+    Array.from(
+      fixture.nativeElement.querySelectorAll('.feature-toggle') as NodeListOf<HTMLElement>,
+    ).map((b) => b.getAttribute('aria-expanded'));
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -53,10 +54,10 @@ describe('Showcase', () => {
   });
 
   it('places the gauge knob on the arc for the score', () => {
-    const start = Showcase.gaugePoint(0);
+    const start = ScoreGauge.point(0);
     expect(start.x).toBeCloseTo(20);
     expect(start.y).toBeCloseTo(100);
-    const top = Showcase.gaugePoint(50);
+    const top = ScoreGauge.point(50);
     expect(top.x).toBeCloseTo(100);
     expect(top.y).toBeCloseTo(20);
   });

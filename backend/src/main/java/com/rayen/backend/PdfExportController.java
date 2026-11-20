@@ -27,12 +27,13 @@ public class PdfExportController {
         if (request.text().codePoints().anyMatch(cp -> Character.isISOControl(cp) && cp != '\n' && cp != '\r' && cp != '\t' && cp != '\u0085')) {
             throw new PdfExportService.UnsupportedCharacterException();
         }
-        String filename = request.documentType().equals("cv") ? "cv-demo.pdf" : "motivation-letter-demo.pdf";
+        boolean cv = request.documentType().equals("cv");
+        String filename = cv ? "cv.pdf" : "motivation-letter-demo.pdf";
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_PDF)
             .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
             .cacheControl(CacheControl.noStore())
-            .body(pdfExport.generate(request.text()));
+            .body(cv ? pdfExport.generateCv(request.text()) : pdfExport.generate(request.text()));
     }
 
     // Suppress default validation logging, which can include rejected document text.

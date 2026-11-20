@@ -10,10 +10,10 @@ import { MenuItemConfig, TOOLS_HREF } from './menu-config';
       <h1 id="coming-soon-title">{{ item()?.title ?? 'This tool' }} is on its way</h1>
       <p class="lede">
         {{ item()?.description ? item()!.description + '. ' : '' }}We're still building this tool.
-        In the meantime, you can upload your CV on the home page.
+        In the meantime, you can check and improve your CV with the CV Checker.
       </p>
       <div class="actions">
-        <a class="cta" href="/#get-started">Back to home</a>
+        <a class="cta" href="/check">Check my CV</a>
         <a class="secondary" [href]="toolsHref">See all tools</a>
       </div>
     </section>

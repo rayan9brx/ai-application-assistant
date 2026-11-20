@@ -21,8 +21,8 @@ describe('HurdlesSection', () => {
     expect(steps.map((s) => s.classList.contains('reversed'))).toEqual([false, true, false]);
     expect(steps.map((s) => s.querySelector('.step-cta')!.getAttribute('href'))).toEqual([
       '/tools/job-search',
-      '/tools/ai-cv-builder',
-      '/#get-started',
+      '/check',
+      '/check',
     ]);
     expect(steps[0].querySelectorAll('.benefits li').length).toBe(3);
   });

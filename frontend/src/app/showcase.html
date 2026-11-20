@@ -95,7 +95,7 @@
 
     <figure class="showcase-visual">
       <figcaption class="sr-only">
-        Illustrative example: a fictional CV with sample scores. Scoring is not available yet.
+        Illustrative example: a fictional CV with sample scores.
       </figcaption>
 
       <article
@@ -108,25 +108,7 @@
 
       <div class="score-card" aria-label="Sample CV score">
         <div class="gauge">
-          <svg viewBox="0 0 200 112" aria-hidden="true">
-            <defs>
-              <linearGradient id="showcase-gauge-gradient" x1="0" x2="1" y1="0" y2="0">
-                <stop offset="0" stop-color="#f0524f" />
-                <stop offset="0.45" stop-color="#f59e2c" />
-                <stop offset="0.65" stop-color="#f3cf3c" />
-                <stop offset="1" stop-color="#2dd4bf" />
-              </linearGradient>
-            </defs>
-            <path
-              [attr.d]="gaugePath"
-              fill="none"
-              stroke="url(#showcase-gauge-gradient)"
-              stroke-width="14"
-              stroke-linecap="round"
-            />
-            <circle class="knob" [attr.cx]="knob.x" [attr.cy]="knob.y" r="9" />
-            <text class="gauge-value" x="100" y="96" text-anchor="middle">{{ score.overall }}</text>
-          </svg>
+          <app-score-gauge [score]="score.overall" />
           <p class="gauge-label">
             <span class="sr-only">Overall score {{ score.overall }} out of 100: </span
             >{{ score.verdict }}

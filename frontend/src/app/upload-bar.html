@@ -21,31 +21,28 @@
   </span>
   <div class="copy">
     <p>
-      <button
-        class="browse"
-        type="button"
-        aria-describedby="upload-bar-status"
-        (click)="browse()"
-      >
+      <button class="browse" type="button" aria-describedby="upload-bar-status" (click)="browse()">
         Upload</button
       >&nbsp;or drop your CV to get your free score
     </p>
     <p class="status" id="upload-bar-status" aria-live="polite">
-      {{ file() ? file()!.name + ' is ready' : notice() || 'PDF, up to 5 MB' }}
+      {{ file() ? file()!.name + ' is ready' : 'PDF or Word (.docx), up to 5 MB' }}
     </p>
   </div>
   <input
     #picker
     class="sr-only"
     type="file"
-    accept=".pdf,application/pdf"
+    [accept]="accept"
     tabindex="-1"
     aria-hidden="true"
     (change)="pick(picker)"
   />
-  <button class="cta score" type="button" [disabled]="!file()" (click)="submit()">
-    Score my CV
-  </button>
+  @if (showSubmit()) {
+    <button class="cta score" type="button" [disabled]="!file() || busy()" (click)="submit()">
+      Score my CV
+    </button>
+  }
 </div>
 @if (error()) {
   <p class="upload-error" role="alert">{{ error() }}</p>

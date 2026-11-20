@@ -1,0 +1,67 @@
+@let i = issue();
+<article class="issue" [class.done]="state() === 'accepted' || state() === 'rejected'">
+  <div class="head">
+    <span class="severity" [attr.data-severity]="i.severity"
+      >{{ i.severity }}<span class="sr-only"> priority</span></span
+    >
+    <span class="section">{{ i.section }}</span>
+    @if (state() === 'accepted') {
+      <span class="status ok"><span aria-hidden="true">✓</span> Fixed</span>
+    } @else if (state() === 'rejected') {
+      <span class="status">Skipped</span>
+    }
+  </div>
+  <p class="problem">{{ i.problem }}</p>
+  <p class="suggestion">{{ i.suggestion }}</p>
+
+  @if (state() === 'idle' || state() === 'loading') {
+    <button
+      class="cta cta-small cta-secondary"
+      type="button"
+      [disabled]="state() === 'loading'"
+      (click)="askAi()"
+    >
+      @if (state() === 'loading') {
+        <span class="spinner" aria-hidden="true"></span> Writing a fix…
+      } @else {
+        <span aria-hidden="true">✦</span> Fix with AI
+      }
+    </button>
+  }
+
+  @if (state() === 'proposal' && fix(); as f) {
+    <div class="proposal" role="group" aria-label="AI suggestion">
+      <p class="tag">Current</p>
+      <p class="before">{{ f.original }}</p>
+      <p class="tag ai"><span aria-hidden="true">✦</span> Suggested</p>
+      <p class="after">{{ f.replacement }}</p>
+      @if (f.explanation) {
+        <p class="why">{{ f.explanation }}</p>
+      }
+      @if (f.needsUserInput) {
+        <p class="note">
+          Replace the [bracketed] parts with your real numbers before you send your CV.
+        </p>
+      }
+      <div class="actions">
+        @if (f.found) {
+          <button class="cta cta-small" type="button" (click)="accept()">Accept</button>
+        } @else {
+          <button class="cta cta-small" type="button" (click)="copy()">
+            {{ copied() ? 'Copied' : 'Copy suggestion' }}
+          </button>
+        }
+        <button class="cta cta-small cta-secondary" type="button" (click)="reject()">Reject</button>
+      </div>
+      @if (!f.found && !error()) {
+        <p class="note">
+          We couldn’t match this to the exact text in your CV, so copy it in yourself.
+        </p>
+      }
+    </div>
+  }
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+</article>

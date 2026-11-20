@@ -1,0 +1,21 @@
+Sam Rivera
+sam.rivera@example.com · Cologne, Germany · github.com/sam-rivera-example
+
+Summary
+Junior web developer who enjoys building clean, fast user interfaces.
+
+Experience
+Junior Frontend Developer, Brightline Software   2023 – Present
+- Responsible for website updates
+- Built a booking form in React and TypeScript used by 3 client teams
+- Helped with code reviews
+
+Web Development Intern, Example Collective   2022 – 2023
+- Worked on the company blog
+- Wrote SQL queries for monthly reports
+
+Education
+B.Sc. Media Informatics, Lakeside University   2019 – 2022
+
+Skills
+React, TypeScript, JavaScript, CSS, SQL, Git

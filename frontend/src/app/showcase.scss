@@ -172,9 +172,6 @@ blockquote { margin: 14px 0 0; font-size: 1rem; line-height: 1.6; }
   background: var(--sc-surface);
   box-shadow: 0 24px 60px #0008;
 }
-.gauge svg { display: block; width: 100%; max-width: 220px; margin-inline: auto; }
-.knob { fill: #fff; stroke: var(--sc-surface); stroke-width: 3; }
-.gauge-value { fill: var(--sc-text); font-size: 44px; font-weight: 700; letter-spacing: -1px; }
 .gauge-label { margin-top: 4px; text-align: center; font-size: .9375rem; font-weight: 600; }
 .score-hint { margin: 10px 0 16px; color: var(--sc-muted); font-size: .8125rem; line-height: 1.5; text-align: center; }
 .categories { margin: 0; padding: 0; list-style: none; }
