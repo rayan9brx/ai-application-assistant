@@ -4,7 +4,9 @@
 
   <main class="workspace" id="main" tabindex="-1">
     @let p = page();
-    @if (p.kind === 'tools') {
+    @if (p.kind === 'pricing') {
+      <app-pricing-page />
+    } @else if (p.kind === 'tools') {
       <app-tools-page />
     } @else if (p.kind === 'coming-soon') {
       <app-coming-soon [item]="p.item" />

@@ -6,7 +6,7 @@ import { MenuItemConfig, TOOLS_HREF } from './menu-config';
   selector: 'app-coming-soon',
   template: `
     <section class="coming-soon" aria-labelledby="coming-soon-title">
-      <p class="pill">Coming soon</p>
+      <p class="pill-badge">Coming soon</p>
       <h1 id="coming-soon-title">{{ item()?.title ?? 'This tool' }} is on its way</h1>
       <p class="lede">
         {{ item()?.description ? item()!.description + '. ' : '' }}We're still building this tool.

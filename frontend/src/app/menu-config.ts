@@ -1,5 +1,5 @@
 /**
- * Single source of truth for the "Product" menu, the mobile accordion and the /tools page.
+ * Single source of truth for the "Services" menu, the mobile accordion and the /tools page.
  * Add, edit or remove items here. Items whose href is under /tools/ show a "Coming soon"
  * page until the tool exists; point href somewhere else once it is built.
  */

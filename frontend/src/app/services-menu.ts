@@ -13,7 +13,7 @@ import {
 import { MENU_COLUMNS, TOOLS_HREF, itemsIn } from './menu-config';
 import { MenuItem } from './menu-item';
 
-export type ProductMenuVariant = 'dropdown' | 'accordion';
+export type ServicesMenuVariant = 'dropdown' | 'accordion';
 
 const OPEN_DELAY_MS = 120;
 const CLOSE_DELAY_MS = 200;
@@ -22,14 +22,14 @@ const VIEWPORT_GUTTER = 16;
 let nextId = 0;
 
 /**
- * "Product" disclosure menu. As a dropdown it opens on mouse hover (with delays) or on
+ * "Services" disclosure menu. As a dropdown it opens on mouse hover (with delays) or on
  * click/Enter/Space; as an accordion (mobile menu) it only toggles on click.
  */
 @Component({
-  selector: 'app-product-menu',
+  selector: 'app-services-menu',
   imports: [MenuItem],
-  templateUrl: './product-menu.html',
-  styleUrl: './product-menu.scss',
+  templateUrl: './services-menu.html',
+  styleUrl: './services-menu.scss',
   host: {
     '[class.accordion]': "variant() === 'accordion'",
     '(pointerenter)': 'hover($event, true)',
@@ -39,8 +39,8 @@ let nextId = 0;
     '(document:click)': 'outsideClick($event)',
   },
 })
-export class ProductMenu {
-  readonly variant = input<ProductMenuVariant>('dropdown');
+export class ServicesMenu {
+  readonly variant = input<ServicesMenuVariant>('dropdown');
   /** Emitted after one of the links is followed. */
   readonly navigate = output<void>();
 
@@ -49,7 +49,7 @@ export class ProductMenu {
   readonly width = signal(PANEL_WIDTH);
   readonly columns = MENU_COLUMNS.map((column) => ({ ...column, items: itemsIn(column.id) }));
   readonly toolsHref = TOOLS_HREF;
-  readonly panelId = `product-menu-${nextId++}`;
+  readonly panelId = `services-menu-${nextId++}`;
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -140,7 +140,7 @@ export class ProductMenu {
     this.open.set(open);
   }
 
-  /** Keep the panel left-aligned with "Product" but inside the viewport. */
+  /** Keep the panel left-aligned with "Services" but inside the viewport. */
   private position(): void {
     const left = this.trigger().nativeElement.getBoundingClientRect().left;
     const width = Math.min(PANEL_WIDTH, innerWidth - VIEWPORT_GUTTER * 2);

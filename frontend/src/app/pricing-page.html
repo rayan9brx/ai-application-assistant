@@ -1,0 +1,29 @@
+<section class="pricing-hero" aria-labelledby="pricing-title">
+  <p class="pill-badge">Pricing</p>
+  <h1 id="pricing-title">Simple pricing. <span>No surprises.</span></h1>
+  <p class="lede">
+    Start for free and upgrade when you're ready to apply seriously. Cancel anytime.
+  </p>
+  <app-billing-toggle [(billing)]="billing" [saving]="saving" />
+</section>
+
+<section class="plans" aria-label="Plans">
+  @for (plan of plans; track plan.id) {
+    <app-pricing-card [plan]="plan" [billing]="billing()" />
+  }
+</section>
+
+<section class="block" aria-labelledby="compare-title">
+  <h2 id="compare-title">Compare plans</h2>
+  <app-comparison-table [plans]="plans" [rows]="comparison" />
+</section>
+
+<section class="block faq-block" aria-labelledby="faq-title">
+  <h2 id="faq-title">Frequently asked questions</h2>
+  <app-faq [items]="faq" />
+</section>
+
+<section class="cta-banner" aria-labelledby="cta-title">
+  <h2 id="cta-title">Your next interview starts with a better CV</h2>
+  <a class="cta" href="/#get-started">Build my CV for free</a>
+</section>

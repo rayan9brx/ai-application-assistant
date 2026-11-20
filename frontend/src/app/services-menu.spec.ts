@@ -2,16 +2,16 @@ import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { MENU_ITEMS } from './menu-config';
 import { Navigation } from './navigation';
-import { ProductMenu } from './product-menu';
+import { ServicesMenu } from './services-menu';
 
 const key = (target: Element, name: string) =>
   target.dispatchEvent(
     new KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }),
   );
 
-describe('ProductMenu', () => {
+describe('ServicesMenu', () => {
   const setup = () => {
-    const fixture = TestBed.createComponent(ProductMenu);
+    const fixture = TestBed.createComponent(ServicesMenu);
     document.body.appendChild(fixture.nativeElement);
     fixture.detectChanges();
     const root: HTMLElement = fixture.nativeElement;

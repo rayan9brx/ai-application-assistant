@@ -11,7 +11,7 @@ import { MenuItemConfig } from './menu-config';
         <span class="badge">{{ item().badge }}</span>
       }
     </span>
-    <span class="description">{{ item().description }}</span>
+    &ngsp;<span class="description">{{ item().description }}</span>
   `,
   styleUrl: './menu-item.scss',
   host: { '[attr.href]': 'item().href' },

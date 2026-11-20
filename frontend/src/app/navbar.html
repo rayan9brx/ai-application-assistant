@@ -6,10 +6,16 @@
     >
     <nav class="desktop-nav" aria-label="Main navigation">
       <ul role="list">
-        <li><app-product-menu /></li>
+        <li><app-services-menu /></li>
         @for (link of links(); track link.href) {
           <li>
-            <a class="nav-link" [href]="link.href">{{ link.label }}</a>
+            <a
+              class="nav-link"
+              [href]="link.href"
+              [class.active]="isActive(link)"
+              [attr.aria-current]="isActive(link) ? 'page' : null"
+              >{{ link.label }}</a
+            >
           </li>
         }
       </ul>
@@ -45,10 +51,16 @@
     (click)="mobileLinkClicked($event)"
   >
     <ul role="list">
-      <li><app-product-menu variant="accordion" /></li>
+      <li><app-services-menu variant="accordion" /></li>
       @for (link of links(); track link.href) {
         <li>
-          <a class="mobile-link" [href]="link.href">{{ link.label }}</a>
+          <a
+            class="mobile-link"
+            [href]="link.href"
+            [class.active]="isActive(link)"
+            [attr.aria-current]="isActive(link) ? 'page' : null"
+            >{{ link.label }}</a
+          >
         </li>
       }
     </ul>
