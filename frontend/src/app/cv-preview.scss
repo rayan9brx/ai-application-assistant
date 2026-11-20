@@ -1,0 +1,13 @@
+:host { display: block; padding: 36px 40px; border-radius: 16px; background: #fff; color: #1f2430; font-size: 11px; line-height: 1.55; }
+.caption { margin-bottom: 14px; color: #6b7280; font-size: 9.5px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
+.name { color: #2563eb; font-size: 26px; font-weight: 700; letter-spacing: -.5px; line-height: 1.2; }
+.title { margin-top: 2px; color: #374151; font-size: 13px; font-weight: 600; }
+.contact { margin-top: 4px; color: #6b7280; font-size: 10.5px; }
+h4 { margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; color: #2563eb; font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; }
+.role + .role { margin-top: 10px; }
+.role-head { display: flex; justify-content: space-between; gap: 8px; }
+.role-head .dates { flex: none; color: #6b7280; }
+ul { margin: 4px 0 0; padding-left: 16px; }
+li { margin-block: 2px; }
+mark { padding: 0 2px; border-bottom: 2px solid #e5484d; background: #fde8e8; color: inherit; }
+.skills-flagged { padding: 6px 8px; border: 1.5px dashed #e5484d; border-radius: 6px; background: #fdf1f1; }

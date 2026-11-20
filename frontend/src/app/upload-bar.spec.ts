@@ -35,7 +35,7 @@ describe('UploadBar', () => {
 });
 
 describe('App', () => {
-  it('renders only the navbar, hero, upload bar and showcase', () => {
+  it('renders the hero, upload bar, showcase and problem section in order', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const main: HTMLElement = fixture.nativeElement.querySelector('main');
@@ -43,6 +43,7 @@ describe('App', () => {
       'app-hero',
       'app-upload-bar',
       'app-showcase',
+      'app-problem-section',
     ]);
     expect(fixture.nativeElement.querySelector('#features')).not.toBeNull();
   });

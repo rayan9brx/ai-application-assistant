@@ -1,18 +1,4 @@
 :host {
-  --sc-bg: #141414;
-  --sc-surface: #1c1c1f;
-  --sc-raised: #2a2a2e;
-  --sc-line: #2e2e33;
-  --sc-text: #fff;
-  --sc-muted: #a1a1a8;
-  --sc-dim: #6e6e76;
-  --sc-badge-bg: #0f2647;
-  --sc-badge-text: #6aa8ff;
-  --sc-focus: #8ab4ff;
-  --sc-low: #f0524f;
-  --sc-mid: #f59e2c;
-  --sc-high: #2dd4bf;
-  --sc-star: #f5c542;
   --sc-pad: 56px;
   display: block;
   margin-block: var(--space-6);
@@ -165,50 +151,13 @@ blockquote { margin: 14px 0 0; font-size: 1rem; line-height: 1.6; }
   min-height: 640px;
   margin: 0 calc(var(--sc-pad) * -1) 0 0;
 }
-.visual-caption {
-  margin-bottom: 14px;
-  color: #6b7280;
-  font-size: 9.5px;
-  font-weight: 600;
-  letter-spacing: .6px;
-  text-transform: uppercase;
-}
 .cv-paper {
   position: absolute;
   top: 64px;
   left: 0;
   width: 720px;
   min-height: 820px;
-  padding: 36px 40px;
-  border-radius: 16px;
-  background: #fff;
-  color: #1f2430;
-  font-size: 11px;
-  line-height: 1.55;
   box-shadow: 0 20px 60px #0006;
-}
-.cv-name { color: #2563eb; font-size: 26px; font-weight: 700; letter-spacing: -.5px; line-height: 1.2; }
-.cv-title { margin-top: 2px; color: #374151; font-size: 13px; font-weight: 600; }
-.cv-contact { margin-top: 4px; color: #6b7280; font-size: 10.5px; }
-.cv-paper h4 {
-  margin: 18px 0 8px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #2563eb;
-  font-size: 10.5px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-.cv-role + .cv-role { margin-top: 10px; }
-.cv-role-head { display: flex; justify-content: space-between; gap: 8px; }
-.cv-role-head span { flex: none; color: #6b7280; }
-.cv-paper ul { margin: 4px 0 0; padding-left: 16px; }
-.cv-paper li { margin-block: 2px; }
-mark {
-  padding: 0 2px;
-  border-bottom: 2px solid #e5484d;
-  background: #fde8e8;
-  color: inherit;
 }
 
 .score-card {

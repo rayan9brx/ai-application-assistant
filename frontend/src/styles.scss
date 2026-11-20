@@ -29,6 +29,24 @@
   --text-sm: .8125rem;
   --text-base: .9375rem;
   --text-lg: 1.125rem;
+  --sc-bg: #141414;
+  --sc-surface: #1c1c1f;
+  --sc-raised: #2a2a2e;
+  --sc-line: #2e2e33;
+  --sc-text: #fff;
+  --sc-muted: #a1a1a8;
+  --sc-dim: #6e6e76;
+  --sc-badge-bg: #0f2647;
+  --sc-badge-text: #6aa8ff;
+  --sc-focus: #8ab4ff;
+  --sc-low: #f0524f;
+  --sc-mid: #f59e2c;
+  --sc-high: #2dd4bf;
+  --sc-star: #f5c542;
+  --sc-danger-bg: #3b1517;
+  --sc-danger-text: #ff8a87;
+  --sc-ok: #3ecf8e;
+  --sc-ok-bg: #10291f;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }

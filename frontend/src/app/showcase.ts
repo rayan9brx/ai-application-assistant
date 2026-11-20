@@ -1,4 +1,5 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { CvData, CvPreview } from './cv-preview';
 
 export interface ShowcaseFeature {
   id: string;
@@ -46,7 +47,11 @@ export const SHOWCASE_FEATURES: readonly ShowcaseFeature[] = [
  * Illustrative sample data for the score card. There is no scoring backend yet;
  * replace this with a real analysis response once one exists.
  */
-export const SAMPLE_SCORE: { overall: number; verdict: string; categories: readonly ScoreCategory[] } = {
+export const SAMPLE_SCORE: {
+  overall: number;
+  verdict: string;
+  categories: readonly ScoreCategory[];
+} = {
   overall: 58,
   verdict: 'Needs improvement',
   categories: [
@@ -58,17 +63,58 @@ export const SAMPLE_SCORE: { overall: number; verdict: string; categories: reado
   ],
 };
 
+/** Fictional CV shown next to the sample score card. */
+export const SAMPLE_CV: CvData = {
+  name: 'Jordan Ellis',
+  title: 'Marketing Coordinator',
+  contact: 'jordan.ellis@example.com · Berlin, Germany · linkedin.com/in/jordan-ellis-example',
+  summary:
+    'Marketing coordinator with four years of experience planning campaigns for B2B software brands. Comfortable working across content, events and analytics.',
+  roles: [
+    {
+      title: 'Marketing Coordinator',
+      org: 'Brightline Software',
+      dates: '2022 – Present',
+      bullets: [
+        {
+          text: 'Planned and launched 12 email campaigns, lifting the average open rate from 21% to 29%.',
+        },
+        { text: 'Responsible for social media.', flagged: true },
+        { text: 'Coordinated three trade-show booths with a team of five.' },
+      ],
+    },
+    {
+      title: 'Marketing Assistant',
+      org: 'Harbor & Pine Agency',
+      dates: '2020 – 2022',
+      bullets: [
+        { text: 'Helped with various marketing tasks for clients.', flagged: true },
+        { text: 'Wrote weekly performance reports for eight client accounts.' },
+        { text: 'Worked on the company website.', flagged: true },
+      ],
+    },
+  ],
+  education: {
+    degree: 'B.A. Media & Communication',
+    school: 'Lakeside University',
+    dates: '2016 – 2020',
+  },
+  skills: 'HubSpot · Google Analytics · Copywriting · Canva · Event planning · A/B testing',
+};
+
 const GAUGE = { cx: 100, cy: 100, r: 80 };
 const RING_RADIUS = 15;
 
 @Component({
   selector: 'app-showcase',
+  imports: [CvPreview],
   templateUrl: './showcase.html',
   styleUrl: './showcase.scss',
 })
 export class Showcase {
   readonly features = SHOWCASE_FEATURES;
   readonly score = SAMPLE_SCORE;
+  readonly cv = SAMPLE_CV;
   readonly intervalMs = SHOWCASE_INTERVAL_MS;
   readonly ringRadius = RING_RADIUS;
   readonly ringCircumference = 2 * Math.PI * RING_RADIUS;

@@ -95,46 +95,13 @@
         Illustrative example: a fictional CV with sample scores. Scoring is not available yet.
       </figcaption>
 
-      <article class="cv-paper" aria-label="Fictional sample CV">
-        <header>
-          <p class="visual-caption" aria-hidden="true">Illustrative example · Fictional CV and sample scores</p>
-          <p class="cv-name">Jordan Ellis</p>
-          <p class="cv-title">Marketing Coordinator</p>
-          <p class="cv-contact">
-            jordan.ellis&#64;example.com · Berlin, Germany · linkedin.com/in/jordan-ellis-example
-          </p>
-        </header>
-
-        <h4>Summary</h4>
-        <p>
-          Marketing coordinator with four years of experience planning campaigns for B2B software
-          brands. Comfortable working across content, events and analytics.
-        </p>
-
-        <h4>Experience</h4>
-        <div class="cv-role">
-          <p class="cv-role-head"><strong>Marketing Coordinator</strong>, Brightline Software <span>2022 – Present</span></p>
-          <ul>
-            <li>Planned and launched 12 email campaigns, lifting the average open rate from 21% to 29%.</li>
-            <li><mark><span class="sr-only">Flagged line: </span>Responsible for social media.</mark></li>
-            <li>Coordinated three trade-show booths with a team of five.</li>
-          </ul>
-        </div>
-        <div class="cv-role">
-          <p class="cv-role-head"><strong>Marketing Assistant</strong>, Harbor &amp; Pine Agency <span>2020 – 2022</span></p>
-          <ul>
-            <li><mark><span class="sr-only">Flagged line: </span>Helped with various marketing tasks for clients.</mark></li>
-            <li>Wrote weekly performance reports for eight client accounts.</li>
-            <li><mark><span class="sr-only">Flagged line: </span>Worked on the company website.</mark></li>
-          </ul>
-        </div>
-
-        <h4>Education</h4>
-        <p class="cv-role-head"><strong>B.A. Media &amp; Communication</strong>, Lakeside University <span>2016 – 2020</span></p>
-
-        <h4>Skills</h4>
-        <p>HubSpot · Google Analytics · Copywriting · Canva · Event planning · A/B testing</p>
-      </article>
+      <article
+        app-cv-preview
+        class="cv-paper"
+        aria-label="Fictional sample CV"
+        [cv]="cv"
+        caption="Illustrative example · Fictional CV and sample scores"
+      ></article>
 
       <div class="score-card" aria-label="Sample CV score">
         <div class="gauge">

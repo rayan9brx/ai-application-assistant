@@ -1,0 +1,52 @@
+@let data = cv();
+<header>
+  @if (caption()) {
+    <p class="caption" aria-hidden="true">{{ caption() }}</p>
+  }
+  <p class="name">{{ data.name }}</p>
+  <p class="title">{{ data.title }}</p>
+  <p class="contact">{{ data.contact }}</p>
+</header>
+
+<h4>Summary</h4>
+<p>{{ data.summary }}</p>
+
+<h4>Experience</h4>
+@for (role of data.roles; track role.title + role.org) {
+  <div class="role">
+    <p class="role-head">
+      <span
+        ><strong>{{ role.title }}</strong
+        >, {{ role.org }}</span
+      >
+      <span class="dates">{{ role.dates }}</span>
+    </p>
+    <ul>
+      @for (bullet of role.bullets; track bullet.text) {
+        <li>
+          @if (bullet.flagged) {
+            <mark><span class="sr-only">Flagged line: </span>{{ bullet.text }}</mark>
+          } @else {
+            {{ bullet.text }}
+          }
+        </li>
+      }
+    </ul>
+  </div>
+}
+
+<h4>Education</h4>
+<p class="role-head">
+  <span
+    ><strong>{{ data.education.degree }}</strong
+    >, {{ data.education.school }}</span
+  >
+  <span class="dates">{{ data.education.dates }}</span>
+</p>
+
+<h4>Skills</h4>
+@if (data.skillsFlagged) {
+  <p class="skills-flagged"><span class="sr-only">Flagged section: </span>{{ data.skills }}</p>
+} @else {
+  <p>{{ data.skills }}</p>
+}

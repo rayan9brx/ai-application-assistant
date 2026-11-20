@@ -1,0 +1,100 @@
+@let r = result();
+<div class="ats" [class.revealed]="revealed()">
+  <p class="ats-tab">Applicant Tracking System</p>
+  <div class="ats-panel">
+    <div class="platforms">
+      <ul role="list" aria-label="Common ATS platforms">
+        @for (name of r.platforms; track name) {
+          <li>{{ name }}</li>
+        }
+      </ul>
+      <p class="platforms-caption">Works with CVs sent to common ATS platforms</p>
+    </div>
+
+    <div class="ats-inner">
+      <figure class="cv-column">
+        <figcaption class="sr-only">
+          Illustrative example: a fictional CV and a sample ATS result.
+        </figcaption>
+        @if (!r.passed) {
+          <p class="filtered-badge"><span aria-hidden="true">✗</span> Filtered out by ATS</p>
+        }
+        <article
+          app-cv-preview
+          class="cv"
+          [class.failed]="!r.passed"
+          aria-label="Fictional sample CV"
+          [cv]="cv()"
+          caption="Illustrative example · Fictional CV"
+        ></article>
+      </figure>
+
+      <div class="results">
+        <div class="submission">
+          <svg class="thumb" viewBox="0 0 28 36" aria-hidden="true">
+            <rect x=".5" y=".5" width="27" height="35" rx="4" />
+            <path d="M6 8h10M6 13h16M6 17h16M6 21h12M6 25h14" />
+          </svg>
+          <div>
+            <p class="submission-title">Your CV</p>
+            <p class="submission-state">Submitted</p>
+          </div>
+          <p class="status" [class.passed]="r.passed">
+            <span aria-hidden="true">{{ r.passed ? '✓' : '✗' }}</span>
+            {{ r.passed ? 'Passed' : 'Failed' }}
+          </p>
+        </div>
+
+        <div class="match" [attr.data-tone]="tone()">
+          <div>
+            <h3>Qualification Match</h3>
+            <p>Against the job description</p>
+          </div>
+          <p class="match-value">
+            <span aria-hidden="true">{{ shownMatch() }}%</span
+            ><span class="sr-only">{{ r.match }}%</span>
+          </p>
+          <div class="bar" aria-hidden="true"><span [style.width.%]="shownMatch()"></span></div>
+        </div>
+
+        <h3 class="group-title">Parsed Fields</h3>
+        <ul class="fields" role="list">
+          @for (field of r.fields; track field.label; let i = $index) {
+            <li
+              app-parsed-field-row
+              class="reveal"
+              [field]="field"
+              [style.--i]="order('field', i)"
+            ></li>
+          }
+        </ul>
+
+        <h3 class="group-title">Hard Skills Matched</h3>
+        <ul class="pills" role="list">
+          @for (skill of r.matchedSkills; track skill; let i = $index) {
+            <li
+              app-skill-pill
+              class="reveal"
+              tone="matched"
+              [label]="skill"
+              [style.--i]="order('matched', i)"
+            ></li>
+          }
+        </ul>
+
+        <h3 class="group-title">Job Requirements Missing</h3>
+        <ul class="pills" role="list">
+          @for (skill of r.missingSkills; track skill; let i = $index) {
+            <li
+              app-skill-pill
+              class="reveal"
+              tone="missing"
+              [label]="skill"
+              [style.--i]="order('missing', i)"
+            ></li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
