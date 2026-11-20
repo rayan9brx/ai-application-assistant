@@ -77,7 +77,10 @@
         </div>
         <blockquote>
           <p>
-            <span class="quote-muted">PLACEHOLDER: your first user review here.</span>&ngsp;<span class="quote-strong">Replace this text with real feedback from a real user.</span>
+            <span class="quote-muted">PLACEHOLDER: your first user review here.</span>&ngsp;<span
+              class="quote-strong"
+              >Replace this text with real feedback from a real user.</span
+            >
           </p>
         </blockquote>
         <figcaption>
@@ -125,7 +128,8 @@
             <text class="gauge-value" x="100" y="96" text-anchor="middle">{{ score.overall }}</text>
           </svg>
           <p class="gauge-label">
-            <span class="sr-only">Overall score {{ score.overall }} out of 100: </span>{{ score.verdict }}
+            <span class="sr-only">Overall score {{ score.overall }} out of 100: </span
+            >{{ score.verdict }}
           </p>
         </div>
         <p class="score-hint">
@@ -134,20 +138,7 @@
         <ul class="categories">
           @for (category of score.categories; track category.label) {
             <li>
-              <span class="ring" [attr.data-tone]="ringTone(category.score)">
-                <svg viewBox="0 0 36 36" aria-hidden="true">
-                  <circle class="ring-track" cx="18" cy="18" [attr.r]="ringRadius" />
-                  <circle
-                    class="ring-value"
-                    cx="18"
-                    cy="18"
-                    [attr.r]="ringRadius"
-                    [attr.stroke-dasharray]="ringCircumference"
-                    [attr.stroke-dashoffset]="ringOffset(category.score)"
-                  />
-                </svg>
-                <span class="ring-number">{{ category.score }}</span>
-              </span>
+              <app-score-ring [value]="category.score" />
               <span class="category-label">{{ category.label }}</span>
               <span class="sr-only">: {{ category.score }} out of 100</span>
             </li>

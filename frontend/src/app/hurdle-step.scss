@@ -1,0 +1,26 @@
+:host { display: block; }
+.step { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 64px; scroll-margin-top: 160px; }
+:host(.reversed) .text { order: 2; }
+.text, .visual { opacity: 0; transform: translateY(28px); transition: opacity .7s cubic-bezier(.2, .7, .2, 1), transform .7s cubic-bezier(.2, .7, .2, 1); }
+.visual { transition-delay: .12s; }
+:host(.visible) .text, :host(.visible) .visual { opacity: 1; transform: none; }
+.text { position: relative; min-width: 0; }
+.visual { min-width: 0; }
+.ghost { position: absolute; z-index: 0; top: -56px; left: -8px; color: #fff; font-size: 9rem; font-weight: 800; letter-spacing: -6px; line-height: 1; opacity: .05; pointer-events: none; user-select: none; }
+.text > :not(.ghost) { position: relative; z-index: 1; }
+.label { color: var(--sc-accent); font-size: .8125rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+h3 { margin-top: 10px; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700; line-height: 1.1; letter-spacing: -1.2px; text-wrap: balance; }
+.pain { margin-top: 16px; color: var(--sc-muted); font-size: 1.0625rem; line-height: 1.65; }
+.help-title { margin-top: 24px; color: var(--sc-text); font-size: .9375rem; font-weight: 650; }
+.benefits { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.benefits li { display: flex; align-items: flex-start; gap: 10px; color: var(--sc-text); font-size: 1rem; line-height: 1.5; }
+.benefits svg { flex: none; width: 20px; height: 20px; margin-top: 1px; padding: 3px; border-radius: 50%; background: var(--sc-accent-bg); fill: none; stroke: var(--sc-accent); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.step-cta { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 20px; color: var(--sc-accent); font-weight: 650; text-decoration: none; }
+.step-cta:hover { color: #c0bcff; text-decoration: underline; text-underline-offset: 4px; }
+.step-cta span { transition: transform .2s ease; }
+.step-cta:hover span { transform: translateX(3px); }
+@media (max-width: 900px) {
+  .step { grid-template-columns: minmax(0, 1fr); gap: 32px; scroll-margin-top: 96px; }
+  :host(.reversed) .text { order: 0; }
+  .ghost { top: -36px; font-size: 6rem; letter-spacing: -4px; }
+}

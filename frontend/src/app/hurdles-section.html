@@ -1,0 +1,29 @@
+<section class="hurdles" id="how-we-help" aria-labelledby="hurdles-title">
+  <header class="head">
+    <p class="badge">{{ header.badge }}</p>
+    <h2 id="hurdles-title">{{ header.title }}</h2>
+    <p class="intro">{{ header.text }}</p>
+  </header>
+
+  <div #journey class="journey">
+    <app-stepper
+      class="stepper"
+      [steps]="hurdles"
+      [fill]="fill()"
+      [progress]="progress()"
+      [positions]="positions()"
+      [active]="active()"
+    />
+    <div class="steps">
+      @for (hurdle of hurdles; track hurdle.id; let i = $index) {
+        <app-hurdle-step [hurdle]="hurdle" [reversed]="i % 2 === 1" />
+      }
+    </div>
+  </div>
+
+  <div class="closing">
+    <p class="closing-title">{{ closing.title }}</p>
+    <a class="cta" [href]="closing.cta.href">{{ closing.cta.label }}</a>
+    <p class="note">{{ closing.note }}</p>
+  </div>
+</section>

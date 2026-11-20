@@ -2,6 +2,7 @@ import { Component, HostListener, computed, effect, inject } from '@angular/core
 import { Title } from '@angular/platform-browser';
 import { ComingSoon } from './coming-soon';
 import { Hero } from './hero';
+import { HurdlesSection } from './hurdles-section';
 import { TOOLS_HREF, itemBySlug } from './menu-config';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
@@ -15,7 +16,17 @@ const SITE_TITLE = 'ApplyCraft — Your application workspace';
 
 @Component({
   selector: 'app-root',
-  imports: [ComingSoon, Hero, Navbar, PricingPage, ProblemSection, Showcase, ToolsPage, UploadBar],
+  imports: [
+    ComingSoon,
+    Hero,
+    HurdlesSection,
+    Navbar,
+    PricingPage,
+    ProblemSection,
+    Showcase,
+    ToolsPage,
+    UploadBar,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })

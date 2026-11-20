@@ -1,5 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { CvData, CvPreview } from './cv-preview';
+import { ScoreRing } from './score-ring';
 
 export interface ShowcaseFeature {
   id: string;
@@ -103,11 +104,10 @@ export const SAMPLE_CV: CvData = {
 };
 
 const GAUGE = { cx: 100, cy: 100, r: 80 };
-const RING_RADIUS = 15;
 
 @Component({
   selector: 'app-showcase',
-  imports: [CvPreview],
+  imports: [CvPreview, ScoreRing],
   templateUrl: './showcase.html',
   styleUrl: './showcase.scss',
 })
@@ -116,8 +116,6 @@ export class Showcase {
   readonly score = SAMPLE_SCORE;
   readonly cv = SAMPLE_CV;
   readonly intervalMs = SHOWCASE_INTERVAL_MS;
-  readonly ringRadius = RING_RADIUS;
-  readonly ringCircumference = 2 * Math.PI * RING_RADIUS;
   readonly gaugePath = `M${GAUGE.cx - GAUGE.r} ${GAUGE.cy} A${GAUGE.r} ${GAUGE.r} 0 0 1 ${GAUGE.cx + GAUGE.r} ${GAUGE.cy}`;
   readonly knob = Showcase.gaugePoint(SAMPLE_SCORE.overall);
 
@@ -147,14 +145,6 @@ export class Showcase {
   static gaugePoint(score: number): { x: number; y: number } {
     const angle = Math.PI * (1 - Math.min(100, Math.max(0, score)) / 100);
     return { x: GAUGE.cx + GAUGE.r * Math.cos(angle), y: GAUGE.cy - GAUGE.r * Math.sin(angle) };
-  }
-
-  ringOffset(score: number): number {
-    return this.ringCircumference * (1 - score / 100);
-  }
-
-  ringTone(score: number): 'low' | 'mid' | 'high' {
-    return score < 50 ? 'low' : score < 75 ? 'mid' : 'high';
   }
 
   /** Switch immediately and give the new feature a full interval. */

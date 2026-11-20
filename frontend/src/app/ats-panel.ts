@@ -9,6 +9,7 @@ import {
   signal,
 } from '@angular/core';
 import { CvData, CvPreview } from './cv-preview';
+import { whenInView } from './in-view';
 import { ParsedField, ParsedFieldRow } from './parsed-field-row';
 import { SkillPill } from './skill-pill';
 
@@ -50,27 +51,14 @@ export class AtsPanel {
 
   constructor() {
     const destroyRef = inject(DestroyRef);
-    afterNextRender(() => {
-      const reduced =
-        typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (reduced || typeof IntersectionObserver === 'undefined') {
-        this.done.set(true);
-        return;
-      }
-      const observer = new IntersectionObserver(
-        (entries) => {
-          if (!entries.some((entry) => entry.isIntersecting)) return;
-          observer.disconnect();
-          this.countUp();
-        },
-        { threshold: 0.25 },
-      );
-      observer.observe(this.host.nativeElement);
-      destroyRef.onDestroy(() => {
-        observer.disconnect();
-        cancelAnimationFrame(this.frame);
-      });
-    });
+    destroyRef.onDestroy(() => cancelAnimationFrame(this.frame));
+    afterNextRender(() =>
+      whenInView(
+        this.host.nativeElement,
+        (animate) => (animate ? this.countUp() : this.done.set(true)),
+        destroyRef,
+      ),
+    );
   }
 
   /** Index used to stagger the reveal of rows and pills after the count finishes. */

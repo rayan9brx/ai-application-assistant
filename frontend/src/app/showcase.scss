@@ -179,22 +179,6 @@ blockquote { margin: 14px 0 0; font-size: 1rem; line-height: 1.6; }
 .score-hint { margin: 10px 0 16px; color: var(--sc-muted); font-size: .8125rem; line-height: 1.5; text-align: center; }
 .categories { margin: 0; padding: 0; list-style: none; }
 .categories li { display: flex; align-items: center; gap: 12px; padding-block: 9px; border-top: 1px solid var(--sc-line); }
-.ring { position: relative; flex: none; width: 36px; height: 36px; }
-.ring[data-tone='low'] { color: var(--sc-low); }
-.ring[data-tone='mid'] { color: var(--sc-mid); }
-.ring[data-tone='high'] { color: var(--sc-high); }
-.ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
-.ring-track { fill: none; stroke: var(--sc-line); stroke-width: 3; }
-.ring-value { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
-.ring-number {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--sc-text);
-  font-size: 11px;
-  font-weight: 700;
-}
 .category-label { font-size: .875rem; }
 
 @media (max-width: 1080px) {
