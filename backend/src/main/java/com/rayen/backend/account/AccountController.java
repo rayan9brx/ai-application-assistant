@@ -77,6 +77,8 @@ public class AccountController {
     @PostMapping("/cvs")
     @ResponseStatus(HttpStatus.CREATED)
     public CvView createCv(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CvRequest request) {
+        // Saving is often a new user's first request: create the profile with their sign-up name.
+        accounts.profile(userId(jwt), signupName(jwt));
         return view(accounts.createCv(userId(jwt), request.title(), request.content(), request.jobDescription()));
     }
 

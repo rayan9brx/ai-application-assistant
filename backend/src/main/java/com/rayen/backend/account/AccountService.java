@@ -39,10 +39,23 @@ public class AccountService {
         this.admin = admin;
     }
 
-    /** Returns the user's profile, creating it on first use (the auth user already exists). */
+    /**
+     * Returns the user's profile, creating it on first use (the auth user already exists).
+     * Called outside any surrounding transaction, so the insert commits on its own: when two first
+     * requests race, the loser's failed insert can't abort other work (Postgres would reject every
+     * later statement in that transaction) and it simply reads the winner's row.
+     */
     public Profile profile(UUID userId, String nameFromSignup) {
         Optional<Profile> existing = profiles.findById(userId);
-        if (existing.isPresent()) return existing.get();
+        if (existing.isPresent()) {
+            Profile profile = existing.get();
+            // A profile first created by a request that didn't carry the name picks it up later.
+            if (profile.getFullName() == null && clean(nameFromSignup) != null) {
+                profile.setFullName(clean(nameFromSignup));
+                return profiles.saveAndFlush(profile);
+            }
+            return profile;
+        }
         try {
             return profiles.saveAndFlush(new Profile(userId, clean(nameFromSignup)));
         } catch (DataIntegrityViolationException raced) {
@@ -50,7 +63,7 @@ public class AccountService {
         }
     }
 
-    @Transactional
+    /** Not @Transactional on purpose: profile() may insert and must not share a transaction. */
     public Profile rename(UUID userId, String fullName) {
         Profile profile = profile(userId, null);
         profile.setFullName(clean(fullName));
@@ -79,7 +92,7 @@ public class AccountService {
         return cvs.findByIdAndUserId(cvId, userId).orElseThrow(AccountService::notFound);
     }
 
-    @Transactional
+    /** Not @Transactional on purpose: profile() may insert and must not share a transaction. */
     public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription) {
         profile(userId, null);
         if (cvs.countByUserId(userId) >= MAX_CVS) {

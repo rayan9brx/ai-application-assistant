@@ -122,6 +122,39 @@ class AccountIsolationTests {
     }
 
     @Test
+    void saveAsFirstRequestKeepsTheSignupName() throws Exception {
+        UUID dana = UUID.randomUUID();
+        call(post("/api/cvs"), dana, cvBody("First save"), 201);
+        assertEquals("Test User", call(get("/api/me"), dana, null, 200).get("fullName").asString());
+    }
+
+    @Test
+    void simultaneousFirstRequestsOfANewUserAllSucceed() throws Exception {
+        UUID carol = UUID.randomUUID();
+        int parallel = 6;
+        var start = new java.util.concurrent.CountDownLatch(1);
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(parallel);
+        try {
+            var results = new java.util.ArrayList<java.util.concurrent.Future<Integer>>();
+            for (int i = 0; i < parallel; i++) {
+                int n = i;
+                results.add(pool.submit(() -> {
+                    start.await();
+                    return mvc.perform(post("/api/cvs").with(as(carol)).contentType(MediaType.APPLICATION_JSON)
+                            .content(JSON.writeValueAsString(cvBody("CV " + n))))
+                        .andReturn().getResponse().getStatus();
+                }));
+            }
+            start.countDown();
+            for (var result : results) assertEquals(201, result.get(30, java.util.concurrent.TimeUnit.SECONDS));
+        } finally {
+            pool.shutdownNow();
+        }
+        assertEquals(parallel, call(get("/api/cvs"), carol, null, 200).size());
+        assertEquals(carol.toString(), call(get("/api/me"), carol, null, 200).get("id").asString());
+    }
+
+    @Test
     void ownerCanUpdateDuplicateAndDelete() throws Exception {
         String id = call(post("/api/cvs"), alice, cvBody("Draft"), 201).get("id").asString();
         assertEquals("Final", call(put("/api/cvs/" + id), alice, cvBody("Final"), 200).get("title").asString());

@@ -92,8 +92,8 @@ public class ClaudeClient {
                 sleep(1500);
                 return send(request, false);
             }
-            // Log the status only; error bodies never contain the CV, but keep logs minimal anyway.
-            log.warn("Claude API returned HTTP {}", status);
+            // API error bodies describe the problem and never echo the CV, so the reason is safe to log.
+            log.warn("Claude API returned HTTP {}: {}", status, errorReason(response.body()));
             if (status == 401 || status == 403) {
                 throw new AiException(HttpStatus.SERVICE_UNAVAILABLE, "The AI service isn't configured correctly. Please try again later.");
             }
@@ -113,6 +113,17 @@ public class ClaudeClient {
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new AiException(HttpStatus.SERVICE_UNAVAILABLE, "The AI request was interrupted. Please try again.");
+        }
+    }
+
+    /** "type: message" from an API error body, capped; never the request itself. */
+    private String errorReason(String body) {
+        try {
+            JsonNode error = json.readTree(body).path("error");
+            String reason = error.path("type").asString("unknown") + ": " + error.path("message").asString("");
+            return reason.length() > 300 ? reason.substring(0, 300) + "…" : reason;
+        } catch (JacksonException | IllegalArgumentException e) {
+            return "(unreadable error body)";
         }
     }
 

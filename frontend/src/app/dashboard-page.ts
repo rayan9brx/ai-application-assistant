@@ -51,6 +51,8 @@ export class DashboardPage {
         runs[1]?.overallScore ?? null,
       );
       await this.navigation.go('/check');
+      // A CV saved without a score has nothing to show yet: score it now (saved to its history).
+      if (!runs[0]) void this.flow.startWithText(saved.content.text ?? '');
     }, 'This CV couldn’t be opened.');
   }
 

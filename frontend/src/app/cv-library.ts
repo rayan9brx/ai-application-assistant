@@ -114,15 +114,25 @@ export class CvLibrary {
     }
   }
 
+  /**
+   * The flag is cleared only once the save has succeeded: if the page reloads or the request
+   * fails mid-save, the next sign-in or page load tries again instead of losing the CV's score.
+   */
   private async savePending(): Promise<void> {
-    let pending = false;
+    if (!this.auth.signedIn()) return;
     try {
-      pending = localStorage.getItem(PENDING_KEY) === '1';
-      if (pending && this.auth.signedIn()) localStorage.removeItem(PENDING_KEY);
+      if (localStorage.getItem(PENDING_KEY) !== '1') return;
     } catch {
       return;
     }
-    if (pending && this.auth.signedIn() && this.flow.cvText().trim()) await this.save();
+    const saved = this.flow.cvText().trim() ? await this.save() : true;
+    if (saved) {
+      try {
+        localStorage.removeItem(PENDING_KEY);
+      } catch {
+        /* Nothing else to do; a second save would only update the same CV. */
+      }
+    }
   }
 }
 
