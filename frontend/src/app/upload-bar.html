@@ -1,7 +1,6 @@
 <div
   class="upload-bar"
   [class.dragging]="dragging()"
-  [attr.aria-busy]="busy()"
   (dragenter)="dragOver($event)"
   (dragover)="dragOver($event)"
   (dragleave)="dragLeave($event)"
@@ -25,7 +24,6 @@
       <button
         class="browse"
         type="button"
-        [disabled]="busy()"
         aria-describedby="upload-bar-status"
         (click)="browse()"
       >
@@ -33,7 +31,7 @@
       >&nbsp;or drop your CV to get your free score
     </p>
     <p class="status" id="upload-bar-status" aria-live="polite">
-      {{ file() ? file()!.name + ' is ready' : 'PDF, up to 5 MB' }}
+      {{ file() ? file()!.name + ' is ready' : notice() || 'PDF, up to 5 MB' }}
     </p>
   </div>
   <input
@@ -45,8 +43,8 @@
     aria-hidden="true"
     (change)="pick(picker)"
   />
-  <button class="cta score" type="button" [disabled]="!file() || busy()" (click)="submit()">
-    {{ busy() ? 'Reading…' : 'Score my CV' }}
+  <button class="cta score" type="button" [disabled]="!file()" (click)="submit()">
+    Score my CV
   </button>
 </div>
 @if (error()) {

@@ -6,32 +6,16 @@
     >
     <nav aria-label="Main navigation">
       <ul role="list">
-        @for (link of links(); track link.section) {
+        @for (link of links(); track link.href) {
           <li>
-            <a
-              class="nav-link"
-              [href]="link.href"
-              [class.active]="active() === link.section"
-              [attr.aria-current]="active() === link.section ? 'location' : null"
-              >{{ link.label }}</a
-            >
+            <a class="nav-link" [href]="link.href">{{ link.label }}</a>
           </li>
         }
       </ul>
     </nav>
     <div class="header-actions">
-      @if (!auth.user()) {
-        <button
-          class="login-link"
-          type="button"
-          [disabled]="auth.busy()"
-          aria-controls="account-form"
-          (click)="auth.show('login')"
-        >
-          Log in
-        </button>
-      }
-      <a class="cta cta-small" href="#application-details">Try it free</a>
+      <!-- Add a "Log in" link here once accounts exist again. -->
+      <a class="cta cta-small" href="#get-started">Try it free</a>
     </div>
   </div>
 </header>

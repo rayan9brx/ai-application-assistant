@@ -24,21 +24,21 @@ export const SHOWCASE_FEATURES: readonly ShowcaseFeature[] = [
     title: 'Build',
     lead: 'Start from the experience you already have.',
     rest: 'Bring your CV and the job description into one workspace, then review and edit every line before you download.',
-    href: '#application-details',
+    href: '#get-started',
   },
   {
     id: 'score',
     title: 'Score',
     lead: 'Know exactly where you stand.',
     rest: "The ApplyCraft Score breaks down your CV section by section. No guessing what's weak. You see it, then fix it.",
-    href: '#about',
+    href: '#get-started',
   },
   {
     id: 'target',
     title: 'Target',
     lead: 'Fit every application to the role.',
     rest: 'Compare your CV with the job description and see which of your real skills to bring forward. Nothing is invented.',
-    href: '#about',
+    href: '#get-started',
   },
 ];
 

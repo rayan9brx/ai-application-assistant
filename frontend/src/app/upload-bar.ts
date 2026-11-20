@@ -1,4 +1,4 @@
-import { Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, signal, viewChild } from '@angular/core';
 
 @Component({
   selector: 'app-upload-bar',
@@ -6,11 +6,10 @@ import { Component, ElementRef, input, output, signal, viewChild } from '@angula
   styleUrl: './upload-bar.scss',
 })
 export class UploadBar {
-  readonly busy = input(false);
-  readonly score = output<File>();
   readonly file = signal<File | null>(null);
   readonly dragging = signal(false);
   readonly error = signal('');
+  readonly notice = signal('');
   private readonly picker = viewChild.required<ElementRef<HTMLInputElement>>('picker');
 
   browse(): void {
@@ -24,7 +23,7 @@ export class UploadBar {
 
   dragOver(event: DragEvent): void {
     event.preventDefault();
-    if (!this.busy()) this.dragging.set(true);
+    this.dragging.set(true);
   }
 
   // Ignore dragleave events fired when the pointer moves onto a child element.
@@ -36,20 +35,21 @@ export class UploadBar {
   drop(event: DragEvent): void {
     event.preventDefault();
     this.dragging.set(false);
-    if (!this.busy()) this.select(event.dataTransfer?.files[0]);
+    this.select(event.dataTransfer?.files[0]);
   }
 
+  // TODO: send the file to a CV scoring endpoint once one exists.
   submit(): void {
-    const file = this.file();
-    if (!file || this.busy()) return;
-    this.score.emit(file);
+    if (!this.file()) return;
     this.file.set(null);
+    this.notice.set("CV scoring isn't available yet, so your file wasn't uploaded.");
   }
 
-  // Only PDFs can be extracted by the backend today; DOCX needs server-side support first.
+  // Only PDFs are accepted for now; DOCX needs server-side support first.
   private select(file?: File): void {
     if (!file) return;
     const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+    this.notice.set('');
     this.error.set(isPdf ? '' : 'Only PDF files are supported for now.');
     this.file.set(isPdf ? file : null);
   }
