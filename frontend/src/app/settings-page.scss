@@ -1,0 +1,10 @@
+.settings { display: grid; gap: var(--space-5); width: min(560px, 100%); margin-inline: auto; }
+.settings header h1 { margin-top: var(--space-3); }
+.settings .lede { margin-bottom: 0; }
+.settings .auth-card { width: 100%; }
+.settings h2 { margin-bottom: var(--space-4); }
+.settings .cta { width: auto; justify-self: start; }
+.plan { margin-bottom: var(--space-2); }
+.danger-zone { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
+.danger-zone .help { margin-bottom: var(--space-4); }
+.delete { justify-self: start; border-color: var(--danger); background: var(--danger); color: #fff; }

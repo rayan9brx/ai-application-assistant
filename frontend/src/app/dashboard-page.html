@@ -1,0 +1,97 @@
+<section aria-labelledby="dashboard-title">
+  <header class="head">
+    <div>
+      <p class="pill-badge">Dashboard</p>
+      <h1 id="dashboard-title">
+        {{ auth.displayName() ? 'Welcome, ' + auth.displayName() : 'Your CVs' }}
+      </h1>
+    </div>
+    <a class="cta cta-small" href="/check">Check a new CV</a>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @let list = cvs();
+  @if (list === null) {
+    <p class="muted" role="status">Loading your CVs…</p>
+  } @else if (list.length === 0) {
+    <div class="empty">
+      <h2>No saved CVs yet</h2>
+      <p class="muted">Score a CV in the checker, then press Save to keep it here.</p>
+      <a class="cta cta-small" href="/check">Score my CV</a>
+    </div>
+  } @else {
+    <h2 class="sr-only">Saved CVs</h2>
+    <ul class="cvs" role="list">
+      @for (cv of list; track cv.id) {
+        <li class="cv">
+          <div class="cv-main">
+            <span class="score" [class]="scoreClass(cv.lastScore)"
+              [attr.aria-label]="cv.lastScore === null ? 'Not scored yet' : 'Last score ' + cv.lastScore">
+              {{ cv.lastScore ?? '–' }}
+            </span>
+            <div class="cv-text">
+              <h3>{{ cv.title }}</h3>
+              <p class="muted">
+                Updated {{ cv.updatedAt | date: 'mediumDate' }}
+                @if (cv.lastScoredAt) {
+                  · last scored {{ cv.lastScoredAt | date: 'short' }}
+                }
+              </p>
+            </div>
+          </div>
+
+          @if (confirmDelete() === cv.id) {
+            <div class="confirm" role="group" aria-label="Confirm delete">
+              <span>Delete this CV and its score history?</span>
+              <button type="button" class="danger" [disabled]="busyId() === cv.id" (click)="remove(cv)">
+                Delete
+              </button>
+              <button type="button" class="plain" (click)="confirmDelete.set(null)">Cancel</button>
+            </div>
+          } @else {
+            <div class="actions">
+              <button type="button" class="cta cta-small" [disabled]="!!busyId()" (click)="open(cv)">
+                Open
+              </button>
+              <button type="button" class="plain" [disabled]="!!busyId()"
+                [attr.aria-expanded]="openHistory() === cv.id"
+                [attr.aria-controls]="'history-' + cv.id" (click)="toggleHistory(cv)">
+                History
+              </button>
+              <button type="button" class="plain" [disabled]="!!busyId()" (click)="duplicate(cv)">
+                Duplicate
+              </button>
+              <button type="button" class="plain" [disabled]="!!busyId()" (click)="confirmDelete.set(cv.id)">
+                Delete
+              </button>
+            </div>
+          }
+
+          @if (openHistory() === cv.id) {
+            <div class="history" [id]="'history-' + cv.id">
+              @let runs = history()[cv.id];
+              @if (!runs) {
+                <p class="muted" role="status">Loading history…</p>
+              } @else if (runs.length === 0) {
+                <p class="muted">No scores saved yet. Open the CV and score it.</p>
+              } @else {
+                <ol role="list" aria-label="Score history, newest first">
+                  @for (run of runs; track run.id) {
+                    <li>
+                      <span class="when">{{ run.createdAt | date: 'short' }}</span>
+                      <span class="bar" aria-hidden="true"><span [style.width.%]="run.overallScore" [class]="scoreClass(run.overallScore)"></span></span>
+                      <span class="value">{{ run.overallScore }}</span>
+                    </li>
+                  }
+                </ol>
+              }
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>

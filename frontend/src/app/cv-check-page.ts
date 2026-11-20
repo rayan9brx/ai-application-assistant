@@ -1,5 +1,7 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { AuthService } from './auth.service';
 import { CvFlow } from './cv-flow';
+import { CvLibrary } from './cv-library';
 import { IssueCard } from './issue-card';
 import { ScoreReport } from './score-report';
 import { TailorPanel } from './tailor-panel';
@@ -21,6 +23,13 @@ const SCORING_STEPS = [
 })
 export class CvCheckPage {
   readonly flow = inject(CvFlow);
+  readonly library = inject(CvLibrary);
+  readonly auth = inject(AuthService);
+  readonly saveLabel = computed(() => {
+    if (this.library.state() === 'saving') return 'Saving…';
+    if (!this.auth.signedIn()) return 'Save to my account';
+    return this.flow.savedCvId() ? 'Save changes' : 'Save';
+  });
   readonly mode = signal<'file' | 'paste'>('file');
   readonly file = signal<File | null>(null);
   readonly pasted = signal('');

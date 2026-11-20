@@ -1,0 +1,86 @@
+<div class="settings">
+  <header>
+    <p class="pill-badge">Settings</p>
+    <h1 id="settings-title">Your account</h1>
+    <p class="lede">{{ auth.user()?.email }}</p>
+  </header>
+  @if (loadError()) {
+    <p class="error" role="alert">{{ loadError() }}</p>
+  }
+
+  <section class="auth-card" aria-labelledby="settings-name">
+    <h2 id="settings-name">Name</h2>
+    <form (submit)="saveName($event)" novalidate>
+      @if (nameState().error) {
+        <p class="error" role="alert">{{ nameState().error }}</p>
+      }
+      @if (nameState().done) {
+        <p class="notice" role="status">Your name is saved.</p>
+      }
+      <div class="field">
+        <label for="settings-full-name">Full name</label>
+        <input id="settings-full-name" autocomplete="name" maxlength="200" [value]="name()"
+          (input)="name.set(value($event))" />
+      </div>
+      <button class="cta cta-small" type="submit" [disabled]="!profile() || nameState().busy">
+        {{ nameState().busy ? 'Saving…' : 'Save name' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="auth-card" aria-labelledby="settings-password">
+    <h2 id="settings-password">Password</h2>
+    <form (submit)="savePassword($event)" novalidate>
+      @if (passwordState().error) {
+        <p class="error" role="alert">{{ passwordState().error }}</p>
+      }
+      @if (passwordState().done) {
+        <p class="notice" role="status">Your password is changed.</p>
+      }
+      <div class="field">
+        <label for="settings-new-password">New password</label>
+        <input id="settings-new-password" type="password" autocomplete="new-password"
+          aria-describedby="settings-password-help" [value]="password()"
+          (input)="password.set(value($event))" />
+        <p class="help" id="settings-password-help">At least {{ minPassword }} characters.</p>
+      </div>
+      <button class="cta cta-small" type="submit" [disabled]="passwordState().busy">
+        {{ passwordState().busy ? 'Saving…' : 'Change password' }}
+      </button>
+    </form>
+  </section>
+
+  <section class="auth-card" aria-labelledby="settings-plan">
+    <h2 id="settings-plan">Plan</h2>
+    @if (profile(); as p) {
+      <p class="plan"><strong>{{ planLabel(p.plan) }}</strong> plan</p>
+      @if (p.plan === 'free') {
+        <p class="help">Compare what Pro and Lifetime add on the <a href="/pricing">pricing page</a>.</p>
+      }
+    } @else {
+      <p class="help" role="status">Loading…</p>
+    }
+  </section>
+
+  <section class="auth-card danger-zone" aria-labelledby="settings-delete">
+    <h2 id="settings-delete">Delete my account</h2>
+    <p class="help">
+      This permanently deletes your account, all saved CVs and their score history. It can’t be
+      undone.
+    </p>
+    <form (submit)="deleteAccount($event)" novalidate>
+      @if (deleteState().error) {
+        <p class="error" role="alert">{{ deleteState().error }}</p>
+      }
+      <div class="field">
+        <label for="settings-confirm-delete">Type DELETE to confirm</label>
+        <input id="settings-confirm-delete" autocomplete="off" [value]="confirmText()"
+          (input)="confirmText.set(value($event))" />
+      </div>
+      <button class="delete" type="submit"
+        [disabled]="confirmText().trim() !== 'DELETE' || deleteState().busy">
+        {{ deleteState().busy ? 'Deleting…' : 'Delete my account' }}
+      </button>
+    </form>
+  </section>
+</div>

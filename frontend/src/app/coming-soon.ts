@@ -1,5 +1,5 @@
-import { Component, input } from '@angular/core';
-import { MenuItemConfig, TOOLS_HREF } from './menu-config';
+import { Component, computed, input } from '@angular/core';
+import { TOOLS_HREF, itemBySlug } from './menu-config';
 
 /** Generic placeholder page for tools that are not built yet. */
 @Component({
@@ -21,6 +21,8 @@ import { MenuItemConfig, TOOLS_HREF } from './menu-config';
   styleUrl: './coming-soon.scss',
 })
 export class ComingSoon {
-  readonly item = input<MenuItemConfig>();
+  /** The :slug route parameter. */
+  readonly slug = input<string>();
+  readonly item = computed(() => itemBySlug(this.slug() ?? ''));
   readonly toolsHref = TOOLS_HREF;
 }

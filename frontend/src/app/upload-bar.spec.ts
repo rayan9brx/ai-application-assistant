@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 import { UploadBar } from './upload-bar';
 
 const dropEvent = (file: File) => {
@@ -43,11 +45,14 @@ describe('UploadBar', () => {
 });
 
 describe('App', () => {
-  it('renders the landing sections in order', () => {
+  it('renders the landing sections in order', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter(routes, withComponentInputBinding())] });
     const fixture = TestBed.createComponent(App);
+    await TestBed.inject(Router).navigateByUrl('/');
     fixture.detectChanges();
-    const main: HTMLElement = fixture.nativeElement.querySelector('main');
-    expect(Array.from(main.children).map((el) => el.tagName.toLowerCase())).toEqual([
+    await fixture.whenStable();
+    const home: HTMLElement = fixture.nativeElement.querySelector('main app-home-page');
+    expect(Array.from(home.children).map((el) => el.tagName.toLowerCase())).toEqual([
       'app-hero',
       'app-upload-bar',
       'app-showcase',

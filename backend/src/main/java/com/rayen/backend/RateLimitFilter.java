@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Fixed-window, per-IP request limits for the public CV endpoints, kept in memory.
+ * Fixed-window, per-IP request limits for the CV endpoints and account writes, kept in memory.
  * Behind a reverse proxy, server.forward-headers-strategy=native makes getRemoteAddr()
  * the client's IP. For several server instances, move this to a shared store.
  */
@@ -22,12 +22,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private final int aiLimit;
     private final int fileLimit;
+    private final int dataLimit;
     private final Map<String, long[]> windows = new ConcurrentHashMap<>();
 
     public RateLimitFilter(@Value("${app.rate-limit.ai-per-10-min:20}") int aiLimit,
-                           @Value("${app.rate-limit.files-per-10-min:60}") int fileLimit) {
+                           @Value("${app.rate-limit.files-per-10-min:60}") int fileLimit,
+                           @Value("${app.rate-limit.data-per-10-min:300}") int dataLimit) {
         this.aiLimit = aiLimit;
         this.fileLimit = fileLimit;
+        this.dataLimit = dataLimit;
     }
 
     @Override
@@ -39,7 +42,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String bucket = bucket(request);
-        int limit = "ai".equals(bucket) ? aiLimit : fileLimit;
+        int limit = "ai".equals(bucket) ? aiLimit : "data".equals(bucket) ? dataLimit : fileLimit;
         long now = System.currentTimeMillis();
         if (windows.size() > 10_000) windows.values().removeIf(window -> now - window[0] > WINDOW_MS);
         long[] window = windows.compute(bucket + ":" + request.getRemoteAddr(), (key, current) ->
@@ -56,8 +59,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private static String bucket(HttpServletRequest request) {
-        if (!"POST".equals(request.getMethod())) return null;
+        String method = request.getMethod();
         String path = request.getRequestURI();
+        // Account writes (save CV, save analysis, rename, delete); reads stay unlimited.
+        if (!"GET".equals(method) && !"HEAD".equals(method) && !"OPTIONS".equals(method)
+            && SecurityConfig.isAccountPath(path)) return "data";
+        if (!"POST".equals(method)) return null;
         if (path.equals("/api/cv/score") || path.equals("/api/cv/fix") || path.equals("/api/cv/tailor")) return "ai";
         if (path.equals("/api/cv/extract") || path.equals("/api/documents/export")) return "files";
         return null;

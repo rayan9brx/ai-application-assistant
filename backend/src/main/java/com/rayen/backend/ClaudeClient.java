@@ -48,6 +48,8 @@ public class ClaudeClient {
         this.endpoint = URI.create(baseUrl.replaceAll("/+$", "") + "/v1/messages");
         this.timeout = Duration.ofSeconds(timeoutSeconds);
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+        // Optional at startup: everything else works, and each AI endpoint answers 503 with a clear message.
+        if (!configured()) log.warn("ANTHROPIC_API_KEY is not set; CV scoring, fixes and tailoring are disabled.");
     }
 
     public boolean configured() {

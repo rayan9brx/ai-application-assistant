@@ -17,7 +17,7 @@ class RateLimitFilterTests {
 
     @Test
     void limitsEachIpPerBucketAndLeavesOtherRoutesAlone() throws Exception {
-        var filter = new RateLimitFilter(2, 3);
+        var filter = new RateLimitFilter(2, 3, 300);
         assertEquals(200, call(filter, "/api/cv/score", "1.1.1.1").getStatus());
         assertEquals(200, call(filter, "/api/cv/fix", "1.1.1.1").getStatus());
         var limited = call(filter, "/api/cv/tailor", "1.1.1.1");

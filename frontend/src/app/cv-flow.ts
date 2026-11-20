@@ -59,14 +59,14 @@ interface SavedFlow {
   previousOverall: number | null;
   stale: boolean;
   tailoring: CvTailoring | null;
+  savedCvId?: string | null;
 }
 
 /**
  * State and server calls for Upload → Score → Fix → Download. The server is stateless: it parses
  * and analyses each request in memory and keeps nothing, so all state lives here in the browser.
  * Results are mirrored to localStorage (this device only) so a refresh doesn't lose progress;
- * "Start over" clears them.
- * TODO(database): saving CVs across devices needs accounts and a database on the server.
+ * "Start over" clears them. Signed-in users can also save the CV to their account (CvLibrary).
  */
 @Injectable({ providedIn: 'root' })
 export class CvFlow {
@@ -82,6 +82,10 @@ export class CvFlow {
   readonly error = signal('');
   readonly busy = signal<'rescore' | 'tailor' | 'download' | null>(null);
   readonly tailoring = signal<CvTailoring | null>(null);
+  /** The saved CV this text belongs to, when it was saved to or opened from the account. */
+  readonly savedCvId = signal<string | null>(null);
+  /** Counts successful scoring runs (not restores), so saving can follow each new score. */
+  readonly scoreRuns = signal(0);
 
   constructor() {
     this.restore();
@@ -95,6 +99,7 @@ export class CvFlow {
             previousOverall: this.previousOverall(),
             stale: this.stale(),
             tailoring: this.tailoring(),
+            savedCvId: this.savedCvId(),
           }
         : null;
       try {
@@ -221,6 +226,20 @@ export class CvFlow {
     this.error.set('');
     this.busy.set(null);
     this.tailoring.set(null);
+    this.savedCvId.set(null);
+  }
+
+  /** Opens a CV from the account, with its latest score when it has one. */
+  loadSaved(id: string, text: string, jobDescription: string, score: CvScore | null, previous: number | null): void {
+    this.reset();
+    this.savedCvId.set(id);
+    this.cvText.set(text);
+    this.jobDescription.set(jobDescription);
+    if (score) {
+      this.score.set(score);
+      this.previousOverall.set(previous);
+      this.phase.set('results');
+    }
   }
 
   private async runScore(mode: 'scoring' | 'rescore'): Promise<void> {
@@ -237,6 +256,7 @@ export class CvFlow {
       this.score.set(score);
       this.stale.set(false);
       this.phase.set('results');
+      this.scoreRuns.update((runs) => runs + 1);
     } catch (error) {
       this.fail(error, 'Scoring failed. Please try again.', mode === 'rescore');
     } finally {
@@ -266,6 +286,7 @@ export class CvFlow {
       this.previousOverall.set(saved.previousOverall ?? null);
       this.stale.set(!!saved.stale);
       this.tailoring.set(saved.tailoring ?? null);
+      this.savedCvId.set(typeof saved.savedCvId === 'string' ? saved.savedCvId : null);
       this.phase.set('results');
     } catch {
       /* Blocked or corrupt storage: start fresh. */

@@ -24,9 +24,25 @@
           >
             {{ flow.busy() === 'download' ? 'Creating PDF…' : 'Download PDF' }}
           </button>
+          <button
+            class="cta cta-small cta-secondary"
+            type="button"
+            [disabled]="!!flow.busy() || library.state() === 'saving'"
+            (click)="library.requestSave()"
+          >
+            {{ saveLabel() }}
+          </button>
           <button class="link-button" type="button" (click)="startOver()">Start over</button>
         </div>
       </header>
+      @if (library.state() === 'saved' && auth.signedIn()) {
+        <p class="hint saved" role="status">
+          Saved to your account. New scores are added to its history.
+          <a href="/dashboard">Go to dashboard</a>
+        </p>
+      } @else if (library.state() === 'error') {
+        <p class="error" role="alert">{{ library.error() }}</p>
+      }
       @if (flow.stale()) {
         <p class="hint" role="status">You changed your CV. Re-score to see your new score.</p>
       }

@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 import { MENU_ITEMS } from './menu-config';
 import { Navigation } from './navigation';
 import { ServicesMenu } from './services-menu';
@@ -90,24 +92,27 @@ describe('App routes', () => {
   const start = location.href;
   afterEach(() => history.replaceState(null, '', start));
 
-  it('shows the tools page and a coming-soon page for placeholder tools', () => {
+  it('shows the tools page and a coming-soon page for placeholder tools', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter(routes, withComponentInputBinding())] });
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const navigation = TestBed.inject(Navigation);
+    const go = async (url: string) => {
+      await navigation.go(url);
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
 
-    navigation.go('/tools');
-    fixture.detectChanges();
+    await go('/tools');
     const main: HTMLElement = fixture.nativeElement.querySelector('main');
     expect(main.querySelector('h1')!.textContent).toContain('All tools');
     expect(main.querySelectorAll('a[app-menu-item]').length).toBe(MENU_ITEMS.length);
 
-    navigation.go('/tools/cv-checker');
-    fixture.detectChanges();
+    await go('/tools/cv-checker');
     expect(main.querySelector('h1')!.textContent).toContain('CV Checker is on its way');
     expect(document.title).toContain('CV Checker');
 
-    navigation.go('/');
-    fixture.detectChanges();
+    await go('/');
     expect(main.querySelector('app-hero')).not.toBeNull();
   });
 });

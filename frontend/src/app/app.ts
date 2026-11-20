@@ -1,82 +1,26 @@
-import { Component, HostListener, computed, effect, inject } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { ComingSoon } from './coming-soon';
-import { CvCheckPage } from './cv-check-page';
-import { CvFlow } from './cv-flow';
-import { Hero } from './hero';
-import { HurdlesSection } from './hurdles-section';
-import { CHECK_HREF, TOOLS_HREF, itemBySlug } from './menu-config';
+import { Component, HostListener, inject } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
+import { CvLibrary } from './cv-library';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
-import { PricingPage } from './pricing-page';
-import { ProblemSection } from './problem-section';
-import { Showcase } from './showcase';
-import { ToolsPage } from './tools-page';
-import { UploadBar } from './upload-bar';
-
-const SITE_TITLE = 'ApplyCraft — Your application workspace';
 
 @Component({
   selector: 'app-root',
-  imports: [
-    ComingSoon,
-    CvCheckPage,
-    Hero,
-    HurdlesSection,
-    Navbar,
-    PricingPage,
-    ProblemSection,
-    Showcase,
-    ToolsPage,
-    UploadBar,
-  ],
+  imports: [Navbar, RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
 export class App {
   private readonly navigation = inject(Navigation);
-  private readonly flow = inject(CvFlow);
   readonly navLinks: NavLink[] = [
     { href: '/#features', label: 'Features' },
     { href: '/#problem', label: 'Why ATS matters' },
     { href: '/pricing', label: 'Pricing' },
   ];
 
-  /** Anything under /tools/ that is not a known tool still gets the generic placeholder. */
-  readonly page = computed(() => {
-    const path = this.navigation.path().replace(/\/+$/, '') || '/';
-    if (path === '/pricing') return { kind: 'pricing' as const };
-    if (path === CHECK_HREF) return { kind: 'check' as const };
-    if (path === TOOLS_HREF) return { kind: 'tools' as const };
-    if (path.startsWith(`${TOOLS_HREF}/`)) {
-      return { kind: 'coming-soon' as const, item: itemBySlug(path.slice(TOOLS_HREF.length + 1)) };
-    }
-    return { kind: 'home' as const };
-  });
-
   constructor() {
-    const title = inject(Title);
-    effect(() => {
-      const page = this.page();
-      title.setTitle(
-        page.kind === 'check'
-          ? 'CV Checker — ApplyCraft'
-          : page.kind === 'pricing'
-            ? 'Pricing — ApplyCraft'
-            : page.kind === 'tools'
-              ? `All tools — ApplyCraft`
-              : page.kind === 'coming-soon'
-                ? `${page.item?.title ?? 'Coming soon'} — ApplyCraft`
-                : SITE_TITLE,
-      );
-    });
-  }
-
-  /** The landing upload bar hands its file to the checker and opens it. */
-  startCheck(file: File): void {
-    this.flow.reset();
-    this.navigation.go(CHECK_HREF);
-    void this.flow.startWithFile(file);
+    // Listens for sign-in from the start, so a CV a guest asked to save is saved after sign-up.
+    inject(CvLibrary);
   }
 
   @HostListener('document:click', ['$event'])

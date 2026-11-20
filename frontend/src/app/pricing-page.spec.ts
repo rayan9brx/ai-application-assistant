@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { App } from './app';
+import { routes } from './app.routes';
 import { Navigation } from './navigation';
 import { COMPARISON, FAQ, PLANS, formatEuro, yearlySaving } from './pricing-config';
 import { PricingPage } from './pricing-page';
@@ -88,11 +90,13 @@ describe('Pricing route', () => {
   const start = location.href;
   afterEach(() => history.replaceState(null, '', start));
 
-  it('renders the pricing page and marks the nav link as current', () => {
+  it('renders the pricing page and marks the nav link as current', async () => {
+    TestBed.configureTestingModule({ providers: [provideRouter(routes, withComponentInputBinding())] });
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
-    TestBed.inject(Navigation).go('/pricing');
+    await TestBed.inject(Navigation).go('/pricing');
     fixture.detectChanges();
+    await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
     expect(root.querySelector('main app-pricing-page')).not.toBeNull();
     const current = Array.from(root.querySelectorAll('nav a[aria-current="page"]'), text);
