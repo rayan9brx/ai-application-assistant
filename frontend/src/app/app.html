@@ -3,9 +3,16 @@
   <app-navbar [links]="navLinks" />
 
   <main class="workspace" id="main" tabindex="-1">
-    <app-hero />
-    <app-upload-bar id="get-started" />
-    <app-showcase />
-    <app-problem-section />
+    @let p = page();
+    @if (p.kind === 'tools') {
+      <app-tools-page />
+    } @else if (p.kind === 'coming-soon') {
+      <app-coming-soon [item]="p.item" />
+    } @else {
+      <app-hero />
+      <app-upload-bar id="get-started" />
+      <app-showcase />
+      <app-problem-section />
+    }
   </main>
 </div>

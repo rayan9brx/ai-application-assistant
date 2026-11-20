@@ -1,0 +1,39 @@
+<button
+  #trigger
+  type="button"
+  class="trigger"
+  [attr.aria-expanded]="open()"
+  [attr.aria-controls]="panelId"
+  (click)="toggle()"
+  (keydown)="triggerKey($event)"
+>
+  Product
+  <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+</button>
+
+<div
+  #panel
+  class="panel"
+  [id]="panelId"
+  [class.open]="open()"
+  [style.left.px]="variant() === 'dropdown' ? offset() : null"
+  [style.width.px]="variant() === 'dropdown' ? width() : null"
+  (keydown)="panelKey($event)"
+  (click)="linkClicked($event)"
+>
+  @for (column of columns; track column.id; let last = $last) {
+    <div class="column">
+      <div class="column-head">
+        <p class="label" [id]="panelId + '-' + column.id">{{ column.label }}</p>
+        @if (last) {
+          <a class="view-all" [href]="toolsHref">View all <span aria-hidden="true">›</span></a>
+        }
+      </div>
+      <ul role="list" [attr.aria-labelledby]="panelId + '-' + column.id">
+        @for (item of column.items; track item.slug) {
+          <li><a app-menu-item [item]="item"></a></li>
+        }
+      </ul>
+    </div>
+  }
+</div>

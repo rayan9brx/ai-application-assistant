@@ -1,11 +1,12 @@
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="#" aria-label="ApplyCraft home"
+    <a class="brand" href="/" aria-label="ApplyCraft home"
       ><span class="brand-mark" aria-hidden="true">A</span
       ><span class="brand-name">ApplyCraft</span></a
     >
-    <nav aria-label="Main navigation">
+    <nav class="desktop-nav" aria-label="Main navigation">
       <ul role="list">
+        <li><app-product-menu /></li>
         @for (link of links(); track link.href) {
           <li>
             <a class="nav-link" [href]="link.href">{{ link.label }}</a>
@@ -15,7 +16,41 @@
     </nav>
     <div class="header-actions">
       <!-- Add a "Log in" link here once accounts exist again. -->
-      <a class="cta cta-small" href="#get-started">Try it free</a>
+      <a class="cta cta-small" href="/#get-started">Try it free</a>
+      <button
+        #menuButton
+        type="button"
+        class="menu-button"
+        aria-controls="mobile-menu"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="toggleMenu()"
+      >
+        <span class="sr-only">{{ menuOpen() ? 'Close menu' : 'Open menu' }}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          @if (menuOpen()) {
+            <path d="M6 6l12 12M18 6 6 18" />
+          } @else {
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          }
+        </svg>
+      </button>
     </div>
   </div>
+
+  <nav
+    id="mobile-menu"
+    class="mobile-menu"
+    aria-label="Main navigation"
+    [class.open]="menuOpen()"
+    (click)="mobileLinkClicked($event)"
+  >
+    <ul role="list">
+      <li><app-product-menu variant="accordion" /></li>
+      @for (link of links(); track link.href) {
+        <li>
+          <a class="mobile-link" [href]="link.href">{{ link.label }}</a>
+        </li>
+      }
+    </ul>
+  </nav>
 </header>
