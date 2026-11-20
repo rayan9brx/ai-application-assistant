@@ -1,18 +1,8 @@
 :host { display: block; }
 .app-shell { min-height: 100vh; }
-.skip-link { position: absolute; top: -80px; left: 20px; z-index: 5; padding: 12px 20px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-sm); }
+.skip-link { position: absolute; top: -80px; left: 20px; z-index: 20; padding: 12px 20px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-sm); }
 .skip-link:focus { top: 12px; }
-.header-inner, .workspace { width: min(1184px, 100%); margin-inline: auto; padding-inline: var(--space-6); }
-.site-header { background: var(--surface); border-bottom: 1px solid var(--line); }
-.header-inner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-5); min-height: 80px; }
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
-.brand-mark { display: grid; place-items: center; width: 32px; height: 36px; background: var(--accent); color: #fff; border-radius: var(--radius-sm); font-size: 21px; font-weight: 700; }
-.brand-name { font-size: 19px; font-weight: 700; letter-spacing: -.5px; }
-.brand-label { color: var(--muted); font-size: .6875rem; }
-.header-actions, nav { display: flex; align-items: center; gap: var(--space-2); }
-.header-link { display: flex; align-items: center; min-height: 44px; padding: 8px 14px; border-radius: var(--radius-sm); color: var(--muted); text-decoration: none; font-size: var(--text-sm); font-weight: 600; }
-.header-link:hover, .header-link.active { color: var(--accent); background: var(--accent-soft); }
-.workspace { padding-block: var(--space-6); }
+.workspace { width: min(1184px, 100%); margin-inline: auto; padding: 0 var(--space-6) var(--space-6); }
 .account-card { padding-block: var(--space-4); margin-bottom: var(--space-5); border-block: 1px solid var(--line); }
 .account-summary, .workspace-toolbar, .list-heading { display: flex; justify-content: space-between; align-items: center; gap: var(--space-4); }
 .account-summary h2 { font-size: var(--text-sm); }
@@ -65,16 +55,13 @@
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--warning); }
 .status-dot.connected { background: var(--success); }
 @media (max-width: 800px) {
-  .header-inner, .workspace { padding-inline: var(--space-5); }
+  .workspace { padding-inline: var(--space-5); }
   .field-grid { grid-template-columns: 1fr; }
   .account-summary, .workspace-toolbar { align-items: flex-start; flex-wrap: wrap; }
   #application-details { padding: var(--space-5); }
 }
 @media (max-width: 520px) {
-  .header-inner, .workspace { padding-inline: var(--space-4); }
-  .header-inner { align-items: flex-start; flex-direction: column; gap: var(--space-2); padding-block: var(--space-4); }
-  nav { flex-wrap: wrap; gap: 0; }
-  .header-link { padding-inline: 12px; }
+  .workspace { padding-inline: var(--space-4); }
   #application-details, .account-form { padding: var(--space-4); }
   .form-actions, .list-heading, .application-list li { align-items: flex-start; flex-direction: column; }
   .form-actions > button { width: 100%; }

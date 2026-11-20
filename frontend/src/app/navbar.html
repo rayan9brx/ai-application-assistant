@@ -1,0 +1,37 @@
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="#" aria-label="ApplyCraft home"
+      ><span class="brand-mark" aria-hidden="true">A</span
+      ><span class="brand-name">ApplyCraft</span></a
+    >
+    <nav aria-label="Main navigation">
+      <ul role="list">
+        @for (link of links(); track link.section) {
+          <li>
+            <a
+              class="nav-link"
+              [href]="link.href"
+              [class.active]="active() === link.section"
+              [attr.aria-current]="active() === link.section ? 'location' : null"
+              >{{ link.label }}</a
+            >
+          </li>
+        }
+      </ul>
+    </nav>
+    <div class="header-actions">
+      @if (!auth.user()) {
+        <button
+          class="login-link"
+          type="button"
+          [disabled]="auth.busy()"
+          aria-controls="account-form"
+          (click)="auth.show('login')"
+        >
+          Log in
+        </button>
+      }
+      <a class="cta cta-small" href="#application-details">Try it free</a>
+    </div>
+  </div>
+</header>

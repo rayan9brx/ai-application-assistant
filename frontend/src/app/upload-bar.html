@@ -1,0 +1,54 @@
+<div
+  class="upload-bar"
+  [class.dragging]="dragging()"
+  [attr.aria-busy]="busy()"
+  (dragenter)="dragOver($event)"
+  (dragover)="dragOver($event)"
+  (dragleave)="dragLeave($event)"
+  (drop)="drop($event)"
+>
+  <span class="thumb" aria-hidden="true">
+    <svg class="page" viewBox="0 0 28 36">
+      <rect x=".5" y=".5" width="27" height="35" rx="4" />
+      <path d="M6 8h10M6 13h16M6 17h16M6 21h12M6 25h14" />
+    </svg>
+    <span class="ring">
+      <svg viewBox="0 0 36 36">
+        <circle cx="18" cy="18" r="15" />
+        <circle class="ring-value" cx="18" cy="18" r="15" pathLength="100" />
+      </svg>
+      <span>95</span>
+    </span>
+  </span>
+  <div class="copy">
+    <p>
+      <button
+        class="browse"
+        type="button"
+        [disabled]="busy()"
+        aria-describedby="upload-bar-status"
+        (click)="browse()"
+      >
+        Upload</button
+      >&nbsp;or drop your CV to get your free score
+    </p>
+    <p class="status" id="upload-bar-status" aria-live="polite">
+      {{ file() ? file()!.name + ' is ready' : 'PDF, up to 5 MB' }}
+    </p>
+  </div>
+  <input
+    #picker
+    class="sr-only"
+    type="file"
+    accept=".pdf,application/pdf"
+    tabindex="-1"
+    aria-hidden="true"
+    (change)="pick(picker)"
+  />
+  <button class="cta score" type="button" [disabled]="!file() || busy()" (click)="submit()">
+    {{ busy() ? 'Reading…' : 'Score my CV' }}
+  </button>
+</div>
+@if (error()) {
+  <p class="upload-error" role="alert">{{ error() }}</p>
+}

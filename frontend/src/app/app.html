@@ -1,32 +1,10 @@
 <div class="app-shell">
   <a class="skip-link" href="#application-details">Skip to application workspace</a>
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="#application-details" aria-label="ApplyCraft workspace"
-        ><span class="brand-mark" aria-hidden="true">A</span>
-        <div>
-          <p class="brand-name">ApplyCraft</p>
-          <p class="brand-label">Your application workspace</p>
-        </div></a
-      >
-      <div class="header-actions">
-        <nav aria-label="Main navigation">
-          @for (link of navLinks; track link.section) {
-            <a
-              class="header-link"
-              [href]="link.href"
-              [class.active]="activeSection() === link.section"
-              [attr.aria-current]="activeSection() === link.section ? 'location' : null"
-              >{{ link.label }}</a
-            >
-          }
-        </nav>
-      </div>
-    </div>
-  </header>
+  <app-navbar [links]="navLinks" [active]="activeSection()" />
 
   <main class="workspace">
     <app-hero />
+    <app-upload-bar [busy]="isExtracting() || storageBusy()" (score)="scoreCv($event)" />
     <app-showcase />
     <section class="account-card" aria-labelledby="account-heading">
       <div class="account-summary">

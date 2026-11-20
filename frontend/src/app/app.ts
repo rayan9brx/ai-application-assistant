@@ -5,7 +5,9 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Auth } from './auth';
 import { About } from './about';
 import { Hero } from './hero';
+import { Navbar, NavLink } from './navbar';
 import { Showcase } from './showcase';
+import { UploadBar } from './upload-bar';
 import { ApplicationInput, ApplicationPage, ApplicationSummary, SavedApplication } from './applications';
 
 interface DemoPreview {
@@ -20,12 +22,12 @@ type DraftFeedback = Record<DraftField, string>;
 const noFeedback = (): DraftFeedback => ({ cvDraft: '', motivationLetterDraft: '' });
 const byStatus = (error: HttpErrorResponse, messages: Record<number, string>, fallback: string): string =>
   messages[error.status] ?? fallback;
-type Section = 'workspace' | 'applications' | 'about';
+type Section = 'features' | 'workspace' | 'applications' | 'about';
 type SourceField = 'cvText' | 'jobText' | 'jobTitle' | 'company' | 'language' | 'includeLetter' | 'motivation';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, DatePipe, About, Hero, Showcase],
+  imports: [FormsModule, DatePipe, About, Hero, Navbar, Showcase, UploadBar],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -34,10 +36,11 @@ export class App {
   readonly auth = inject(Auth);
   readonly backendStatus = signal('Checking backend...');
   readonly activeSection = signal<Section>('workspace');
-  readonly navLinks: { href: string; section: Section; label: string }[] = [
+  readonly navLinks: NavLink<Section>[] = [
+    { href: '#features', section: 'features', label: 'Features' },
+    { href: '#about', section: 'about', label: 'How it works' },
     { href: '#application-details', section: 'workspace', label: 'Workspace' },
     { href: '#saved-applications', section: 'applications', label: 'My applications' },
-    { href: '#about', section: 'about', label: 'About' },
   ];
   readonly documents = [
     { field: 'cvDraft', id: 'cv', kind: 'Document 01', title: 'Your CV', toolbar: 'CV editor toolbar',
@@ -101,8 +104,7 @@ export class App {
   // Reflect in-page navigation without replacing the editor or its unsaved state.
   @HostListener('window:hashchange')
   syncNavigation(): void {
-    this.activeSection.set(window.location.hash === '#about' ? 'about'
-      : window.location.hash === '#saved-applications' ? 'applications' : 'workspace');
+    this.activeSection.set(this.navLinks.find(link => link.href === window.location.hash)?.section ?? 'workspace');
   }
 
   private applicationInput(): ApplicationInput {
@@ -298,7 +300,19 @@ export class App {
   uploadCv(input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
-    if (!file || this.busy()) return;
+    if (file) this.extractCv(file);
+  }
+
+  // TODO: call a real CV scoring endpoint once one exists; for now the hero upload
+  // reuses PDF text extraction and takes the user to the CV field in the workspace.
+  scoreCv(file: File): void {
+    if (this.busy()) return;
+    document.getElementById('experience-heading')?.scrollIntoView({ block: 'start' });
+    this.extractCv(file);
+  }
+
+  private extractCv(file: File): void {
+    if (this.busy()) return;
     this.uploadError.set('');
     this.uploadMessage.set('');
     if (file.size > 5 * 1024 * 1024) {
