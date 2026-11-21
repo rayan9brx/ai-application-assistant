@@ -143,7 +143,7 @@
       </div>
 
       @if (mode() === 'file') {
-        <app-upload-bar class="upload" [showSubmit]="false" (selected)="file.set($event)" />
+        <app-upload-bar class="upload" [showSubmit]="false" [(file)]="file" />
       } @else {
         <label class="field-label" for="cv-paste">Your CV</label>
         <textarea
@@ -167,7 +167,14 @@
       ></textarea>
 
       @if (flow.error()) {
-        <p class="error" role="alert">{{ flow.error() }}</p>
+        <div class="error retry-error" role="alert">
+          <p>{{ flow.error() }}</p>
+          @if (canScore()) {
+            <button class="cta cta-small cta-secondary" type="button" (click)="retry()">
+              Try again
+            </button>
+          }
+        </div>
       }
       <button class="cta score-button" type="button" [disabled]="!canScore()" (click)="score()">
         Score my CV

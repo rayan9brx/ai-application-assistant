@@ -17,6 +17,8 @@ textarea { display: block; width: 100%; padding: 12px 14px; border: 1px solid va
 textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
 .score-button { width: 100%; margin-top: 20px; }
 .error { margin-top: 16px; padding: 12px 14px; border: 1px solid #eac9cc; border-radius: 12px; background: var(--danger-soft); color: var(--danger); font-size: var(--text-sm); }
+.retry-error { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.retry-error .cta { flex-shrink: 0; }
 .hint { margin-top: 12px; color: #6b4300; font-size: var(--text-sm); }
 
 .working { max-width: 560px; margin: 0 auto; padding-block: 72px; text-align: center; }

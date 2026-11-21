@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { CvFlow } from './cv-flow';
 import { Hero } from './hero';
 import { HurdlesSection } from './hurdles-section';
@@ -14,7 +14,7 @@ import { UploadBar } from './upload-bar';
   imports: [Hero, HurdlesSection, ProblemSection, Showcase, UploadBar],
   template: `
     <app-hero />
-    <app-upload-bar id="get-started" [autoSubmit]="true" (submitted)="startCheck($event)" />
+    <app-upload-bar id="get-started" [busy]="starting()" (submitted)="startCheck($event)" />
     <app-showcase />
     <app-problem-section />
     <app-hurdles-section />
@@ -23,11 +23,20 @@ import { UploadBar } from './upload-bar';
 export class HomePage {
   private readonly navigation = inject(Navigation);
   private readonly flow = inject(CvFlow);
+  readonly starting = signal(false);
 
-  /** The landing upload bar hands its file to the checker and opens it. */
-  startCheck(file: File): void {
+  /** Hands the file to the checker, which starts scoring it as soon as /check opens. */
+  async startCheck(file: File): Promise<void> {
+    if (this.starting()) return;
+    this.starting.set(true);
     this.flow.reset();
-    void this.navigation.go(CHECK_HREF);
-    void this.flow.startWithFile(file);
+    this.flow.handOff(file);
+    try {
+      if (!(await this.navigation.go(CHECK_HREF))) this.flow.takeHandOff();
+    } catch {
+      this.flow.takeHandOff();
+    } finally {
+      this.starting.set(false);
+    }
   }
 }

@@ -54,6 +54,18 @@ export class CvCheckPage {
     effect(() => {
       if (this.flow.phase() !== 'scoring') this.step.set(0);
     });
+    // A file from the landing page's upload bar: score it right away.
+    const handedOff = this.flow.takeHandOff();
+    if (handedOff) {
+      this.mode.set('file');
+      this.file.set(handedOff);
+      this.score();
+    }
+  }
+
+  /** "Try again" after a failure: re-run with the same file or text. */
+  retry(): void {
+    this.score();
   }
 
   score(): void {

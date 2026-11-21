@@ -20,27 +20,55 @@ describe('UploadBar', () => {
     const bar = root.querySelector('.upload-bar')!;
     const score = root.querySelector<HTMLButtonElement>('.score')!;
     const alert = () => root.querySelector('[role="alert"]')?.textContent ?? '';
-    expect(score.disabled).toBe(true);
+    const picker = root.querySelector<HTMLInputElement>('input[type="file"]')!;
+    let pickerOpened = 0;
+    picker.click = () => void pickerOpened++;
+
+    // Without a file the button stays live and opens the file picker.
+    expect(score.disabled).toBe(false);
+    score.click();
+    expect(pickerOpened).toBe(1);
+    expect(submitted).toEqual([]);
 
     bar.dispatchEvent(dropEvent(new File(['x'], 'photo.png', { type: 'image/png' })));
     fixture.detectChanges();
-    expect(score.disabled).toBe(true);
     expect(alert()).toContain('PDF or Word');
+    expect(bar.classList).toContain('invalid');
 
     const big = new File(['x'], 'cv.pdf', { type: 'application/pdf' });
     Object.defineProperty(big, 'size', { value: 5 * 1024 * 1024 + 1 });
     bar.dispatchEvent(dropEvent(big));
     fixture.detectChanges();
-    expect(score.disabled).toBe(true);
     expect(alert()).toContain('5 MB');
+    score.click();
+    expect(submitted).toEqual([]);
 
     bar.dispatchEvent(dropEvent(new File(['PK'], 'cv.docx')));
     fixture.detectChanges();
-    expect(score.disabled).toBe(false);
-    expect(root.querySelector('#upload-bar-status')?.textContent).toContain('cv.docx is ready');
+    expect(alert()).toBe('');
+    expect(root.querySelector('.file-name')?.textContent).toBe('cv.docx');
 
     score.click();
     expect(submitted.map((file) => file.name)).toEqual(['cv.docx']);
+
+    root.querySelector<HTMLButtonElement>('.remove')!.click();
+    fixture.detectChanges();
+    expect(root.querySelector('.file-name')).toBeNull();
+    expect(fixture.componentInstance.file()).toBeNull();
+  });
+
+  it('highlights while dragging and shows a spinner while busy', () => {
+    const fixture = TestBed.createComponent(UploadBar);
+    fixture.componentRef.setInput('busy', true);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const bar = root.querySelector('.upload-bar')!;
+    bar.dispatchEvent(new Event('dragover', { cancelable: true }));
+    fixture.detectChanges();
+    expect(bar.classList).toContain('dragging');
+    const score = root.querySelector<HTMLButtonElement>('.score')!;
+    expect(score.textContent).toContain('Scoring…');
+    expect(score.querySelector('.spinner')).not.toBeNull();
   });
 });
 

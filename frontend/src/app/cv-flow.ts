@@ -86,6 +86,8 @@ export class CvFlow {
   readonly savedCvId = signal<string | null>(null);
   /** Counts successful scoring runs (not restores), so saving can follow each new score. */
   readonly scoreRuns = signal(0);
+  /** A file picked on another page (the landing upload bar) for /check to score on arrival. */
+  private handedOff: File | null = null;
 
   constructor() {
     this.restore();
@@ -109,6 +111,18 @@ export class CvFlow {
         /* Storage can be full or blocked (private mode); the flow still works without it. */
       }
     });
+  }
+
+  /** Hands a file to /check, which starts scoring it as soon as it opens. */
+  handOff(file: File): void {
+    this.handedOff = file;
+  }
+
+  /** Returns the handed-off file once, then forgets it. */
+  takeHandOff(): File | null {
+    const file = this.handedOff;
+    this.handedOff = null;
+    return file;
   }
 
   async startWithFile(file: File): Promise<void> {

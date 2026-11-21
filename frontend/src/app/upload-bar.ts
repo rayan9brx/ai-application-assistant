@@ -1,11 +1,11 @@
-import { Component, ElementRef, input, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, input, model, output, signal, viewChild } from '@angular/core';
 import { MAX_FILE_BYTES } from './cv-flow';
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
 /**
- * Click or drop a PDF/DOCX CV. Emits `selected` on every valid pick and `submitted` on its button,
- * or right after a valid pick when `autoSubmit` is set.
+ * Click or drop a PDF/DOCX CV. Emits `selected` on every pick or removal, and `submitted` when
+ * "Score my CV" is pressed with a valid file. Pressing it without a file opens the file picker.
  */
 @Component({
   selector: 'app-upload-bar',
@@ -15,13 +15,12 @@ const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 export class UploadBar {
   /** Hide the built-in "Score my CV" button when the page has its own. */
   readonly showSubmit = input(true);
+  /** Shows "Scoring…" on the button and ignores further presses. */
   readonly busy = input(false);
-  /** Submit as soon as a valid file is picked or dropped (the button stays as a fallback). */
-  readonly autoSubmit = input(false);
+  readonly file = model<File | null>(null);
   readonly selected = output<File | null>();
   readonly submitted = output<File>();
 
-  readonly file = signal<File | null>(null);
   readonly dragging = signal(false);
   readonly error = signal('');
   readonly accept = `.pdf,.docx,application/pdf,${DOCX}`;
@@ -34,6 +33,12 @@ export class UploadBar {
   pick(input: HTMLInputElement): void {
     this.select(input.files?.[0]);
     input.value = '';
+  }
+
+  remove(): void {
+    this.error.set('');
+    this.file.set(null);
+    this.selected.emit(null);
   }
 
   dragOver(event: DragEvent): void {
@@ -54,8 +59,10 @@ export class UploadBar {
   }
 
   submit(): void {
+    if (this.busy()) return;
     const file = this.file();
-    if (file && !this.busy()) this.submitted.emit(file);
+    if (file) this.submitted.emit(file);
+    else this.browse();
   }
 
   private select(file?: File): void {
@@ -63,13 +70,12 @@ export class UploadBar {
     const supported =
       file.type === 'application/pdf' || file.type === DOCX || /\.(pdf|docx)$/i.test(file.name);
     const error = !supported
-      ? 'Choose a PDF or Word (.docx) file.'
+      ? `“${file.name}” isn’t a PDF or Word (.docx) file. Choose a PDF or Word (.docx) file.`
       : file.size > MAX_FILE_BYTES
-        ? 'Your file must be 5 MB or smaller.'
+        ? `“${file.name}” is ${(file.size / 1024 / 1024).toFixed(1)} MB. Your file must be 5 MB or smaller.`
         : '';
     this.error.set(error);
     this.file.set(error ? null : file);
     this.selected.emit(this.file());
-    if (!error && this.autoSubmit()) this.submit();
   }
 }

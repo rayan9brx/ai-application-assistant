@@ -12,9 +12,20 @@
 .copy p:first-child { font-size: var(--text-base); line-height: 1.4; }
 .browse { min-height: 0; padding: 0; border: 0; background: none; color: var(--accent); font-size: inherit; font-weight: 700; line-height: inherit; }
 .browse:hover:enabled { color: var(--accent-hover); text-decoration: underline; text-underline-offset: 3px; }
-.browse:disabled { background: none; }
+.browse:disabled { background: none; color: var(--muted); }
+.browse.small { font-size: inherit; font-weight: 600; }
+.file { display: flex; align-items: center; gap: var(--space-2); min-width: 0; font-size: var(--text-base); font-weight: 600; line-height: 1.4; }
+.file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.remove { display: inline-grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: var(--surface-muted); color: var(--muted); }
+.remove:hover:enabled { background: var(--danger-soft); color: var(--danger); }
+.remove:disabled { background: var(--surface-muted); }
+.remove svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.upload-bar.invalid:not(.dragging) { border-color: var(--danger); }
 .status { color: var(--muted); font-size: .75rem; overflow-wrap: anywhere; }
-.score { flex-shrink: 0; }
+.score { flex-shrink: 0; gap: 8px; }
+.score.busy { cursor: progress; }
+.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .upload-error { margin-top: var(--space-2); color: var(--danger); font-size: var(--text-sm); text-align: center; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (max-width: 520px) {

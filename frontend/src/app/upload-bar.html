@@ -1,6 +1,7 @@
 <div
   class="upload-bar"
   [class.dragging]="dragging()"
+  [class.invalid]="!!error()"
   (dragenter)="dragOver($event)"
   (dragover)="dragOver($event)"
   (dragleave)="dragLeave($event)"
@@ -20,14 +21,35 @@
     </span>
   </span>
   <div class="copy">
-    <p>
-      <button class="browse" type="button" aria-describedby="upload-bar-status" (click)="browse()">
-        Upload</button
-      >&nbsp;or drop your CV to get your free score
-    </p>
-    <p class="status" id="upload-bar-status" aria-live="polite">
-      {{ file() ? file()!.name + ' is ready' : 'PDF or Word (.docx), up to 5 MB' }}
-    </p>
+    @if (file(); as f) {
+      <p class="file">
+        <span class="file-name" [title]="f.name">{{ f.name }}</span>
+        <button
+          class="remove"
+          type="button"
+          [attr.aria-label]="'Remove ' + f.name"
+          [disabled]="busy()"
+          (click)="remove()"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+        </button>
+      </p>
+      <p class="status" id="upload-bar-status" aria-live="polite">
+        Ready to score ·
+        <button class="browse small" type="button" [disabled]="busy()" (click)="browse()">
+          Choose another
+        </button>
+      </p>
+    } @else {
+      <p>
+        <button class="browse" type="button" aria-describedby="upload-bar-status" (click)="browse()">
+          Upload</button
+        >&nbsp;or drop your CV to get your free score
+      </p>
+      <p class="status" id="upload-bar-status" aria-live="polite">
+        {{ dragging() ? 'Drop it here' : 'PDF or Word (.docx), up to 5 MB' }}
+      </p>
+    }
   </div>
   <input
     #picker
@@ -39,8 +61,18 @@
     (change)="pick(picker)"
   />
   @if (showSubmit()) {
-    <button class="cta score" type="button" [disabled]="!file() || busy()" (click)="submit()">
-      Score my CV
+    <button
+      class="cta score"
+      type="button"
+      [class.busy]="busy()"
+      [attr.aria-busy]="busy()"
+      (click)="submit()"
+    >
+      @if (busy()) {
+        <span class="spinner" aria-hidden="true"></span> Scoring…
+      } @else {
+        Score my CV
+      }
     </button>
   }
 </div>

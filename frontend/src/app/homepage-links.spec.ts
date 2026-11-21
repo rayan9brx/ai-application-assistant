@@ -8,7 +8,8 @@ import { AuthService } from './auth.service';
 import { CvCheckPage } from './cv-check-page';
 import { itemBySlug } from './menu-config';
 import { FAQ, PLANS } from './pricing-config';
-import { UploadBar } from './upload-bar';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 /** Signed-out (or signed-in) stand-in for Supabase; no network. */
 class FakeAuth {
@@ -134,18 +135,54 @@ describe('Home upload bar', () => {
     return event;
   };
 
-  it('submits a valid file as soon as it is dropped, and never an invalid one', () => {
-    const fixture = TestBed.createComponent(UploadBar);
-    fixture.componentRef.setInput('autoSubmit', true);
-    const submitted: string[] = [];
-    fixture.componentInstance.submitted.subscribe((file) => submitted.push(file.name));
-    fixture.detectChanges();
-    const bar = fixture.nativeElement.querySelector('.upload-bar') as HTMLElement;
+  const start = location.href;
+  afterEach(() => history.replaceState(null, '', start));
 
-    bar.dispatchEvent(drop(new File(['x'], 'photo.png', { type: 'image/png' })));
-    expect(submitted).toEqual([]);
+  it('waits for "Score my CV", then opens /check and scores the file with the real API', async () => {
+    localStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter(routes, withComponentInputBinding()),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: new FakeAuth() },
+      ],
+    });
+    const http = TestBed.inject(HttpTestingController);
+    const router = TestBed.inject(Router);
+    const fixture = TestBed.createComponent(App);
+    await router.navigateByUrl('/');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const root: HTMLElement = fixture.nativeElement;
+    const bar = root.querySelector('app-upload-bar .upload-bar') as HTMLElement;
+
     bar.dispatchEvent(drop(new File(['PK'], 'cv.docx')));
-    expect(submitted).toEqual(['cv.docx']);
+    fixture.detectChanges();
+    expect(router.url).toBe('/'); // picking a file alone doesn't leave the page
+    expect(root.querySelector('app-upload-bar .file-name')?.textContent).toBe('cv.docx');
+
+    root.querySelector<HTMLButtonElement>('app-upload-bar .score')!.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    expect(router.url).toBe('/check');
+    const extract = http.expectOne('/api/cv/extract');
+    expect((extract.request.body as FormData).get('file')).toBeInstanceOf(File);
+    extract.flush({ text: 'Taylor Brooks\nExperience\n- Built things' });
+    await new Promise((resolve) => setTimeout(resolve));
+    http.expectOne('/api/cv/score').flush(
+        { message: 'The AI service is busy right now.' },
+        { status: 503, statusText: 'Busy' },
+      );
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    expect(text(root.querySelector('app-cv-check-page [role="alert"]'))).toContain('busy');
+
+    // "Try again" re-runs the same file.
+    root.querySelector<HTMLButtonElement>('.retry-error button')!.click();
+    await new Promise((resolve) => setTimeout(resolve));
+    http.expectOne('/api/cv/extract');
+    http.verify();
   });
 });
 
