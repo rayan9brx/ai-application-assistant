@@ -65,58 +65,94 @@ const parse = (source: string): Segment[] =>
       return match ? { text: match[1], mark: match[2] } : { text: part };
     });
 
-const WEAK_BULLET = 'Worked on the website';
+const WEAK_BULLET = 'Worked on the company website';
 const FIXED_BULLET = 'Redesigned 12 product pages in React, improving mobile conversion by 22%';
+/** The real Lumen Labs bullet; the AI Fixes tab swaps in WEAK_BULLET so it has something to rewrite. */
+const ORIGINAL_BULLET = 'Maintained the company website and internal tools with JavaScript and PHP';
 
+/** Marks use `[text|id id…]`; ids are the anchors the Checker and Tailor tabs highlight. */
 const CV = {
+  contact: [
+    'Berlin, Germany',
+    'jordan.avery@email.com',
+    '+49 151 2345 6789',
+    'linkedin.com/in/jordanavery',
+    'github.com/jordanavery',
+  ],
   summary: parse(
-    'Frontend developer with 4 years of experience building fast, [accessible web apps|a11y] with [React|react] and [TypeScript|ts]. Passionate about clean UI and measurable impact.',
+    'Frontend developer with 4+ years of experience building fast, accessible web applications with [React|react nextjs], Angular and [TypeScript|ts]. Focused on clean UI, [performance|perf] and measurable business impact. Experienced in [agile teams|scrum] and close collaboration with designers and product managers.',
   ),
   jobs: [
     {
       role: 'Frontend Developer',
-      company: 'Northpine',
-      dates: '2022 – now',
+      company: 'Northpine GmbH',
+      place: 'Berlin',
+      dates: '03/2022 – Present',
       bullets: [
-        parse('Rebuilt the checkout flow in [React|react], increasing conversion by 18%'),
-        parse('Cut [page load time|perf] by 40% through code splitting and lazy loading'),
-        parse('Led migration of 120+ components to [TypeScript|ts]'),
+        parse('Rebuilt the checkout flow in [React|react] and [TypeScript|ts], increasing conversion by 18%'),
+        parse('Reduced [page load time|vitals] by 40% through code splitting, lazy loading and image optimization'),
+        parse('Led the migration of 120+ components to TypeScript, cutting runtime errors by 35%'),
+        parse('Built a [shared component library|storybook] used by 4 product teams'),
+        parse('Mentored 2 junior developers and introduced code review guidelines'),
       ],
     },
     {
       role: 'Junior Web Developer',
-      company: 'Brightfield',
-      dates: '2020 – 2022',
+      company: 'Brightfield Digital',
+      place: 'Hamburg',
+      dates: '08/2020 – 02/2022',
       bullets: [
-        null,
-        parse('Built 15+ responsive landing pages used in marketing campaigns'),
-        parse('Introduced [automated UI tests|testing], reducing bugs in production by 30%'),
+        parse('Developed 15+ responsive landing pages for marketing campaigns with Angular'),
+        parse('Introduced [automated UI tests|cicd testing] with Cypress, reducing production bugs by 30%'),
+        parse('Integrated [REST APIs|rest] for a customer dashboard used by 10,000+ users'),
+        parse('Collaborated with UX designers to improve accessibility to [WCAG 2.1 AA|wcag]'),
       ],
     },
+    {
+      role: 'Working Student, Web Development',
+      company: 'Lumen Labs',
+      place: 'Berlin',
+      dates: '10/2018 – 07/2020',
+      bullets: [null, parse('Automated weekly reporting, saving the team ~5 hours per week')],
+    },
   ],
-  skills: parse(
-    '[React|react] · [TypeScript|ts] · Angular · Tailwind CSS · [Git|cicd] · [REST APIs|api] · Figma',
-  ),
+  projects: [
+    { name: 'TaskFlow', text: 'Open-source Kanban app (Angular, Firebase) · 300+ GitHub stars' },
+    { name: 'WeatherNow', text: 'PWA with offline support (React, Service Workers)' },
+  ],
+  education: {
+    degree: 'B.Sc. Computer Science',
+    school: 'Technische Universität Berlin',
+    dates: '2016 – 2020',
+    note: 'Thesis: Performance optimization of single-page applications (Grade: 1.7)',
+  },
+  skills: [
+    { label: 'Frontend', text: 'React, Angular, TypeScript, JavaScript, HTML, CSS, Tailwind CSS' },
+    { label: 'Tools', text: 'Git, Jest, Cypress, Webpack, Vite, Figma, Jira' },
+    { label: 'Backend & APIs', text: 'REST, GraphQL, Node.js, basic Spring Boot' },
+  ],
+  languages: 'German (native) · English (C1) · French (B1)',
+  certifications: 'AWS Certified Cloud Practitioner (2023) · Google UX Design Certificate (2022)',
 };
 
-/** CV Checker: missing keywords and the CV spot each one belongs in. */
+/** CV Checker: missing keywords, highlighted at the CV phrase each one belongs next to. */
 const MISSING = [
-  { label: 'Accessibility (WCAG)', anchor: 'a11y' },
-  { label: 'Web performance', anchor: 'perf' },
-  { label: 'Unit testing (Jest)', anchor: 'testing' },
+  { label: 'Next.js', anchor: 'nextjs' },
+  { label: 'Scrum', anchor: 'scrum' },
+  { label: 'Core Web Vitals', anchor: 'vitals' },
+  { label: 'Storybook', anchor: 'storybook' },
   { label: 'CI/CD', anchor: 'cicd' },
-  { label: 'GraphQL', anchor: 'api' },
 ];
 const missingAt = (i: number) => 1600 + i * 500;
 
-/** Tailor to Job: required skills that flip from missing to matched. */
+/** Tailor to Job: required skills that flip from missing to matched, highlighted where the CV proves them. */
 const REQUIRED = [
   { label: 'React', anchor: 'react' },
   { label: 'TypeScript', anchor: 'ts' },
   { label: 'Unit testing', anchor: 'testing' },
-  { label: 'Accessibility', anchor: 'a11y' },
+  { label: 'Accessibility', anchor: 'wcag' },
   { label: 'Performance', anchor: 'perf' },
-  { label: 'REST APIs', anchor: 'api' },
+  { label: 'REST APIs', anchor: 'rest' },
 ];
 const flipAt = (i: number) => 1800 + i * 420;
 
@@ -139,6 +175,7 @@ export class DemoWindow {
   readonly icons = ICONS;
   readonly cv = CV;
   readonly weakBullet = WEAK_BULLET;
+  readonly originalBullet = ORIGINAL_BULLET;
   readonly fixedBullet = FIXED_BULLET;
   readonly autoplay = !prefersReducedMotion();
 
@@ -175,7 +212,7 @@ export class DemoWindow {
 
   // ---- AI Fixes ----
   readonly upNext = [
-    { title: 'No measurable result', where: 'Built 15+ responsive landing pages…', severity: 'Medium' },
+    { title: 'No measurable result', where: 'Developed 15+ responsive landing pages…', severity: 'Medium' },
     { title: 'Missing keyword: CI/CD', where: 'Skills', severity: 'Medium' },
     { title: 'Summary could be shorter', where: 'Summary', severity: 'Low' },
   ];
@@ -189,11 +226,9 @@ export class DemoWindow {
   readonly typed = computed(() =>
     FIXED_BULLET.slice(0, Math.round(FIXED_BULLET.length * clamp((this.elapsed() - FIX.type) / (FIX.typed - FIX.type)))),
   );
-  /** How the weak Brightfield bullet looks in the CV for the current tab and moment. */
-  readonly bulletState = computed<'weak' | 'target' | 'fixed'>(() => {
-    const id = this.tab().id;
-    if (id === 'checker') return 'weak';
-    if (id !== 'fixes') return 'fixed';
+  /** The first Lumen Labs bullet: its real text, except in AI Fixes where it starts weak and gets rewritten. */
+  readonly bulletState = computed<'original' | 'weak' | 'target' | 'fixed'>(() => {
+    if (this.tab().id !== 'fixes') return 'original';
     const t = this.elapsed();
     return t >= FIX.applied ? 'fixed' : t >= FIX.select ? 'target' : 'weak';
   });
@@ -278,13 +313,14 @@ export class DemoWindow {
   /** Highlight for a marked CV spot: yellow while the checker lists it, green once tailoring matches it. */
   markTone(mark: string | undefined): 'warn' | 'ok' | null {
     if (!mark) return null;
+    const ids = mark.split(' ');
     const id = this.tab().id;
     if (id === 'checker') {
-      const i = MISSING.findIndex((k) => k.anchor === mark);
+      const i = MISSING.findIndex((k) => ids.includes(k.anchor));
       return i >= 0 && this.after(missingAt(i)) ? 'warn' : null;
     }
     if (id === 'tailor') {
-      const i = REQUIRED.findIndex((k) => k.anchor === mark);
+      const i = REQUIRED.findIndex((k) => ids.includes(k.anchor));
       return i >= 0 && this.after(flipAt(i)) ? 'ok' : null;
     }
     return null;

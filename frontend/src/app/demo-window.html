@@ -89,53 +89,87 @@
             <article class="paper">
               <header class="cv-header">
                 <p class="cv-name">Jordan Avery</p>
-                <p class="cv-role">Frontend Developer · Berlin</p>
-                <p class="cv-contact">jordan.avery&#64;email.com · linkedin.com/in/jordanavery</p>
+                <p class="cv-contact">
+                  @for (item of cv.contact; track item; let last = $last) {
+                    <span>{{ item }}</span>@if (!last) {<span class="sep">·</span>}
+                  }
+                </p>
               </header>
 
-              <p class="cv-head">Summary</p>
-              <p><ng-container *ngTemplateOutlet="text; context: { $implicit: cv.summary }" /></p>
+              <section class="cv-section">
+                <h4 class="cv-head">Summary</h4>
+                <p><ng-container *ngTemplateOutlet="text; context: { $implicit: cv.summary }" /></p>
+              </section>
 
-              <p class="cv-head">Experience</p>
-              @for (job of cv.jobs; track job.company) {
-                <div class="cv-job">
-                  <p class="cv-job-title"><b>{{ job.role }}</b>, {{ job.company }} <span>{{ job.dates }}</span></p>
-                  <ul>
-                    @for (bullet of job.bullets; track $index) {
-                      @if (bullet) {
-                        <li><ng-container *ngTemplateOutlet="text; context: { $implicit: bullet }" /></li>
-                      } @else {
-                        <li class="fix-line" [attr.data-state]="bulletState()">
-                          @if (bulletState() === 'fixed') {
-                            <span [class.flash]="tab().id === 'fixes'">{{ fixedBullet }}</span>
-                          } @else {
-                            <span>{{ weakBullet }}</span>
-                          }
-                          @if (autoplay && tab().id === 'fixes' && cursor().opacity > 0) {
-                            <span
-                              class="cursor"
-                              [class.clicking]="cursor().clicking"
-                              [style.transform]="cursor().transform"
-                              [style.opacity]="cursor().opacity"
-                            >
-                              <svg viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-3 6z" /></svg>
-                            </span>
-                          }
-                        </li>
+              <section class="cv-section">
+                <h4 class="cv-head">Experience</h4>
+                @for (job of cv.jobs; track job.company) {
+                  <div class="cv-entry">
+                    <p class="cv-row">
+                      <span><b>{{ job.role }}</b>, {{ job.company }}</span>
+                      <span class="cv-meta">{{ job.place }} | {{ job.dates }}</span>
+                    </p>
+                    <ul>
+                      @for (bullet of job.bullets; track $index) {
+                        @if (bullet) {
+                          <li><ng-container *ngTemplateOutlet="text; context: { $implicit: bullet }" /></li>
+                        } @else {
+                          <li class="fix-line" [attr.data-state]="bulletState()">
+                            @switch (bulletState()) {
+                              @case ('original') { <span>{{ originalBullet }}</span> }
+                              @case ('fixed') { <span class="flash">{{ fixedBullet }}</span> }
+                              @default { <span>{{ weakBullet }}</span> }
+                            }
+                            @if (autoplay && tab().id === 'fixes' && cursor().opacity > 0) {
+                              <span
+                                class="cursor"
+                                [class.clicking]="cursor().clicking"
+                                [style.transform]="cursor().transform"
+                                [style.opacity]="cursor().opacity"
+                              >
+                                <svg viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-3 6z" /></svg>
+                              </span>
+                            }
+                          </li>
+                        }
                       }
-                    }
-                  </ul>
-                </div>
-              }
+                    </ul>
+                  </div>
+                }
+              </section>
 
-              <p class="cv-head">Projects</p>
-              <p><b>Shiftly</b>, open-source shift planner for small teams (React, Node.js) · 1.2k stars</p>
+              <section class="cv-section">
+                <h4 class="cv-head">Projects</h4>
+                @for (project of cv.projects; track project.name) {
+                  <p><b>{{ project.name }}</b>: {{ project.text }}</p>
+                }
+              </section>
 
-              <p class="cv-head">Education</p>
-              <p class="cv-job-title"><b>B.Sc. Computer Science</b>, TU Berlin <span>2020</span></p>
+              <section class="cv-section">
+                <h4 class="cv-head">Education</h4>
+                <p class="cv-row">
+                  <span><b>{{ cv.education.degree }}</b>, {{ cv.education.school }}</span>
+                  <span class="cv-meta">{{ cv.education.dates }}</span>
+                </p>
+                <p class="cv-note">{{ cv.education.note }}</p>
+              </section>
 
-              <p class="cv-head">Skills</p>
-              <p><ng-container *ngTemplateOutlet="text; context: { $implicit: cv.skills }" /></p>
+              <section class="cv-section">
+                <h4 class="cv-head">Skills</h4>
+                @for (group of cv.skills; track group.label) {
+                  <p class="cv-skill"><b>{{ group.label }}:</b> {{ group.text }}</p>
+                }
+              </section>
+
+              <section class="cv-section">
+                <h4 class="cv-head">Languages</h4>
+                <p>{{ cv.languages }}</p>
+              </section>
+
+              <section class="cv-section">
+                <h4 class="cv-head">Certifications</h4>
+                <p>{{ cv.certifications }}</p>
+              </section>
             </article>
           </div>
 

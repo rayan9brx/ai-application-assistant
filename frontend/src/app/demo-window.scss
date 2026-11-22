@@ -74,7 +74,7 @@ h2 { max-width: 20ch; font-size: clamp(2rem, 4.4vw, 3.25rem); line-height: 1.05;
 .divider { width: 1px; height: 16px; margin-inline: 4px; background: var(--line); }
 .saved { margin-left: auto; color: var(--success); font-weight: 600; }
 
-.workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) 380px; min-height: 0; }
+.workspace { display: grid; flex: 1; grid-template-columns: minmax(0, 1fr) 380px; grid-template-rows: minmax(0, 1fr); min-height: 0; }
 .side { position: relative; min-height: 0; overflow: hidden; padding: 16px; border-left: 1px solid var(--line); background: #fff; }
 .panel { animation: panel-in .45s cubic-bezier(.2, .7, .2, 1) both; }
 @keyframes panel-in { from { opacity: 0; transform: translate(16px, 4px); } to { opacity: 1; transform: none; } }
