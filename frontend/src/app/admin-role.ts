@@ -48,9 +48,11 @@ export class AdminRole {
 
 /** /admin: guests log in first; signed-in non-admins go to their dashboard. */
 export const adminGuard: CanActivateFn = async (_route, state) => {
+  // inject() only works before the first await, so take everything up front.
   const auth = inject(AuthService);
   const router = inject(Router);
+  const role = inject(AdminRole);
   await auth.whenReady();
   if (!auth.signedIn()) return router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } });
-  return (await inject(AdminRole).check()) ? true : router.parseUrl('/dashboard');
+  return (await role.check()) ? true : router.parseUrl('/dashboard');
 };

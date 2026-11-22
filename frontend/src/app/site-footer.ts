@@ -3,8 +3,8 @@ import { AuthService } from './auth.service';
 import { CHECK_HREF, TOOLS_HREF } from './menu-config';
 
 /**
- * Site footer. Links only to pages that exist; add Privacy / Imprint here once those pages are
- * written (they are required before launch in the EU).
+ * Site footer, on every page except log-in and sign-up. German law requires the imprint and
+ * privacy policy to be one click away from every page; the terms sit with them.
  */
 @Component({
   selector: 'app-site-footer',
@@ -26,6 +26,10 @@ import { CHECK_HREF, TOOLS_HREF } from './menu-config';
             }
           </ul>
         </nav>
+        <nav class="legal" aria-label="Legal">
+          <a href="/imprint">Imprint</a><span aria-hidden="true">·</span><a href="/privacy">Privacy</a
+          ><span aria-hidden="true">·</span><a href="/terms">Terms</a>
+        </nav>
         <p class="note">© {{ year }} ApplyCraft</p>
       </div>
     </footer>
@@ -39,6 +43,7 @@ import { CHECK_HREF, TOOLS_HREF } from './menu-config';
     nav a { display: inline-flex; min-height: 32px; align-items: center; color: var(--muted); font-size: var(--text-sm); text-decoration: none; }
     nav a:hover { color: var(--ink); text-decoration: underline; }
     .note { color: var(--muted); font-size: var(--text-sm); }
+    .legal { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); color: var(--muted); font-size: var(--text-sm); }
     @media (max-width: 520px) { .inner { padding: var(--space-5) var(--space-4); } }
   `,
 })

@@ -48,15 +48,15 @@ export const routes: Routes = [
     title: 'Reset your password — ApplyCraft',
     loadComponent: () => import('./reset-password-page').then((m) => m.ResetPasswordPage),
   },
-  // Legal pages are not written yet; they show the Coming Soon page until then.
+  // Legal pages, in English and German (?lang=de); the texts live in public/legal/*.{en,de}.md.
   {
-    path: 'terms',
-    title: 'Terms of Service — ApplyCraft',
-    data: { pageTitle: 'Terms of Service' },
-    loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
+    path: 'imprint',
+    title: 'Imprint (Impressum) — ApplyCraft',
+    data: { legalDoc: 'imprint', title: 'Imprint (Impressum)' },
+    loadComponent: () => import('./legal-page').then((m) => m.LegalPage),
   },
   /*
-   * TODO(privacy): before launch, the Datenschutzerklärung on /privacy must cover at least:
+   * TODO(privacy): the privacy policy (public/legal/privacy.{en,de}.md) must cover at least:
    * - Cookieless analytics: on each page view the backend stores the path, the referring
    *   website, mobile/desktop, and country and city looked up offline from the IP address
    *   (DB-IP Lite / GeoLite2, with the attribution its licence requires). The IP address
@@ -76,10 +76,20 @@ export const routes: Routes = [
    */
   {
     path: 'privacy',
-    title: 'Privacy Policy — ApplyCraft',
-    data: { pageTitle: 'Privacy Policy' },
-    loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
+    title: 'Privacy Policy (Datenschutzerklärung) — ApplyCraft',
+    data: { legalDoc: 'privacy', title: 'Privacy Policy (Datenschutzerklärung)' },
+    loadComponent: () => import('./legal-page').then((m) => m.LegalPage),
   },
+  {
+    path: 'terms',
+    title: 'Terms of Service (AGB) — ApplyCraft',
+    data: { legalDoc: 'terms', title: 'Terms of Service (AGB)' },
+    loadComponent: () => import('./legal-page').then((m) => m.LegalPage),
+  },
+  // German paths people may type or link to; they open the German version.
+  { path: 'impressum', redirectTo: '/imprint?lang=de' },
+  { path: 'datenschutz', redirectTo: '/privacy?lang=de' },
+  { path: 'agb', redirectTo: '/terms?lang=de' },
   {
     path: 'dashboard',
     title: 'Dashboard — ApplyCraft',

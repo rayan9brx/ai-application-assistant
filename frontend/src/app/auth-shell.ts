@@ -12,6 +12,11 @@ import { AuthPreview } from './auth-preview';
     >
     <div class="form-side">
       <div class="form-wrap"><ng-content /></div>
+      <!-- No site footer here, but German law wants these one click away from every page. -->
+      <nav class="legal" aria-label="Legal">
+        <a href="/imprint">Imprint</a><span aria-hidden="true">·</span><a href="/privacy">Privacy</a
+        ><span aria-hidden="true">·</span><a href="/terms">Terms</a>
+      </nav>
     </div>
     <div class="preview-side">
       <app-auth-preview />
@@ -36,13 +41,17 @@ import { AuthPreview } from './auth-preview';
       display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px;
       background: #fff; color: #0f1629; font-weight: 750;
     }
-    .form-side { display: grid; place-items: center; padding: 104px 32px 56px; }
+    .form-side { display: grid; grid-template-rows: 1fr auto; justify-items: center; align-items: center; gap: 32px; padding: 104px 32px 28px; }
+    .legal { display: flex; gap: 8px; color: #6f7894; font-size: 12px; }
+    .legal a { color: #8d95ad; text-decoration: none; }
+    .legal a:hover { color: #fff; text-decoration: underline; }
+    .legal a:focus-visible { outline: 2px solid #b4adff; outline-offset: 3px; border-radius: 4px; }
     .form-wrap { width: min(360px, 100%); }
     .preview-side { display: flex; align-items: center; padding: 64px 0 112px 48px; }
     @media (max-width: 960px) {
       :host { grid-template-columns: 1fr; }
       .preview-side { display: none; }
-      .form-side { padding: 96px 20px 48px; }
+      .form-side { padding: 96px 20px 24px; }
       .logo { top: 24px; left: 20px; }
     }
   `,

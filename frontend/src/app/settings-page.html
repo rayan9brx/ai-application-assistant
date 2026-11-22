@@ -68,6 +68,9 @@
       This permanently deletes your account, all saved CVs and their score history. It can’t be
       undone.
     </p>
+    <p class="help">
+      How we process and delete your data: <a href="/privacy">Privacy Policy</a>
+    </p>
     <form (submit)="deleteAccount($event)" novalidate>
       @if (deleteState().error) {
         <p class="error" role="alert">{{ deleteState().error }}</p>
