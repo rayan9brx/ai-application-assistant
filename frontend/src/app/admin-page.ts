@@ -1,10 +1,11 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { AdminAudit } from './admin-audit';
 import { AdminCvs } from './admin-cvs';
+import { AdminOnboarding } from './admin-onboarding';
 import { AdminOverview } from './admin-overview';
 import { AdminUsers } from './admin-users';
 
-type AdminTab = 'overview' | 'users' | 'cvs' | 'audit';
+type AdminTab = 'overview' | 'onboarding' | 'users' | 'cvs' | 'audit';
 
 /**
  * /admin, behind adminGuard. The guard only hides the page: every /api/admin request is checked
@@ -12,7 +13,7 @@ type AdminTab = 'overview' | 'users' | 'cvs' | 'audit';
  */
 @Component({
   selector: 'app-admin-page',
-  imports: [AdminAudit, AdminCvs, AdminOverview, AdminUsers],
+  imports: [AdminAudit, AdminCvs, AdminOnboarding, AdminOverview, AdminUsers],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="head">
@@ -30,6 +31,9 @@ type AdminTab = 'overview' | 'users' | 'cvs' | 'audit';
     <!-- Tabs stay mounted once opened, so searches and pages survive switching. -->
     <section role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" [hidden]="tab() !== 'overview'">
       <app-admin-overview />
+    </section>
+    <section role="tabpanel" id="panel-onboarding" aria-labelledby="tab-onboarding" [hidden]="tab() !== 'onboarding'">
+      @if (opened().has('onboarding')) { <app-admin-onboarding /> }
     </section>
     <section role="tabpanel" id="panel-users" aria-labelledby="tab-users" [hidden]="tab() !== 'users'">
       @if (opened().has('users')) { <app-admin-users /> }
@@ -55,6 +59,7 @@ type AdminTab = 'overview' | 'users' | 'cvs' | 'audit';
 export class AdminPage {
   readonly tabs: { id: AdminTab; label: string }[] = [
     { id: 'overview', label: 'Overview' },
+    { id: 'onboarding', label: 'Onboarding' },
     { id: 'users', label: 'Users' },
     { id: 'cvs', label: 'CVs' },
     { id: 'audit', label: 'Audit log' },

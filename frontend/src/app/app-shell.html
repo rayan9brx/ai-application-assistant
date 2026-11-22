@@ -1,0 +1,123 @@
+<div class="shell app-dark" [class.drawer-open]="drawerOpen()">
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  @if (drawerOpen()) {
+    <div class="scrim" aria-hidden="true" (click)="closeDrawer()"></div>
+  }
+  <aside class="sidebar" id="app-sidebar" aria-label="App" [attr.inert]="drawerHidden() ? '' : null">
+    <div class="sidebar-top">
+      <a class="logo" href="/dashboard" aria-label="ApplyCraft dashboard"
+        ><span class="mark" aria-hidden="true">A</span>ApplyCraft</a
+      >
+      <button type="button" class="icon-button close" aria-label="Close menu" (click)="closeDrawer()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+    </div>
+
+    <a class="new-cv" href="/check" (click)="startNewCv()"><span aria-hidden="true">+</span> New CV</a>
+
+    <nav aria-label="Main">
+      <ul role="list">
+        @for (item of nav; track item.label) {
+          <li>
+            <a class="nav-item" [href]="item.href" [class.active]="active(item)"
+              [attr.aria-current]="active(item) ? 'page' : null">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
+              <span class="nav-label">{{ item.label }}</span>
+              @if (item.soon) {
+                <span class="soon">Soon</span>
+              }
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="sidebar-bottom">
+      @if (usage.meters().length) {
+        <section class="usage" aria-label="Your usage">
+          @for (m of usage.meters(); track m.label) {
+            <div class="meter">
+              <p>
+                <span>{{ m.label }}</span>
+                <strong>{{ m.used }} / {{ m.limit ?? '∞' }}</strong>
+              </p>
+              @if (m.limit) {
+                <span class="track" role="progressbar" [attr.aria-label]="m.label"
+                  [attr.aria-valuenow]="m.used" aria-valuemin="0" [attr.aria-valuemax]="m.limit">
+                  <span [style.width.%]="m.percent" [class.full]="m.percent >= 100"></span>
+                </span>
+              }
+            </div>
+          }
+          @if (usage.plan() === 'free') {
+            <a class="upgrade" href="/pricing">Upgrade</a>
+          }
+        </section>
+      }
+      <!-- German law wants these one click away from every page. -->
+      <nav class="legal" aria-label="Legal">
+        <a href="/imprint">Imprint</a><span aria-hidden="true">·</span><a href="/privacy">Privacy</a
+        ><span aria-hidden="true">·</span><a href="/terms">Terms</a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="main-area">
+    <header class="topbar">
+      <button #menuButton type="button" class="icon-button hamburger" aria-label="Open menu"
+        aria-controls="app-sidebar" [attr.aria-expanded]="drawerOpen()" (click)="openDrawer()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+      </button>
+
+      <nav class="tabs" aria-label="Documents">
+        <a href="/dashboard" [class.active]="!coverLetters()" [attr.aria-current]="!coverLetters() && path() === '/dashboard' ? 'page' : null">CVs</a>
+        <a href="/cover-letters" [class.active]="coverLetters()" [attr.aria-current]="coverLetters() ? 'page' : null">Cover letters</a>
+      </nav>
+
+      <div class="actions">
+        @if (usage.plan() === 'free') {
+          <a class="upgrade small" href="/pricing">Upgrade</a>
+        }
+
+        <div class="menu-wrap">
+          <button #bellButton type="button" class="icon-button" aria-label="Notifications"
+            aria-controls="notifications-menu" [attr.aria-expanded]="openMenu() === 'bell'" (click)="toggle('bell')">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15zM10 20a2 2 0 0 0 4 0" />
+            </svg>
+          </button>
+          @if (openMenu() === 'bell') {
+            <div class="menu" id="notifications-menu" role="region" aria-label="Notifications">
+              <p class="menu-title">Notifications</p>
+              <p class="empty">No notifications yet</p>
+            </div>
+          }
+        </div>
+
+        <div class="menu-wrap">
+          <button #avatarButton type="button" class="avatar" aria-controls="account-menu"
+            [attr.aria-expanded]="openMenu() === 'account'" (click)="toggle('account')">
+            <span aria-hidden="true">{{ initial() }}</span>
+            <span class="sr-only">Account menu for {{ auth.displayName() }}</span>
+          </button>
+          @if (openMenu() === 'account') {
+            <div class="menu" id="account-menu">
+              <p class="menu-title ellipsis">{{ auth.displayName() }}</p>
+              <a href="/settings">Settings</a>
+              <a href="/settings#settings-preferences">Job preferences</a>
+              @if (role.isAdmin()) {
+                <a href="/admin">Admin</a>
+              }
+              <button type="button" (click)="logOut()">Log out</button>
+            </div>
+          }
+        </div>
+      </div>
+    </header>
+
+    <main class="content" id="main" tabindex="-1">
+      <ng-content />
+    </main>
+  </div>
+</div>

@@ -34,6 +34,11 @@ public class AdminController {
         return admin.stats(Range.parse(range));
     }
 
+    @GetMapping("/onboarding")
+    public OnboardingStats onboarding() {
+        return admin.onboarding();
+    }
+
     @GetMapping("/users")
     public AdminService.Page<UserRow> users(@RequestParam(defaultValue = "") String q,
                                             @RequestParam(defaultValue = "0") int page) {

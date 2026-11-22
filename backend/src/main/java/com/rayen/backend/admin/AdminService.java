@@ -67,8 +67,7 @@ public class AdminService {
     public record Count(String key, long count) {}
     public record Funnel(long visitors, long signups, long firstScored) {}
     public record Stats(String range, Instant from, Kpis kpis, List<DayPoint> series, List<Count> topPages,
-                        List<Count> topCountries, List<Count> topReferrers, List<Count> devices, Funnel funnel,
-                        List<Count> onboardingAnswers) {}
+                        List<Count> topCountries, List<Count> topReferrers, List<Count> devices, Funnel funnel) {}
     public record UserRow(UUID id, String email, Instant createdAt, Instant lastSignInAt, String country,
                           String plan, String role, long cvCount) {}
     public record CvRow(UUID id, String ownerEmail, String title, Instant createdAt, Integer lastScore) {}
@@ -77,6 +76,12 @@ public class AdminService {
     public record AuditRow(long id, Instant createdAt, String adminEmail, UUID cvId, String cvTitle,
                            String ownerEmail, String reason) {}
     public record Page<T>(List<T> items, long total, int page, int pageSize) {}
+    /**
+     * Onboarding, all time. answered[i] is how many users answered step i + 1 and skippedAt[i] how
+     * many pressed "Skip for now" on it; answers maps each question to its count per option.
+     */
+    public record OnboardingStats(long started, long completed, long skipped, List<Long> answered,
+                                  List<Long> skippedAt, Map<String, List<Count>> answers) {}
 
     public Stats stats(Range range) {
         LocalDate today = LocalDate.now(zone);
@@ -121,11 +126,46 @@ public class AdminService {
             counts("""
                 select device_type as key, count(distinct visitor_hash) as n
                 from public.page_views where created_at >= :from group by device_type""", p),
-            new Funnel(kpis.visitors(), signups, firstScored),
-            // All time: profiles don't record when the question was answered.
-            counts("""
-                select onboarding_answer as key, count(*) as n from public.profiles
-                where onboarding_done and onboarding_answer is not null group by onboarding_answer""", p));
+            new Funnel(kpis.visitors(), signups, firstScored));
+    }
+
+    public OnboardingStats onboarding() {
+        var p = new MapSqlParameterSource();
+        Map<String, Object> totals = db.queryForMap("""
+            select count(*) as started, count(*) filter (where completed) as completed,
+                   count(*) filter (where skipped_at_step is not null and not completed) as skipped,
+                   count(challenge) as s1, count(found_jobs) as s2, count(search_status) as s3,
+                   count(experience_level) as s4, count(*) filter (where cardinality(roles) > 0) as s5,
+                   count(*) filter (where cardinality(work_modes) > 0) as s6,
+                   count(*) filter (where cardinality(locations) > 0) as s7, count(min_salary) as s8
+            from public.onboarding_answers""", p);
+        List<Long> answered = new java.util.ArrayList<>();
+        for (int step = 1; step <= 8; step++) answered.add(num(totals.get("s" + step)));
+        Long[] skippedAt = new Long[8];
+        java.util.Arrays.fill(skippedAt, 0L);
+        db.query("""
+            select skipped_at_step as step, count(*) as n from public.onboarding_answers
+            where skipped_at_step is not null group by skipped_at_step""", p,
+            rs -> { skippedAt[rs.getInt("step") - 1] = rs.getLong("n"); });
+
+        Map<String, List<Count>> answers = new java.util.LinkedHashMap<>();
+        for (String column : List.of("challenge", "found_jobs", "search_status", "experience_level", "min_salary")) {
+            answers.put(column, db.query("select " + column + " as key, count(*) as n from public.onboarding_answers"
+                + " where " + column + " is not null group by 1 order by n desc", p,
+                (rs, i) -> new Count(rs.getString("key"), rs.getLong("n"))));
+        }
+        for (String column : List.of("roles", "work_modes")) {
+            answers.put(column, db.query("select v as key, count(*) as n from public.onboarding_answers, unnest("
+                + column + ") v group by v order by n desc", p,
+                (rs, i) -> new Count(rs.getString("key"), rs.getLong("n"))));
+        }
+        // Free text: grouped case-insensitively ("berlin" and "Berlin" count together).
+        answers.put("locations", db.query("""
+            select min(v) as key, count(*) as n from public.onboarding_answers, unnest(locations) v
+            group by lower(v) order by n desc limit""" + " " + TOP, p,
+            (rs, i) -> new Count(rs.getString("key"), rs.getLong("n"))));
+        return new OnboardingStats(num(totals.get("started")), num(totals.get("completed")),
+            num(totals.get("skipped")), answered, List.of(skippedAt), answers);
     }
 
     /** Visitors and sign-ups per day in the admin time zone, with zero days filled in. */

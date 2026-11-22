@@ -2,14 +2,16 @@ import { Component, inject, signal } from '@angular/core';
 import { AuthService } from './auth.service';
 import { CvApi, Profile } from './cv-api';
 import { CvFlow } from './cv-flow';
+import { JobPreferences } from './job-preferences';
 import { Navigation } from './navigation';
 import { MIN_PASSWORD } from './signup-page';
 
 const PLAN_LABELS: Record<Profile['plan'], string> = { free: 'Free', pro: 'Pro', lifetime: 'Lifetime' };
 
-/** /settings: name, password, plan and account deletion. */
+/** /settings: name, password, job preferences, plan and account deletion. */
 @Component({
   selector: 'app-settings-page',
+  imports: [JobPreferences],
   templateUrl: './settings-page.html',
   styleUrls: ['./account-forms.scss', './settings-page.scss'],
 })

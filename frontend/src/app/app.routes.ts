@@ -97,6 +97,14 @@ export const routes: Routes = [
     loadComponent: () => import('./dashboard-page').then((m) => m.DashboardPage),
   },
   {
+    // The top bar's "Cover letters" tab; the tool isn't built yet.
+    path: 'cover-letters',
+    title: 'Cover letters — ApplyCraft',
+    canActivate: [authGuard],
+    data: { slug: 'cover-letter-generator' },
+    loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
+  },
+  {
     path: 'settings',
     title: 'Settings — ApplyCraft',
     canActivate: [authGuard],

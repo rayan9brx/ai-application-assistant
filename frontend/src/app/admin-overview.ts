@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { AdminApi, AdminRange, AdminStats, KeyCount, countryName, flag } from './admin-api';
 import { AdminLineChart } from './admin-line-chart';
 import { CvFlow } from './cv-flow';
-import { ONBOARDING_ANSWER_LABELS } from './onboarding-options';
 
 const RANGES: { id: AdminRange; label: string }[] = [
   { id: 'today', label: 'Today' },
@@ -109,17 +108,6 @@ const RANGES: { id: AdminRange; label: string }[] = [
             <p class="muted">No visitors yet.</p>
           }
         </section>
-
-        <section class="panel" aria-labelledby="onboarding-title">
-          <h2 id="onboarding-title">Onboarding answers <span class="muted">users, all time</span></h2>
-          @if (!s.onboardingAnswers.length) { <p class="muted">No answers yet.</p> }
-          <ul class="bars" role="list">
-            @for (row of onboarding(); track row.key) {
-              <li><span class="ellipsis" [title]="row.label">{{ row.label }}</span>
-                <span class="bar"><span [style.width.%]="share(row, onboarding())"></span></span><b>{{ n(row.count) }}</b></li>
-            }
-          </ul>
-        </section>
       </div>
     }
   `,
@@ -146,17 +134,6 @@ export class AdminOverview {
       { label: 'Sign-ups', value: f.signups, width: (f.signups / top) * 100, rate: rate(f.signups, f.visitors) },
       { label: 'First CV scored', value: f.firstScored, width: (f.firstScored / top) * 100, rate: rate(f.firstScored, f.signups) },
     ];
-  });
-
-  /** Every answer in a fixed order, with zero counts, once anyone has answered. */
-  readonly onboarding = computed(() => {
-    const rows = this.stats()?.onboardingAnswers ?? [];
-    if (!rows.length) return [];
-    return Object.entries(ONBOARDING_ANSWER_LABELS).map(([key, label]) => ({
-      key,
-      label,
-      count: rows.find((r) => r.key === key)?.count ?? 0,
-    }));
   });
 
   readonly devices = computed(() => {

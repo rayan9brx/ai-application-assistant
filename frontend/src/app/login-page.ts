@@ -90,7 +90,7 @@ export class LoginPage {
     this.busy.set(true);
     this.error.set('');
     try {
-      this.deferOnboarding();
+      this.rememberReturnUrl();
       await this.auth.signIn(this.email().trim(), this.password());
       await this.navigation.go(safeNext(this.returnUrl()));
     } catch (error) {
@@ -105,7 +105,7 @@ export class LoginPage {
     this.googleBusy.set(true);
     this.error.set('');
     try {
-      this.deferOnboarding();
+      this.rememberReturnUrl();
       await this.auth.signInWithGoogle(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Logging in with Google failed. Please try again.'));
@@ -113,9 +113,9 @@ export class LoginPage {
     }
   }
 
-  /** Headed to a returnUrl: go straight there; the onboarding question waits for the next visit. */
-  private deferOnboarding(): void {
-    if (this.returnUrl()) Onboarding.deferForThisVisit();
+  /** A first-time user goes to the returnUrl after the onboarding flow. */
+  private rememberReturnUrl(): void {
+    Onboarding.rememberReturnUrl(this.returnUrl());
   }
 
   value(event: Event): string {

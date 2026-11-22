@@ -10,11 +10,16 @@ export class Navigation {
   private readonly injector = inject(Injector);
   private readonly router = inject(Router);
   readonly path = signal(location.pathname);
+  /** The query string ("?focus=job"), or ''. */
+  readonly search = signal(location.search);
 
   constructor() {
     this.router.events.subscribe((event) => {
-      if (event instanceof NavigationEnd)
-        this.path.set(new URL(event.urlAfterRedirects, location.origin).pathname);
+      if (event instanceof NavigationEnd) {
+        const url = new URL(event.urlAfterRedirects, location.origin);
+        this.path.set(url.pathname);
+        this.search.set(url.search);
+      }
     });
   }
 

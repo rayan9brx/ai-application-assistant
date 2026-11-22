@@ -105,7 +105,7 @@ export class SignupPage {
     try {
       const destination = safeNext(this.returnUrl());
       // The form no longer asks for a name; it can be added later in Settings.
-      this.deferOnboarding();
+      this.rememberReturnUrl();
       const signedIn = await this.auth.signUp(email, this.password(), '', destination);
       if (signedIn) await this.navigation.go(destination);
       else this.confirmSent.set(true);
@@ -122,7 +122,7 @@ export class SignupPage {
     this.googleBusy.set(true);
     this.error.set('');
     try {
-      this.deferOnboarding();
+      this.rememberReturnUrl();
       await this.auth.signInWithGoogle(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Signing up with Google failed. Please try again.'));
@@ -130,9 +130,9 @@ export class SignupPage {
     }
   }
 
-  /** Headed to a returnUrl: go straight there; the onboarding question waits for the next visit. */
-  private deferOnboarding(): void {
-    if (this.returnUrl()) Onboarding.deferForThisVisit();
+  /** A first-time user goes to the returnUrl after the onboarding flow. */
+  private rememberReturnUrl(): void {
+    Onboarding.rememberReturnUrl(this.returnUrl());
   }
 
   value(event: Event): string {

@@ -36,8 +36,15 @@ export interface AdminStats {
   topReferrers: KeyCount[];
   devices: KeyCount[];
   funnel: { visitors: number; signups: number; firstScored: number };
-  /** All time, whatever the range. */
-  onboardingAnswers: KeyCount[];
+}
+/** All time. answered[i] / skippedAt[i] are for step i + 1; answers is keyed by DB column. */
+export interface AdminOnboardingStats {
+  started: number;
+  completed: number;
+  skipped: number;
+  answered: number[];
+  skippedAt: number[];
+  answers: Record<string, KeyCount[]>;
 }
 export interface AdminPage<T> {
   items: T[];
@@ -87,6 +94,9 @@ export class AdminApi {
 
   stats(range: AdminRange): Promise<AdminStats> {
     return this.get('/api/admin/stats', { range });
+  }
+  onboarding(): Promise<AdminOnboardingStats> {
+    return this.get('/api/admin/onboarding', {});
   }
   users(q: string, page: number): Promise<AdminPage<AdminUser>> {
     return this.get('/api/admin/users', { q, page });

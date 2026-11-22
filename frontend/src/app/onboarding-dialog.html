@@ -1,0 +1,166 @@
+@if (visible()) {
+  <div class="overlay">
+    <section
+      #frame
+      class="frame"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="finished() ? 'ob-done-title' : 'ob-title'"
+      (keydown)="keydown($event)"
+    >
+      @if (!finished()) {
+        <header class="top">
+          <div class="progress-row">
+            <p class="count">Step {{ step() + 1 }} of {{ steps.length }}</p>
+            <button class="skip" type="button" (click)="skip()">Skip for now</button>
+          </div>
+          <div
+            class="progress"
+            role="progressbar"
+            aria-label="Onboarding progress"
+            [attr.aria-valuenow]="step() + 1"
+            aria-valuemin="1"
+            [attr.aria-valuemax]="steps.length"
+          >
+            <span [style.width.%]="((step() + 1) / steps.length) * 100"></span>
+          </div>
+        </header>
+
+        <div class="body">
+          @for (s of [current()]; track s.field) {
+            <div class="step" [class.back]="direction() === 'back'">
+              <h2 id="ob-title">{{ s.title }}</h2>
+              @if (s.hint && s.kind !== 'pills') {
+                <p class="hint">{{ s.hint }}</p>
+              }
+
+              @switch (s.kind) {
+                @case ('single') {
+                  <fieldset class="cards" (keydown)="arrows($event)">
+                    <legend class="sr-only">{{ s.title }}</legend>
+                    @for (o of optionsOf(s); track o.key) {
+                      <label class="card" [class.selected]="picked(s, o.key)">
+                        <input
+                          type="radio"
+                          [name]="'ob-' + s.field"
+                          [value]="o.key"
+                          [checked]="picked(s, o.key)"
+                          (change)="choose(s, o.key)"
+                        />
+                        <span class="control radio" aria-hidden="true"></span>
+                        <span class="text">
+                          <strong>{{ o.label }}</strong>
+                          @if (o.sub) {
+                            <small>{{ o.sub }}</small>
+                          }
+                        </span>
+                      </label>
+                    }
+                  </fieldset>
+                }
+                @case ('multi') {
+                  <fieldset class="cards" [class.grid]="isGrid(s)" (keydown)="arrows($event)">
+                    <legend class="sr-only">{{ s.title }}</legend>
+                    @for (o of optionsOf(s); track o.key) {
+                      <label class="card" [class.selected]="picked(s, o.key)">
+                        <input
+                          type="checkbox"
+                          [value]="o.key"
+                          [checked]="picked(s, o.key)"
+                          (change)="choose(s, o.key)"
+                        />
+                        <span class="control check" aria-hidden="true">
+                          <svg viewBox="0 0 16 16"><path d="M3.5 8.5l3 3 6-7" /></svg>
+                        </span>
+                        <span class="text">
+                          <strong>{{ o.label }}</strong>
+                          @if (o.sub) {
+                            <small>{{ o.sub }}</small>
+                          }
+                        </span>
+                      </label>
+                    }
+                  </fieldset>
+                }
+                @case ('pills') {
+                  <fieldset class="pills" (keydown)="arrows($event)">
+                    <legend class="sr-only">{{ s.title }}</legend>
+                    @for (o of optionsOf(s); track o.key) {
+                      <label class="pill" [class.selected]="picked(s, o.key)">
+                        <input
+                          type="radio"
+                          [name]="'ob-' + s.field"
+                          [value]="o.key"
+                          [checked]="picked(s, o.key)"
+                          (change)="choose(s, o.key)"
+                        />
+                        {{ o.label }}
+                      </label>
+                    }
+                  </fieldset>
+                  @if (s.hint) {
+                    <p class="hint below">{{ s.hint }}</p>
+                  }
+                }
+                @case ('chips') {
+                  <div class="chips-field">
+                    <label class="sr-only" for="ob-location">Add a location</label>
+                    <div class="chips-box" (click)="locationInput.focus()">
+                      @for (l of answers().locations; track l) {
+                        <span class="chip">
+                          {{ l }}
+                          <button type="button" [attr.aria-label]="'Remove ' + l" (click)="removeLocation(l)">×</button>
+                        </span>
+                      }
+                      <input
+                        #locationInput
+                        id="ob-location"
+                        type="text"
+                        autocomplete="off"
+                        maxlength="60"
+                        placeholder="Add a city or Remote…"
+                        [value]="locationText()"
+                        (input)="locationText.set(value($event))"
+                        (keydown.enter)="addLocation($event)"
+                        (keydown.backspace)="backspace()"
+                      />
+                    </div>
+                    @if (suggestions().length) {
+                      <p class="hint small">Suggestions</p>
+                      <div class="suggestions">
+                        @for (city of suggestions(); track city) {
+                          <button type="button" class="suggestion" (click)="pickLocation(city)">+ {{ city }}</button>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+
+        <footer class="bottom">
+          <button class="back-link" type="button" [class.hidden]="step() === 0" [disabled]="step() === 0" (click)="back()">
+            Back
+          </button>
+          <button class="primary" type="button" [disabled]="!answered()" (click)="next()">Continue</button>
+        </footer>
+      } @else {
+        <div class="body done">
+          <div class="step">
+            <h2 id="ob-done-title">You’re all set{{ firstName() ? ', ' + firstName() : '' }}! 🎉</h2>
+            <p class="hint">Thanks. We’ve saved your answers; you can change them anytime in Settings.</p>
+            <button class="primary wide" type="button" (click)="finish()">{{ finishLabel() }}</button>
+          </div>
+        </div>
+      }
+    </section>
+  </div>
+}
+@if (note()) {
+  <div class="note" role="status">
+    <span>Job search is coming soon. We’ll use your preferences when it’s ready.</span>
+    <button type="button" aria-label="Dismiss" (click)="note.set(false)">×</button>
+  </div>
+}

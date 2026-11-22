@@ -24,21 +24,21 @@ public class AccountService {
     static final int MAX_CVS = 200;
     static final int MAX_ANALYSES_PER_CV = 500;
     static final int MAX_JSON_CHARS = 200_000;
-    /** Answers to the onboarding question; the frontend sends one of these keys. */
-    public static final List<String> ONBOARDING_ANSWERS = List.of("cv_quality", "ats", "tailor", "job_search", "skipped");
 
     private final ProfileRepository profiles;
     private final CvRepository cvs;
     private final AnalysisRepository analyses;
     private final SupabaseAdminClient admin;
+    private final OnboardingRepository onboarding;
     private final JsonMapper json = JsonMapper.builder().build();
 
     public AccountService(ProfileRepository profiles, CvRepository cvs, AnalysisRepository analyses,
-                          SupabaseAdminClient admin) {
+                          SupabaseAdminClient admin, OnboardingRepository onboarding) {
         this.profiles = profiles;
         this.cvs = cvs;
         this.analyses = analyses;
         this.admin = admin;
+        this.onboarding = onboarding;
     }
 
     /**
@@ -72,24 +72,11 @@ public class AccountService {
         return profiles.saveAndFlush(profile);
     }
 
-    /**
-     * Stores the onboarding answer (or "skipped") once; later calls keep the first answer.
-     * Not @Transactional on purpose: profile() may insert and must not share a transaction.
-     */
-    public Profile completeOnboarding(UUID userId, String nameFromSignup, String answer) {
-        if (!ONBOARDING_ANSWERS.contains(answer)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown answer.");
-        }
-        Profile profile = profile(userId, nameFromSignup);
-        if (profile.isOnboardingDone()) return profile;
-        profile.completeOnboarding(answer);
-        return profiles.saveAndFlush(profile);
-    }
-
     /** Deletes the sign-in account first (so a failure leaves everything intact), then all rows. */
     @Transactional
     public void deleteAccount(UUID userId) {
         admin.deleteUser(userId);
+        onboarding.deleteFor(userId);
         analyses.deleteAllOwnedBy(userId);
         cvs.deleteAllOwnedBy(userId);
         profiles.deleteAllByIdInBatch(List.of(userId));

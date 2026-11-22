@@ -10,7 +10,7 @@
 .status { margin-left: auto; color: var(--muted); font-size: var(--text-sm); font-weight: 650; }
 .status.ok { color: var(--success); }
 .problem { margin-top: 10px; font-size: 1rem; font-weight: 600; line-height: 1.45; }
-.suggestion { margin-top: 4px; color: #424a59; font-size: var(--text-base); line-height: 1.55; }
+.suggestion { margin-top: 4px; color: var(--ink-soft); font-size: var(--text-base); line-height: 1.55; }
 .cta { margin-top: 14px; gap: 8px; }
 .proposal { margin-top: 16px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--page); }
 .tag { color: var(--muted); font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }

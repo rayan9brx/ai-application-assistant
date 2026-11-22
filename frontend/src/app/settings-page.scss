@@ -7,4 +7,4 @@
 .plan { margin-bottom: var(--space-2); }
 .danger-zone { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); }
 .danger-zone .help { margin-bottom: var(--space-4); }
-.delete { justify-self: start; border-color: var(--danger); background: var(--danger); color: #fff; }
+.delete { justify-self: start; border-color: var(--danger); background: var(--danger); color: var(--surface); }

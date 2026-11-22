@@ -50,6 +50,11 @@
     </form>
   </section>
 
+  <section class="auth-card" aria-labelledby="settings-preferences">
+    <h2 id="settings-preferences">Job preferences</h2>
+    <app-job-preferences />
+  </section>
+
   <section class="auth-card" aria-labelledby="settings-plan">
     <h2 id="settings-plan">Plan</h2>
     @if (profile(); as p) {
@@ -65,7 +70,8 @@
   <section class="auth-card danger-zone" aria-labelledby="settings-delete">
     <h2 id="settings-delete">Delete my account</h2>
     <p class="help">
-      This permanently deletes your account, all saved CVs and their score history. It can’t be
+      This permanently deletes your account, all saved CVs, their score history and your job
+      preferences. It can’t be
       undone.
     </p>
     <p class="help">

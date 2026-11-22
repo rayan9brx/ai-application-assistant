@@ -1,97 +1,209 @@
-<section aria-labelledby="dashboard-title">
-  <header class="head">
-    <div>
-      <p class="pill-badge">Dashboard</p>
-      <h1 id="dashboard-title">
-        {{ auth.displayName() ? 'Welcome, ' + auth.displayName() : 'Your CVs' }}
-      </h1>
-    </div>
-    <a class="cta cta-small" href="/check">Check a new CV</a>
+<section class="dashboard" aria-labelledby="dashboard-title">
+  <header class="greeting">
+    <h1 id="dashboard-title">Welcome back{{ firstName() ? ', ' + firstName() : '' }} 👋</h1>
+    <p class="muted">{{ subline() }}</p>
   </header>
 
-  @if (error()) {
-    <p class="error" role="alert">{{ error() }}</p>
-  }
+  <ul class="features" role="list">
+    <li>
+      <a class="feature" href="/check">
+        <span class="feature-icon" aria-hidden="true">✨</span>
+        <strong>CV Checker</strong>
+        <span>Get your ATS score in seconds</span>
+      </a>
+    </li>
+    <li>
+      <a class="feature" href="/check?focus=job">
+        <span class="feature-icon" aria-hidden="true">🎯</span>
+        <strong>Tailor to Job</strong>
+        <span>Match your CV to any job description</span>
+      </a>
+    </li>
+    <li>
+      <a class="feature" href="/tools/job-search">
+        <span class="feature-icon" aria-hidden="true">💼</span>
+        <strong>Job Search <span class="soon">Soon</span></strong>
+        <span>Find jobs that match your profile</span>
+      </a>
+    </li>
+  </ul>
 
-  @let list = cvs();
-  @if (list === null) {
-    <p class="muted" role="status">Loading your CVs…</p>
-  } @else if (list.length === 0) {
-    <div class="empty">
-      <h2>No saved CVs yet</h2>
-      <p class="muted">Score a CV in the checker, then press Save to keep it here.</p>
-      <a class="cta cta-small" href="/check">Score my CV</a>
-    </div>
-  } @else {
-    <h2 class="sr-only">Saved CVs</h2>
-    <ul class="cvs" role="list">
-      @for (cv of list; track cv.id) {
-        <li class="cv">
-          <div class="cv-main">
-            <span class="score" [class]="scoreClass(cv.lastScore)"
-              [attr.aria-label]="cv.lastScore === null ? 'Not scored yet' : 'Last score ' + cv.lastScore">
-              {{ cv.lastScore ?? '–' }}
-            </span>
-            <div class="cv-text">
-              <h3>{{ cv.title }}</h3>
-              <p class="muted">
-                Updated {{ cv.updatedAt | date: 'mediumDate' }}
-                @if (cv.lastScoredAt) {
-                  · last scored {{ cv.lastScoredAt | date: 'short' }}
-                }
-              </p>
-            </div>
-          </div>
+  <section class="panel" aria-labelledby="cvs-title">
+    <header class="panel-head">
+      <h2 id="cvs-title">Your CVs</h2>
+      <div class="controls">
+        <label class="sr-only" for="cv-sort">Sort by</label>
+        <select id="cv-sort" [value]="sort()" (change)="setSort(value($event))">
+          <option value="edited">Last edited</option>
+          <option value="created">Created</option>
+          <option value="score">Score</option>
+        </select>
+        <div class="toggle" role="group" aria-label="View">
+          <button type="button" aria-label="Grid view" [attr.aria-pressed]="view() === 'grid'" (click)="setView('grid')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" /></svg>
+          </button>
+          <button type="button" aria-label="List view" [attr.aria-pressed]="view() === 'list'" (click)="setView('list')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+        </div>
+      </div>
+    </header>
 
-          @if (confirmDelete() === cv.id) {
-            <div class="confirm" role="group" aria-label="Confirm delete">
-              <span>Delete this CV and its score history?</span>
-              <button type="button" class="danger" [disabled]="busyId() === cv.id" (click)="remove(cv)">
-                Delete
-              </button>
-              <button type="button" class="plain" (click)="confirmDelete.set(null)">Cancel</button>
-            </div>
-          } @else {
-            <div class="actions">
-              <button type="button" class="cta cta-small" [disabled]="!!busyId()" (click)="open(cv)">
-                Open
-              </button>
-              <button type="button" class="plain" [disabled]="!!busyId()"
-                [attr.aria-expanded]="openHistory() === cv.id"
-                [attr.aria-controls]="'history-' + cv.id" (click)="toggleHistory(cv)">
-                History
-              </button>
-              <button type="button" class="plain" [disabled]="!!busyId()" (click)="duplicate(cv)">
-                Duplicate
-              </button>
-              <button type="button" class="plain" [disabled]="!!busyId()" (click)="confirmDelete.set(cv.id)">
-                Delete
-              </button>
-            </div>
-          }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
 
-          @if (openHistory() === cv.id) {
-            <div class="history" [id]="'history-' + cv.id">
-              @let runs = history()[cv.id];
-              @if (!runs) {
-                <p class="muted" role="status">Loading history…</p>
-              } @else if (runs.length === 0) {
-                <p class="muted">No scores saved yet. Open the CV and score it.</p>
+    <ng-template #createCard>
+      <div class="create" [class.dragging]="dragging()" (dragover)="dragOver($event)"
+        (dragleave)="dragLeave($event)" (drop)="drop($event)">
+        <input #picker class="sr-only" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          tabindex="-1" aria-hidden="true" (change)="pick(picker)" />
+        <button type="button" class="create-button" (click)="picker.click()">
+          <span class="plus" aria-hidden="true">+</span>
+          <strong>Create new CV</strong>
+          <span>Click to upload a CV or drop a file here</span>
+          <small>PDF or Word (.docx), up to 5 MB</small>
+        </button>
+      </div>
+    </ng-template>
+
+    @if (uploadError()) {
+      <p class="error" role="alert">{{ uploadError() }}</p>
+    }
+
+    @let list = sorted();
+    @if (cvs() === null) {
+      <p class="muted" role="status">Loading your CVs…</p>
+    } @else if (list.length === 0) {
+      <div class="grid">
+        <ng-container *ngTemplateOutlet="createCard" />
+      </div>
+      <p class="first-line">Upload your first CV to get your score</p>
+    } @else if (view() === 'grid') {
+      <ul class="grid" role="list">
+        <li><ng-container *ngTemplateOutlet="createCard" /></li>
+        @for (cv of list; track cv.id) {
+          <li class="cv-card" [class.busy]="busyId() === cv.id">
+            <button type="button" class="cv-open" [disabled]="!!busyId()" (click)="open(cv)"
+              [attr.aria-label]="'Open ' + cv.title">
+              <span class="paper" aria-hidden="true"><span class="paper-text">{{ cv.preview || 'No text yet' }}</span></span>
+            </button>
+            <div class="cv-info">
+              <div class="cv-text">
+                <h3 [title]="cv.title">{{ cv.title }}</h3>
+                <p class="muted small">edited {{ ago(cv.updatedAt) }}</p>
+              </div>
+              @if (cv.lastScore !== null) {
+                <app-score-ring class="ring" [value]="cv.lastScore" [attr.aria-label]="'Last score ' + cv.lastScore" role="img" />
               } @else {
-                <ol role="list" aria-label="Score history, newest first">
-                  @for (run of runs; track run.id) {
-                    <li>
-                      <span class="when">{{ run.createdAt | date: 'short' }}</span>
-                      <span class="bar" aria-hidden="true"><span [style.width.%]="run.overallScore" [class]="scoreClass(run.overallScore)"></span></span>
-                      <span class="value">{{ run.overallScore }}</span>
-                    </li>
-                  }
-                </ol>
+                <span class="unscored">Not scored</span>
               }
+              <ng-container *ngTemplateOutlet="menu; context: { $implicit: cv }" />
             </div>
-          }
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="list-create"><ng-container *ngTemplateOutlet="createCard" /></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Score</th>
+              <th scope="col" class="hide-sm">Last edited</th>
+              <th scope="col" class="hide-sm">Created</th>
+              <th scope="col"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cv of list; track cv.id) {
+              <tr [class.busy]="busyId() === cv.id">
+                <td>
+                  <button type="button" class="row-open" [disabled]="!!busyId()" (click)="open(cv)">{{ cv.title }}</button>
+                </td>
+                <td>
+                  @if (cv.lastScore !== null) {
+                    <app-score-ring class="ring small" [value]="cv.lastScore" [attr.aria-label]="'Last score ' + cv.lastScore" role="img" />
+                  } @else {
+                    <span class="unscored">–</span>
+                  }
+                </td>
+                <td class="muted hide-sm">{{ ago(cv.updatedAt) }}</td>
+                <td class="muted hide-sm">{{ cv.createdAt | date: 'mediumDate' }}</td>
+                <td class="menu-cell"><ng-container *ngTemplateOutlet="menu; context: { $implicit: cv }" /></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</section>
+
+<ng-template #menu let-cv>
+  <div class="cv-menu">
+    <button type="button" class="dots" [attr.aria-label]="'Actions for ' + cv.title" aria-haspopup="menu"
+      [attr.aria-expanded]="menuFor() === cv.id" [disabled]="!!busyId()" (click)="toggleMenu(cv, $event)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
+    </button>
+    @if (menuFor() === cv.id) {
+      <div class="menu" role="menu">
+        <button type="button" role="menuitem" (click)="open(cv)">Open</button>
+        <button type="button" role="menuitem" (click)="askRename(cv)">Rename</button>
+        <button type="button" role="menuitem" (click)="duplicate(cv)">Duplicate</button>
+        <button type="button" role="menuitem" (click)="showHistory(cv)">Score history</button>
+        <button type="button" role="menuitem" class="danger-item" (click)="askDelete(cv)">Delete</button>
+      </div>
+    }
+  </div>
+</ng-template>
+
+<dialog #renameDialog class="dialog" aria-labelledby="rename-title">
+  <form (submit)="rename($event)">
+    <h2 id="rename-title">Rename CV</h2>
+    <label class="sr-only" for="rename-input">New name</label>
+    <input id="rename-input" maxlength="200" autocomplete="off" [value]="newTitle()" (input)="newTitle.set(value($event))" />
+    <div class="dialog-actions">
+      <button type="button" class="plain" (click)="closeDialog(renameDialog)">Cancel</button>
+      <button type="submit" class="cta cta-small" [disabled]="!newTitle().trim() || !!busyId()">
+        {{ busyId() ? 'Saving…' : 'Save' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog #deleteDialog class="dialog" aria-labelledby="delete-title">
+  <h2 id="delete-title">Delete “{{ target()?.title }}”?</h2>
+  <p class="muted">This deletes the CV and its score history. It can’t be undone.</p>
+  <div class="dialog-actions">
+    <button type="button" class="plain" (click)="closeDialog(deleteDialog)">Cancel</button>
+    <button type="button" class="danger" [disabled]="!!busyId()" (click)="remove()">
+      {{ busyId() ? 'Deleting…' : 'Delete' }}
+    </button>
+  </div>
+</dialog>
+
+<dialog #historyDialog class="dialog" aria-labelledby="history-title">
+  <h2 id="history-title">Score history</h2>
+  <p class="muted small">{{ target()?.title }}</p>
+  @let runs = history()[target()?.id ?? ''];
+  @if (!runs) {
+    <p class="muted" role="status">Loading history…</p>
+  } @else if (runs.length === 0) {
+    <p class="muted">No scores saved yet. Open the CV and score it.</p>
+  } @else {
+    <ol class="history" role="list" aria-label="Score history, newest first">
+      @for (run of runs; track run.id) {
+        <li>
+          <span class="when">{{ run.createdAt | date: 'short' }}</span>
+          <span class="bar" aria-hidden="true"><span [style.width.%]="run.overallScore" [class]="scoreClass(run.overallScore)"></span></span>
+          <span class="value">{{ run.overallScore }}</span>
         </li>
       }
-    </ul>
+    </ol>
   }
-</section>
+  <div class="dialog-actions">
+    <button type="button" class="plain" (click)="closeDialog(historyDialog)">Close</button>
+  </div>
+</dialog>

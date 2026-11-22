@@ -1,4 +1,6 @@
 import { Component, HostListener, computed, inject } from '@angular/core';
+import { AppShell } from './app-shell';
+import { AuthService } from './auth.service';
 import { RouterOutlet } from '@angular/router';
 import { CvLibrary } from './cv-library';
 import { Navbar, NavLink } from './navbar';
@@ -9,10 +11,12 @@ import { PageViewTracker } from './page-view-tracker';
 import { SiteFooter } from './site-footer';
 
 const FULL_SCREEN_PATHS = ['/login', '/signup'];
+/** Pages of the logged-in app, shown in AppShell (sidebar + top bar). */
+const APP_PATHS = ['/dashboard', '/check', '/settings', '/admin', '/cover-letters'];
 
 @Component({
   selector: 'app-root',
-  imports: [Navbar, OnboardingDialog, RouterOutlet, SiteFooter],
+  imports: [AppShell, Navbar, OnboardingDialog, RouterOutlet, SiteFooter],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -25,6 +29,13 @@ export class App {
   ];
   /** Log-in and sign-up are full-screen pages without the site's navbar and footer. */
   readonly fullScreen = computed(() => FULL_SCREEN_PATHS.includes(this.navigation.path()));
+  /** App pages, plus the tool pages (/tools/<slug>) for signed-in users. */
+  readonly appLayout = computed(() => {
+    const path = this.navigation.path();
+    if (APP_PATHS.includes(path)) return this.auth.signedIn();
+    return path.startsWith('/tools/') && this.auth.signedIn();
+  });
+  private readonly auth = inject(AuthService);
 
   constructor() {
     // Listens for sign-in from the start, so a CV a guest asked to save is saved after sign-up.

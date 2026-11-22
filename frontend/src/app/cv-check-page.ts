@@ -2,8 +2,8 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  afterNextRender,
   input,
+  untracked,
   computed,
   effect,
   inject,
@@ -34,7 +34,10 @@ const SCORING_STEPS = [
 export class CvCheckPage {
   readonly flow = inject(CvFlow);
   readonly library = inject(CvLibrary);
-  /** ?focus=job (from onboarding's "tailor to a job" answer) puts the cursor in the job field. */
+  /**
+   * ?focus=job (Tailor to Job) puts the cursor in the job description field; ?focus=fixes
+   * (AI Fixes) scrolls to the report's issues. Re-runs when only the query changes.
+   */
   readonly focus = input<string>();
   readonly mode = signal<'file' | 'paste'>('file');
   readonly file = signal<File | null>(null);
@@ -63,9 +66,19 @@ export class CvCheckPage {
     effect(() => {
       if (this.flow.phase() !== 'scoring') this.step.set(0);
     });
-    afterNextRender(() => {
-      // After the navigation's scroll-to-top, so the field is scrolled into view.
-      if (this.focus() === 'job') setTimeout(() => this.jobBox()?.nativeElement.focus());
+    effect(() => {
+      const focus = this.focus();
+      untracked(() => {
+        // After render and the navigation's scroll-to-top, so the target is scrolled into view.
+        setTimeout(() => {
+          if (focus === 'job') {
+            const field = this.jobBox()?.nativeElement ?? document.getElementById('results-job');
+            field?.focus();
+          } else if (focus === 'fixes') {
+            document.getElementById('issues-title')?.scrollIntoView({ block: 'start' });
+          }
+        });
+      });
     });
     // A file from the landing page's upload bar: score it right away.
     const handedOff = this.flow.takeHandOff();

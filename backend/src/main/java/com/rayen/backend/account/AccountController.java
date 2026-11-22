@@ -29,18 +29,18 @@ public class AccountController {
         this.accounts = accounts;
     }
 
-    public record ProfileView(UUID id, String email, String fullName, String plan, String role,
-                              boolean onboardingDone, Instant createdAt) {}
-
-    public record OnboardingRequest(@NotBlank @Size(max = 40) String answer) {}
+    public record ProfileView(UUID id, String email, String fullName, String plan, String role, Instant createdAt) {}
 
     public record ProfileUpdate(@Size(max = 200) String fullName) {}
 
     public record CvRequest(@NotBlank @Size(max = 200) String title, @NotNull JsonNode content,
                             @Size(max = 15000) String jobDescription) {}
 
+    /** preview: the start of the CV text, for the dashboard's mini page. */
     public record CvSummary(UUID id, String title, Instant createdAt, Instant updatedAt,
-                            Integer lastScore, Instant lastScoredAt) {}
+                            Integer lastScore, Instant lastScoredAt, String preview) {}
+
+    static final int PREVIEW_CHARS = 700;
 
     public record CvView(UUID id, String title, JsonNode content, String jobDescription,
                          Instant createdAt, Instant updatedAt) {}
@@ -60,12 +60,6 @@ public class AccountController {
         return view(accounts.rename(userId(jwt), update.fullName()), jwt);
     }
 
-    /** The one-time onboarding question: an answer key or "skipped". */
-    @PutMapping("/me/onboarding")
-    public ProfileView onboarding(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody OnboardingRequest request) {
-        return view(accounts.completeOnboarding(userId(jwt), signupName(jwt), request.answer()), jwt);
-    }
-
     @DeleteMapping("/me")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteMe(@AuthenticationPrincipal Jwt jwt) {
@@ -79,7 +73,8 @@ public class AccountController {
         return accounts.listCvs(user).stream().map(cv -> {
             Analysis last = latest.get(cv.getId());
             return new CvSummary(cv.getId(), cv.getTitle(), cv.getCreatedAt(), cv.getUpdatedAt(),
-                last == null ? null : last.getOverallScore(), last == null ? null : last.getCreatedAt());
+                last == null ? null : last.getOverallScore(), last == null ? null : last.getCreatedAt(),
+                preview(cv.getContent()));
         }).toList();
     }
 
@@ -141,7 +136,7 @@ public class AccountController {
         return Map.of("message", "That request is not valid.");
     }
 
-    private static UUID userId(Jwt jwt) {
+    static UUID userId(Jwt jwt) {
         try {
             return UUID.fromString(jwt.getSubject());
         } catch (IllegalArgumentException | NullPointerException e) {
@@ -150,14 +145,21 @@ public class AccountController {
     }
 
     /** Supabase puts the name given at sign-up in user_metadata.full_name. */
-    private static String signupName(Jwt jwt) {
+    static String signupName(Jwt jwt) {
         Object metadata = jwt.getClaims().get("user_metadata");
         return metadata instanceof Map<?, ?> map && map.get("full_name") instanceof String name ? name : null;
     }
 
     private static ProfileView view(Profile profile, Jwt jwt) {
         return new ProfileView(profile.getId(), jwt.getClaimAsString("email"), profile.getFullName(), profile.getPlan(),
-            profile.getRole(), profile.isOnboardingDone(), profile.getCreatedAt());
+            profile.getRole(), profile.getCreatedAt());
+    }
+
+    private static String preview(JsonNode content) {
+        JsonNode text = content == null ? null : content.get("text");
+        if (text == null || !text.isString()) return "";
+        String value = text.asString();
+        return value.length() > PREVIEW_CHARS ? value.substring(0, PREVIEW_CHARS) : value;
     }
 
     private static CvView view(Cv cv) {

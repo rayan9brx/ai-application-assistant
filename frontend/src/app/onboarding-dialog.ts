@@ -2,6 +2,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -11,120 +13,63 @@ import {
 import { AuthService } from './auth.service';
 import { Navigation } from './navigation';
 import { Onboarding } from './onboarding';
-import { ONBOARDING_OPTIONS, OnboardingOption } from './onboarding-options';
+import {
+  ONBOARDING_STEPS,
+  OnboardingOption,
+  OnboardingStep,
+  cleanLocation,
+  destinationFor,
+  isAnswered,
+} from './onboarding-options';
 
-/** The one-time "biggest challenge" question, as a dark overlay in the style of /signup. */
+/**
+ * The one-time onboarding flow: eight steps over a blurred page, then a success screen.
+ * Each "Continue" saves the answers so far, so skipping keeps what was given.
+ */
 @Component({
   selector: 'app-onboarding-dialog',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  template: `
-    @if (visible()) {
-      <div class="backdrop">
-        <section
-          #dialog
-          class="dialog"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="onboarding-title"
-          tabindex="-1"
-          (keydown.escape)="skip()"
-        >
-          <p class="step">Welcome to ApplyCraft</p>
-          <h2 id="onboarding-title">What’s your biggest challenge right now?</h2>
-          <p class="subtitle">We’ll take you to the right place to start.</p>
-
-          <fieldset>
-            <legend class="sr-only">Your biggest challenge</legend>
-            @for (option of options; track option.key) {
-              <label class="option" [class.selected]="selected()?.key === option.key">
-                <input
-                  type="radio"
-                  name="onboarding-answer"
-                  [value]="option.key"
-                  [checked]="selected()?.key === option.key"
-                  (change)="selected.set(option)"
-                />
-                <span class="dot" aria-hidden="true"></span>
-                <span>{{ option.label }}</span>
-              </label>
-            }
-          </fieldset>
-
-          <button class="primary" type="button" [disabled]="!selected()" (click)="continue()">
-            Continue
-          </button>
-          <button class="skip" type="button" (click)="skip()">Skip</button>
-        </section>
-      </div>
-    }
-    @if (note()) {
-      <div class="note" role="status">
-        <span>Job search is coming soon. We’ll notify you.</span>
-        <button type="button" aria-label="Dismiss" (click)="note.set(false)">×</button>
-      </div>
-    }
-  `,
-  styles: `
-    .backdrop {
-      position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px;
-      overflow-y: auto; background: #0a0f1ecc; backdrop-filter: blur(6px); color-scheme: dark;
-    }
-    .dialog {
-      width: min(480px, 100%); padding: 32px; border: 1px solid #262f4b; border-radius: 16px;
-      background: radial-gradient(ellipse 80% 60% at 100% 0%, #4b3fb040, transparent 70%), #0f1629;
-      box-shadow: 0 24px 64px #0008; color: #e7e9f3;
-    }
-    .dialog:focus { outline: none; }
-    .step { color: #b4adff; font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; }
-    h2 { margin-top: 8px; color: #fff; font-size: clamp(1.3rem, 2.4vw, 1.5rem); letter-spacing: -.5px; }
-    .subtitle { margin-top: 6px; color: #8d95ad; font-size: var(--text-sm); }
-    fieldset { display: grid; gap: 10px; margin: 24px 0 0; padding: 0; border: 0; }
-    .option {
-      display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 12px 16px;
-      border: 1px solid #29334f; border-radius: 12px; background: #161f37; color: #e7e9f3;
-      font-size: .9rem; font-weight: 550; cursor: pointer; transition: border-color .15s, background-color .15s;
-    }
-    .option:hover { border-color: #36416a; }
-    .option.selected { border-color: #8b85ff; background: #1c2245; box-shadow: 0 0 0 1px #8b85ff; }
-    .option:has(input:focus-visible) { outline: 3px solid #b4adff; outline-offset: 2px; }
-    .option input { position: absolute; opacity: 0; pointer-events: none; }
-    .dot { flex: none; width: 18px; height: 18px; border: 2px solid #4a5478; border-radius: 50%; transition: border-color .15s; }
-    .selected .dot { border-color: #b4adff; background: radial-gradient(circle, #b4adff 0 4px, transparent 5px); }
-    .primary {
-      width: 100%; min-height: 48px; margin-top: 24px; border: 0; border-radius: 10px;
-      background: #b4adff; color: #0f1629; font-size: .9rem; font-weight: 700; transition: background-color .15s;
-    }
-    .primary:hover:not(:disabled) { background: #c7c2ff; }
-    .primary:disabled { background: #b4adff; color: #0f1629; opacity: .4; }
-    .primary:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-    .skip {
-      display: flex; min-height: 40px; margin: 8px auto 0; padding: 6px 12px; border: 0; background: none;
-      color: #8d95ad; font-size: var(--text-sm); font-weight: 500; text-decoration: underline; text-underline-offset: 3px;
-    }
-    .skip:hover { color: #fff; }
-    .skip:focus-visible { outline: 2px solid #b4adff; outline-offset: 2px; }
-    .note {
-      position: fixed; bottom: 24px; left: 50%; z-index: 90; display: flex; align-items: center; gap: 12px;
-      width: max-content; max-width: calc(100% - 32px); padding: 10px 10px 10px 18px; border-radius: 999px;
-      background: #20293d; color: #fff; font-size: var(--text-sm); box-shadow: 0 8px 24px #20293d33; transform: translateX(-50%);
-    }
-    .note button { min-height: 32px; width: 32px; padding: 0; border: 0; border-radius: 50%; background: #ffffff1a; color: #fff; font-size: 1.1rem; }
-    .note button:hover { background: #ffffff33; }
-    @media (max-width: 520px) {
-      .dialog { padding: 24px 20px; }
-    }
-  `,
+  templateUrl: './onboarding-dialog.html',
+  styleUrl: './onboarding-dialog.scss',
 })
 export class OnboardingDialog {
   private readonly auth = inject(AuthService);
   private readonly onboarding = inject(Onboarding);
   private readonly navigation = inject(Navigation);
-  private readonly dialog = viewChild<ElementRef<HTMLElement>>('dialog');
-  readonly options = ONBOARDING_OPTIONS;
-  readonly selected = signal<OnboardingOption | null>(null);
+  private readonly injector = inject(Injector);
+  private readonly frame = viewChild<ElementRef<HTMLElement>>('frame');
+  readonly steps = ONBOARDING_STEPS;
+  readonly step = signal(0);
+  readonly finished = signal(false);
+  readonly direction = signal<'forward' | 'back'>('forward');
+  readonly locationText = signal('');
   readonly note = signal(false);
+  readonly answers = this.onboarding.answers;
+  readonly current = computed(() => this.steps[this.step()]);
+  readonly answered = computed(() => isAnswered(this.current(), this.answers()));
   /** Not while a password-reset link is being completed. */
   readonly visible = computed(() => this.onboarding.open() && !this.auth.recovering());
+  readonly firstName = computed(() => {
+    const name = this.auth.user()?.user_metadata?.['full_name'];
+    return typeof name === 'string' ? (name.trim().split(/\s+/)[0] ?? '') : '';
+  });
+  /** Unused suggestions matching what's typed. */
+  readonly suggestions = computed(() => {
+    const step = this.current();
+    if (step.kind !== 'chips') return [];
+    const typed = this.locationText().trim().toLowerCase();
+    const chosen = this.answers().locations.map((l) => l.toLowerCase());
+    return step.suggestions.filter(
+      (city) => !chosen.includes(city.toLowerCase()) && city.toLowerCase().includes(typed),
+    );
+  });
+  private readonly returnUrl = signal<string | null>(null);
+  private readonly destination = computed(() => destinationFor(this.answers()));
+  readonly finishLabel = computed(() => {
+    const target = this.returnUrl() ?? this.destination();
+    if (target.startsWith('/check')) return 'Let’s check your CV';
+    return target.startsWith('/dashboard') ? 'Go to my dashboard' : 'Continue';
+  });
 
   constructor() {
     effect((onCleanup) => {
@@ -133,18 +78,162 @@ export class OnboardingDialog {
       document.body.style.overflow = 'hidden';
       onCleanup(() => (document.body.style.overflow = previous));
     });
-    effect(() => this.dialog()?.nativeElement.focus());
+    // Each time the flow opens: resume where the user left off.
+    effect(() => {
+      if (!this.onboarding.open()) return;
+      this.step.set(this.onboarding.startStep());
+      this.finished.set(false);
+      this.focusStep();
+    });
   }
 
-  async continue(): Promise<void> {
-    const option = this.selected();
-    if (!option) return;
-    void this.onboarding.complete(option.key);
-    await this.navigation.go(option.href);
-    if (option.key === 'job_search') this.note.set(true);
+  optionsOf(step: OnboardingStep): OnboardingOption[] {
+    return step.kind === 'chips' ? [] : step.options;
+  }
+
+  isGrid(step: OnboardingStep): boolean {
+    return step.kind === 'multi' && !!step.grid;
+  }
+
+  picked(step: OnboardingStep, key: string): boolean {
+    const value = this.answers()[step.field];
+    return Array.isArray(value) ? value.includes(key) : value === key;
+  }
+
+  /** Selects a single-choice option, or toggles a multi-choice one. */
+  choose(step: OnboardingStep, key: string): void {
+    if (step.kind === 'chips') return;
+    if (step.kind === 'multi') {
+      const field = step.field;
+      this.answers.update((a) => ({
+        ...a,
+        [field]: a[field].includes(key) ? a[field].filter((k) => k !== key) : [...a[field], key],
+      }));
+    } else {
+      const field = step.field;
+      this.answers.update((a) => ({ ...a, [field]: key }));
+    }
+  }
+
+  addLocation(event: Event): void {
+    const text = this.locationText();
+    if (!text.trim()) return; // Enter in an empty field continues (see keydown).
+    event.preventDefault();
+    event.stopPropagation();
+    this.pickLocation(text);
+  }
+
+  pickLocation(text: string): void {
+    const clean = cleanLocation(text, this.answers().locations);
+    if (clean) this.answers.update((a) => ({ ...a, locations: [...a.locations, clean] }));
+    this.locationText.set('');
+    this.frame()?.nativeElement.querySelector<HTMLInputElement>('#ob-location')?.focus();
+  }
+
+  removeLocation(location: string): void {
+    this.answers.update((a) => ({ ...a, locations: a.locations.filter((l) => l !== location) }));
+    this.frame()?.nativeElement.querySelector<HTMLInputElement>('#ob-location')?.focus();
+  }
+
+  /** Backspace in the empty field removes the last chip. */
+  backspace(): void {
+    const locations = this.answers().locations;
+    if (!this.locationText() && locations.length) this.removeLocation(locations[locations.length - 1]);
+  }
+
+  next(): void {
+    if (!this.answered()) return;
+    const last = this.step() === this.steps.length - 1;
+    void this.onboarding.save(last ? 'completed' : 'progress', this.step() + 1);
+    this.direction.set('forward');
+    if (last) {
+      this.returnUrl.set(this.onboarding.takeReturnUrl());
+      this.finished.set(true);
+    } else {
+      this.step.update((s) => s + 1);
+    }
+    this.focusStep();
+  }
+
+  back(): void {
+    if (this.step() === 0) return;
+    this.direction.set('back');
+    this.step.update((s) => s - 1);
+    this.focusStep();
   }
 
   skip(): void {
-    void this.onboarding.complete('skipped');
+    this.onboarding.skip(this.step() + 1);
+    const returnUrl = this.onboarding.takeReturnUrl();
+    if (returnUrl) void this.navigation.go(returnUrl);
+  }
+
+  async finish(): Promise<void> {
+    const target = this.returnUrl() ?? this.destination();
+    this.onboarding.close();
+    await this.navigation.go(target);
+    if (!this.returnUrl() && this.answers().challenge === 'job_search') this.note.set(true);
+  }
+
+  /** Enter continues; Tab stays inside the dialog. */
+  keydown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (event.key === 'Enter' && !event.defaultPrevented) {
+      // Buttons and links handle Enter themselves.
+      if (target.closest('button, a')) return;
+      event.preventDefault();
+      if (this.finished()) void this.finish();
+      else this.next();
+    } else if (event.key === 'Tab') {
+      this.trapFocus(event);
+    }
+  }
+
+  /** Arrow keys move between checkboxes too (radio groups already do this natively). */
+  arrows(event: KeyboardEvent): void {
+    const keys = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'];
+    const input = event.target as HTMLInputElement;
+    if (!keys.includes(event.key) || input.type !== 'checkbox') return;
+    event.preventDefault();
+    const inputs = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLInputElement>('input')];
+    const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight';
+    const index = inputs.indexOf(input) + (forward ? 1 : -1);
+    inputs[(index + inputs.length) % inputs.length]?.focus();
+  }
+
+  value(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
+
+  private trapFocus(event: KeyboardEvent): void {
+    const frame = this.frame()?.nativeElement;
+    if (!frame) return;
+    // The first and last are always buttons (Skip / Continue), so radio groups don't matter here.
+    const focusable = [...frame.querySelectorAll<HTMLElement>('button:not([disabled]), input')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  /** Focuses the step's chosen option (or its first one), or the success button. */
+  private focusStep(): void {
+    afterNextRender(
+      () => {
+        const frame = this.frame()?.nativeElement;
+        const target =
+          frame?.querySelector<HTMLElement>('.step input:checked') ??
+          frame?.querySelector<HTMLElement>('.step input') ??
+          frame?.querySelector<HTMLElement>('.step .primary');
+        target?.focus({ preventScroll: true });
+      },
+      { injector: this.injector },
+    );
   }
 }

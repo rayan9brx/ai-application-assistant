@@ -1,15 +1,24 @@
-<div class="app-shell">
-  <a class="skip-link" href="#main">Skip to main content</a>
-  @if (fullScreen()) {
+@if (fullScreen()) {
+  <div class="app-shell">
+    <a class="skip-link" href="#main">Skip to main content</a>
     <main id="main" tabindex="-1">
       <router-outlet />
     </main>
-  } @else {
+  </div>
+} @else if (appLayout()) {
+  <!-- Logged-in pages: sidebar + top bar. -->
+  <app-shell>
+    <router-outlet />
+  </app-shell>
+  <app-onboarding-dialog />
+} @else {
+  <div class="app-shell">
+    <a class="skip-link" href="#main">Skip to main content</a>
     <app-navbar [links]="navLinks" />
     <main class="workspace" id="main" tabindex="-1">
       <router-outlet />
     </main>
     <app-site-footer />
     <app-onboarding-dialog />
-  }
-</div>
+  </div>
+}

@@ -3,7 +3,7 @@
 .upload-bar:hover { border-color: var(--accent); box-shadow: 0 24px 56px -12px #4e46a826, 0 4px 12px -4px #20293d0f; }
 .upload-bar::after { content: ""; position: absolute; inset: 5px; border: 1.5px dashed transparent; border-radius: 17px; pointer-events: none; transition: border-color .18s ease; }
 .upload-bar.dragging::after { border-color: #4e46a866; }
-.upload-bar.dragging { border-color: var(--accent); background: #fbfaff; box-shadow: 0 0 0 4px var(--accent-soft), 0 24px 56px -12px #4e46a826; }
+.upload-bar.dragging { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); box-shadow: 0 0 0 4px var(--accent-soft), 0 24px 56px -12px #4e46a826; }
 .thumb { position: relative; display: grid; place-items: center; flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%; background: var(--accent-soft); }
 .page { width: 26px; height: 34px; fill: var(--surface-muted); stroke: var(--line-strong); stroke-width: 1; }
 .page path { stroke: #c5c8d2; stroke-width: 2; stroke-linecap: round; }
