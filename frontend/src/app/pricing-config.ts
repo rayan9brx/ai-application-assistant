@@ -1,4 +1,4 @@
-import { SIGNUP_HREF } from './menu-config';
+import { CHECK_HREF, SIGNUP_HREF } from './menu-config';
 
 /**
  * Single source of truth for the /pricing page: plans, prices, comparison rows and FAQ.
@@ -23,8 +23,8 @@ export interface Plan {
   cta: { label: string; href: string; style: 'primary' | 'secondary' };
 }
 
-/** The Free plan starts with a free account (or the dashboard when already signed in). */
-const FREE_HREF = SIGNUP_HREF;
+/** The Free plan opens the CV Checker; guests sign up first (PricingCard gates the link). */
+const FREE_HREF = CHECK_HREF;
 /**
  * Paid plans lead to sign-up for now; nothing is charged yet.
  * TODO(stripe): send Pro and Lifetime to Stripe Checkout (after sign-up) and set profiles.plan

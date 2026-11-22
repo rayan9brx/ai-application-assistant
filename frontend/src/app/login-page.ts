@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, signal } from '@angular/core';
-import { AuthService } from './auth.service';
+import { AuthService, signupUrl } from './auth.service';
 import { safeNext } from './auth.guard';
 import { AuthShell } from './auth-shell';
 import { GoogleButton } from './google-button';
@@ -14,6 +14,9 @@ import { Navigation } from './navigation';
       <section aria-labelledby="login-title">
         <h1 id="login-title">Welcome back</h1>
         <p class="subtitle">Your saved CVs and scores are waiting.</p>
+        @if (returnUrl()) {
+          <p class="return-note" role="status">Log in to score your CV</p>
+        }
 
         <app-google-button class="social" [busy]="googleBusy()" (pressed)="google()" />
         <p class="divider" role="separator">OR</p>
@@ -64,8 +67,8 @@ import { Navigation } from './navigation';
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly navigation = inject(Navigation);
-  /** ?next= from the auth guard. */
-  readonly next = input<string>();
+  /** ?returnUrl= from a gated link or the auth guard. */
+  readonly returnUrl = input<string>();
   readonly email = signal('');
   readonly password = signal('');
   readonly showPassword = signal(false);
@@ -73,7 +76,7 @@ export class LoginPage {
   readonly googleBusy = signal(false);
   readonly error = signal('');
   readonly signupHref = computed(() =>
-    this.next() ? `/signup?next=${encodeURIComponent(safeNext(this.next()))}` : '/signup',
+    this.returnUrl() ? signupUrl(safeNext(this.returnUrl())) : '/signup',
   );
 
   async submit(event: Event): Promise<void> {
@@ -87,7 +90,7 @@ export class LoginPage {
     this.error.set('');
     try {
       await this.auth.signIn(this.email().trim(), this.password());
-      await this.navigation.go(safeNext(this.next()));
+      await this.navigation.go(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Logging in failed. Please try again.'));
     } finally {
@@ -100,7 +103,7 @@ export class LoginPage {
     this.googleBusy.set(true);
     this.error.set('');
     try {
-      await this.auth.signInWithGoogle(safeNext(this.next()));
+      await this.auth.signInWithGoogle(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Logging in with Google failed. Please try again.'));
       this.googleBusy.set(false);

@@ -10,8 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * AI endpoints of the Upload → Score → Fix → Download flow. They are open to anonymous users,
- * rate limited per IP (RateLimitFilter), and keep nothing: CV text exists only for the request.
+ * AI endpoints of the Upload → Score → Fix → Download flow. They need a signed-in user
+ * (SecurityConfig), are rate limited per user (RateLimitFilter), and keep nothing themselves:
+ * CV text exists only for the request; the frontend saves scores through the CV endpoints.
  */
 @RestController
 @RequestMapping("/api/cv")

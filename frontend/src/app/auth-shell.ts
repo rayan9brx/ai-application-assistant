@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, afterNextRender } from '@angular/core';
 import { AuthPreview } from './auth-preview';
 
 /** Full-screen dark layout of /login and /signup: logo, the projected form, product preview. */
@@ -47,4 +47,9 @@ import { AuthPreview } from './auth-preview';
     }
   `,
 })
-export class AuthShell {}
+export class AuthShell {
+  constructor() {
+    // A guard redirect (e.g. a guest clicking a /check link) keeps the old scroll position.
+    afterNextRender(() => scrollTo({ top: 0, behavior: 'instant' }));
+  }
+}

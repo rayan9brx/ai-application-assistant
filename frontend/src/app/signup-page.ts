@@ -7,7 +7,7 @@ import { Navigation } from './navigation';
 
 export const MIN_PASSWORD = 8;
 
-/** /signup. With ?save=1 the guest came from the checker's Save button. */
+/** /signup. ?returnUrl= is where the user goes after signing up (or confirming their email). */
 @Component({
   selector: 'app-signup-page',
   imports: [AuthShell, GoogleButton],
@@ -16,14 +16,14 @@ export const MIN_PASSWORD = 8;
       <section aria-labelledby="signup-title">
         <h1 id="signup-title">Create your ApplyCraft account</h1>
         <p class="subtitle">Free forever. No credit card required.</p>
-        @if (save()) {
-          <p class="save-note">Sign up to save this CV and its score. We’ll save it as soon as you’re in.</p>
+        @if (returnUrl()) {
+          <p class="return-note" role="status">Create a free account to score your CV</p>
         }
 
         @if (confirmSent()) {
           <p class="notice" role="status">
             Check your inbox: we sent a confirmation link to {{ email() }}. Open it on this device to
-            finish signing up{{ save() ? ' and save your CV' : '' }}.
+            finish signing up.
           </p>
         } @else {
           <app-google-button class="social" [busy]="googleBusy()" (pressed)="google()" />
@@ -79,8 +79,7 @@ export const MIN_PASSWORD = 8;
 export class SignupPage {
   private readonly auth = inject(AuthService);
   private readonly navigation = inject(Navigation);
-  readonly next = input<string>();
-  readonly save = input<string>();
+  readonly returnUrl = input<string>();
   readonly minPassword = MIN_PASSWORD;
   readonly email = signal('');
   readonly password = signal('');
@@ -90,7 +89,7 @@ export class SignupPage {
   readonly error = signal('');
   readonly confirmSent = signal(false);
   readonly loginHref = computed(() =>
-    this.next() ? `/login?next=${encodeURIComponent(safeNext(this.next()))}` : '/login',
+    this.returnUrl() ? `/login?returnUrl=${encodeURIComponent(safeNext(this.returnUrl()))}` : '/login',
   );
 
   async submit(event: Event): Promise<void> {
@@ -103,7 +102,7 @@ export class SignupPage {
     this.busy.set(true);
     this.error.set('');
     try {
-      const destination = safeNext(this.next());
+      const destination = safeNext(this.returnUrl());
       // The form no longer asks for a name; it can be added later in Settings.
       const signedIn = await this.auth.signUp(email, this.password(), '', destination);
       if (signedIn) await this.navigation.go(destination);
@@ -115,13 +114,13 @@ export class SignupPage {
     }
   }
 
-  /** Google sign-up; a pending CV save survives the redirect (CvLibrary keeps it in storage). */
+  /** Google sign-up; it returns to the returnUrl after the redirect. */
   async google(): Promise<void> {
     if (this.googleBusy()) return;
     this.googleBusy.set(true);
     this.error.set('');
     try {
-      await this.auth.signInWithGoogle(safeNext(this.next()));
+      await this.auth.signInWithGoogle(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Signing up with Google failed. Please try again.'));
       this.googleBusy.set(false);

@@ -12,6 +12,7 @@ export const routes: Routes = [
   {
     path: 'check',
     title: 'CV Checker — ApplyCraft',
+    canActivate: [authGuard],
     loadComponent: () => import('./cv-check-page').then((m) => m.CvCheckPage),
   },
   {

@@ -1,6 +1,12 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { AuthChangeEvent, Session, SupabaseClient, createClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
+import { CHECK_HREF } from './menu-config';
+
+/** /signup with a returnUrl to come back to after sign-up (and email confirmation) or log-in. */
+export function signupUrl(returnUrl?: string | null): string {
+  return returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : '/signup';
+}
 
 /**
  * Supabase Auth in the browser, with the PUBLISHABLE key only. It handles sign-up, log-in,
@@ -18,8 +24,8 @@ export class AuthService {
   readonly session = signal<Session | null>(null);
   readonly user = computed(() => this.session()?.user ?? null);
   readonly signedIn = computed(() => !!this.session());
-  /** Where every "Try it free" button leads: sign-up for guests, the dashboard once signed in. */
-  readonly startHref = computed(() => (this.signedIn() ? '/dashboard' : '/signup'));
+  /** Where the "Try it free" / "Score my CV" buttons lead: the CV Checker, behind sign-up for guests. */
+  readonly startHref = computed(() => this.gate(CHECK_HREF));
   /** True after opening a password-reset link, until the new password is set. */
   readonly recovering = signal(false);
   readonly displayName = computed(() => {
@@ -45,6 +51,14 @@ export class AuthService {
     );
   }
 
+  /**
+   * The app itself is for signed-in users only: guests get /signup, with `path` as the returnUrl.
+   * Read inside a template or computed() so the link updates when the user signs in or out.
+   */
+  gate(path: string): string {
+    return this.signedIn() ? path : signupUrl(path);
+  }
+
   /** Resolves once a stored session (if any) has been restored. */
   whenReady(): Promise<void> {
     return this.ready;
@@ -62,13 +76,14 @@ export class AuthService {
   }
 
   /** Returns true when the user is signed in right away (email confirmation turned off). */
-  async signUp(email: string, password: string, fullName: string, next: string): Promise<boolean> {
+  /** `returnUrl` is also where the email confirmation link leads, so it survives confirmation. */
+  async signUp(email: string, password: string, fullName: string, returnUrl: string): Promise<boolean> {
     const { data, error } = await this.client.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: fullName.trim() },
-        emailRedirectTo: location.origin + next,
+        emailRedirectTo: location.origin + returnUrl,
       },
     });
     if (error) throw error;
@@ -81,14 +96,14 @@ export class AuthService {
   }
 
   /**
-   * Redirects to Google and back to `next`; the session is picked up from the URL on return.
+   * Redirects to Google and back to `returnUrl`; the session is picked up from the URL on return.
    * TODO(supabase): enable the Google provider (client ID + secret) in the Supabase dashboard under
    * Authentication → Providers, and add this site's origin to the allowed redirect URLs.
    */
-  async signInWithGoogle(next: string): Promise<void> {
+  async signInWithGoogle(returnUrl: string): Promise<void> {
     const { error } = await this.client.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: location.origin + next },
+      options: { redirectTo: location.origin + returnUrl },
     });
     if (error) throw error;
   }

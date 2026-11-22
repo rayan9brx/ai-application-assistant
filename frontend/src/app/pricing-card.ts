@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { AuthService } from './auth.service';
-import { SIGNUP_HREF } from './menu-config';
+import { CHECK_HREF, SIGNUP_HREF } from './menu-config';
 import { Billing, Plan, formatEuro } from './pricing-config';
 
 @Component({
@@ -13,9 +13,12 @@ export class PricingCard {
   readonly plan = input.required<Plan>();
   readonly billing = input<Billing>('monthly');
   private readonly auth = inject(AuthService);
-  readonly href = computed(() =>
-    this.plan().cta.href === SIGNUP_HREF ? this.auth.startHref() : this.plan().cta.href,
-  );
+  /** Guests always go to sign-up first; signed-in users go straight on. */
+  readonly href = computed(() => {
+    const href = this.plan().cta.href;
+    if (href === SIGNUP_HREF) return this.auth.signedIn() ? '/dashboard' : SIGNUP_HREF;
+    return href === CHECK_HREF ? this.auth.gate(CHECK_HREF) : href;
+  });
 
   /** The big number, its suffix and the short line under it for the chosen billing period. */
   readonly display = computed(() => {

@@ -20,6 +20,9 @@ export class UploadBar {
   readonly file = model<File | null>(null);
   readonly selected = output<File | null>();
   readonly submitted = output<File>();
+  /** When false, "Score my CV" without a file emits `emptySubmit` instead of opening the picker. */
+  readonly browseWhenEmpty = input(true);
+  readonly emptySubmit = output<void>();
 
   readonly dragging = signal(false);
   readonly error = signal('');
@@ -62,7 +65,8 @@ export class UploadBar {
     if (this.busy()) return;
     const file = this.file();
     if (file) this.submitted.emit(file);
-    else this.browse();
+    else if (this.browseWhenEmpty()) this.browse();
+    else this.emptySubmit.emit();
   }
 
   private select(file?: File): void {

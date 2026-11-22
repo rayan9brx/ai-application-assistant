@@ -24,18 +24,23 @@
           >
             {{ flow.busy() === 'download' ? 'Creating PDF…' : 'Download PDF' }}
           </button>
-          <button
-            class="cta cta-small cta-secondary"
-            type="button"
-            [disabled]="!!flow.busy() || library.state() === 'saving'"
-            (click)="library.requestSave()"
-          >
-            {{ saveLabel() }}
-          </button>
+          @if (flow.stale()) {
+            <!-- Scores save themselves; this keeps text edits without re-scoring. -->
+            <button
+              class="cta cta-small cta-secondary"
+              type="button"
+              [disabled]="!!flow.busy() || library.state() === 'saving'"
+              (click)="library.save()"
+            >
+              {{ library.state() === 'saving' ? 'Saving…' : 'Save changes' }}
+            </button>
+          }
           <button class="link-button" type="button" (click)="startOver()">Start over</button>
         </div>
       </header>
-      @if (library.state() === 'saved' && auth.signedIn()) {
+      @if (library.state() === 'saving') {
+        <p class="hint" role="status">Saving to your account…</p>
+      } @else if (library.state() === 'saved') {
         <p class="hint saved" role="status">
           Saved to your account. New scores are added to its history.
           <a href="/dashboard">Go to dashboard</a>
@@ -123,12 +128,8 @@
       <h1 id="check-title">Check your CV in under a minute</h1>
       <p class="lede">
         Get an ATS score, see what’s missing and fix it with AI. We send your CV to our AI provider
-        for the analysis.
-        @if (auth.signedIn()) {
-          Saved CVs are stored securely in the EU and can be deleted anytime.
-        } @else {
-          Your CV is never stored.
-        }
+        for the analysis. Your CVs are stored securely in the EU and can be deleted anytime in
+        Settings.
       </p>
     </section>
 

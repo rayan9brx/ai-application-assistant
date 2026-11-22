@@ -63,10 +63,10 @@ interface SavedFlow {
 }
 
 /**
- * State and server calls for Upload → Score → Fix → Download. The server is stateless: it parses
- * and analyses each request in memory and keeps nothing, so all state lives here in the browser.
- * Results are mirrored to localStorage (this device only) so a refresh doesn't lose progress;
- * "Start over" clears them. Signed-in users can also save the CV to their account (CvLibrary).
+ * State and server calls for Upload → Score → Fix → Download, for signed-in users (the API needs
+ * their token). Every new score is saved to the account by CvLibrary. Results are also mirrored
+ * to localStorage (this device only) so a refresh doesn't lose progress; "Start over" and
+ * signing out clear them.
  */
 @Injectable({ providedIn: 'root' })
 export class CvFlow {

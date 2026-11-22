@@ -1,23 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, effect, inject, signal, untracked } from '@angular/core';
-import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { CvApi, CvInput } from './cv-api';
 import { CvFlow } from './cv-flow';
 
-const PENDING_KEY = 'applycraft.pending-save.v1';
-
 /**
- * Saving the CV checker's work to the account. Guests who press Save are sent to sign up;
- * the CV is saved automatically once they are signed in. After that, every new score of a
- * saved CV is added to its history. Signing out clears the checker on this device.
+ * Saving the CV checker's work to the account. Only signed-in users can use the checker, and
+ * every new score is saved automatically: the first one creates the CV, later ones add to its
+ * history. Signing out clears the checker on this device.
  */
 @Injectable({ providedIn: 'root' })
 export class CvLibrary {
   private readonly flow = inject(CvFlow);
   private readonly api = inject(CvApi);
   private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
 
   readonly state = signal<'idle' | 'saving' | 'saved' | 'error'>('idle');
   readonly error = signal('');
@@ -32,7 +28,7 @@ export class CvLibrary {
       if (runs === seenRuns) return;
       seenRuns = runs;
       untracked(() => {
-        if (this.flow.savedCvId() && this.auth.signedIn()) void this.save();
+        if (this.auth.signedIn()) void this.save();
         else this.state.set('idle');
       });
     });
@@ -40,30 +36,13 @@ export class CvLibrary {
     effect(() => {
       if (!this.flow.savedCvId()) untracked(() => this.state() === 'saved' && this.state.set('idle'));
     });
-    this.auth.onChange((event, session) => {
+    this.auth.onChange((event) => {
       if (event === 'SIGNED_OUT') {
         this.flow.reset();
         this.state.set('idle');
         this.savedRun = null;
-      } else if (session) {
-        void this.savePending();
       }
     });
-    void this.auth.whenReady().then(() => this.savePending());
-  }
-
-  /** The checker's Save button. */
-  async requestSave(): Promise<void> {
-    if (!this.auth.signedIn()) {
-      try {
-        localStorage.setItem(PENDING_KEY, '1');
-      } catch {
-        /* Without storage the user can still press Save again after signing up. */
-      }
-      await this.router.navigate(['/signup'], { queryParams: { next: '/check', save: 1 } });
-      return;
-    }
-    await this.save();
   }
 
   /** Saves (or updates) the CV, plus its current score unless the text changed since. */
@@ -111,27 +90,6 @@ export class CvLibrary {
       this.state.set('error');
       this.error.set(CvFlow.message(error, 'Saving failed. Please try again.'));
       return false;
-    }
-  }
-
-  /**
-   * The flag is cleared only once the save has succeeded: if the page reloads or the request
-   * fails mid-save, the next sign-in or page load tries again instead of losing the CV's score.
-   */
-  private async savePending(): Promise<void> {
-    if (!this.auth.signedIn()) return;
-    try {
-      if (localStorage.getItem(PENDING_KEY) !== '1') return;
-    } catch {
-      return;
-    }
-    const saved = this.flow.cvText().trim() ? await this.save() : true;
-    if (saved) {
-      try {
-        localStorage.removeItem(PENDING_KEY);
-      } catch {
-        /* Nothing else to do; a second save would only update the same CV. */
-      }
     }
   }
 }

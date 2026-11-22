@@ -8,13 +8,17 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Fixed-window, per-IP request limits for the CV endpoints and account writes, kept in memory.
- * Behind a reverse proxy, server.forward-headers-strategy=native makes getRemoteAddr()
- * the client's IP. For several server instances, move this to a shared store.
+ * Fixed-window request limits for the CV endpoints and account writes, kept in memory. They are
+ * counted per user (the JWT's "sub"; this filter runs after Spring Security), with the client IP
+ * as a fallback. Behind a reverse proxy, server.forward-headers-strategy=native makes
+ * getRemoteAddr() the client's IP. For several server instances, move this to a shared store.
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
@@ -45,7 +49,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         int limit = "ai".equals(bucket) ? aiLimit : "data".equals(bucket) ? dataLimit : fileLimit;
         long now = System.currentTimeMillis();
         if (windows.size() > 10_000) windows.values().removeIf(window -> now - window[0] > WINDOW_MS);
-        long[] window = windows.compute(bucket + ":" + request.getRemoteAddr(), (key, current) ->
+        long[] window = windows.compute(bucket + ":" + clientKey(request), (key, current) ->
             current == null || now - current[0] > WINDOW_MS ? new long[] {now, 1} : new long[] {current[0], current[1] + 1});
         if (window[1] > limit) {
             long retryAfter = Math.max(1, (WINDOW_MS - (now - window[0])) / 1000);
@@ -56,6 +60,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    /** The signed-in user, so limits follow the account rather than a shared or changing IP. */
+    private static String clientKey(HttpServletRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth instanceof JwtAuthenticationToken jwt) return "user:" + jwt.getToken().getSubject();
+        return "ip:" + request.getRemoteAddr();
     }
 
     private static String bucket(HttpServletRequest request) {

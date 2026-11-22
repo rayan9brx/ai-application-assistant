@@ -2,7 +2,7 @@
  * All copy and sample data for the "3 hurdles" section. Edit text here; the components only
  * lay it out. Sample jobs, bullets and scores are fictional illustrations, not real results.
  */
-import { CHECK_HREF, SIGNUP_HREF, itemBySlug } from './menu-config';
+import { CHECK_HREF, itemBySlug } from './menu-config';
 
 export type HurdleVisual = 'jobs' | 'rewrite' | 'ats';
 
@@ -110,6 +110,6 @@ export const SAMPLE_ATS_SCORE = {
 
 export const HURDLES_CLOSING = {
   title: 'One tool. Three hurdles. Your next interview.',
-  cta: { label: 'Start for free', href: SIGNUP_HREF },
+  cta: { label: 'Start for free', href: CHECK_HREF },
   note: 'No credit card required',
 };

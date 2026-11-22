@@ -31,7 +31,7 @@ export const MENU_COLUMNS: readonly MenuColumn[] = [
 /** The CV checker page: upload, score, fix with AI and download. */
 export const CHECK_HREF = '/check';
 
-/** "Try it free" buttons for guests; AuthService.startHref swaps in /dashboard once signed in. */
+/** Plain sign-up (paid plans for now). App links use AuthService.gate() instead. */
 export const SIGNUP_HREF = '/signup';
 
 const live = (
