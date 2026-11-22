@@ -38,6 +38,9 @@
             <div #accountMenu id="account-menu" class="account-menu">
               <p class="account-name">{{ auth.displayName() }}</p>
               <a href="/dashboard">Dashboard</a>
+              @if (role.isAdmin()) {
+                <a href="/admin">Admin</a>
+              }
               <a href="/settings">Settings</a>
               <button type="button" (click)="logOut()">Log out</button>
             </div>
@@ -89,6 +92,9 @@
       }
       @if (auth.signedIn()) {
         <li><a class="mobile-link" href="/dashboard">Dashboard</a></li>
+        @if (role.isAdmin()) {
+          <li><a class="mobile-link" href="/admin">Admin</a></li>
+        }
         <li><a class="mobile-link" href="/settings">Settings</a></li>
         <li><button type="button" class="mobile-link mobile-button" (click)="logOut()">Log out</button></li>
       } @else {

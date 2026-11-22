@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### GeoIP database (downloaded, not committed) ###
+data/*.mmdb

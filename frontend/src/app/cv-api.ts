@@ -9,6 +9,8 @@ export interface Profile {
   email: string | null;
   fullName: string | null;
   plan: 'free' | 'pro' | 'lifetime';
+  /** Set only in the database; the backend checks it again on every admin request. */
+  role: 'user' | 'admin';
   createdAt: string;
 }
 export interface CvContent {

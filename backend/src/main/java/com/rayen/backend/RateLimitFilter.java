@@ -46,7 +46,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String bucket = bucket(request);
-        int limit = "ai".equals(bucket) ? aiLimit : "data".equals(bucket) ? dataLimit : fileLimit;
+        int limit = "ai".equals(bucket) ? aiLimit : "files".equals(bucket) ? fileLimit : dataLimit;
         long now = System.currentTimeMillis();
         if (windows.size() > 10_000) windows.values().removeIf(window -> now - window[0] > WINDOW_MS);
         long[] window = windows.compute(bucket + ":" + clientKey(request), (key, current) ->
@@ -78,6 +78,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (!"POST".equals(method)) return null;
         if (path.equals("/api/cv/score") || path.equals("/api/cv/fix") || path.equals("/api/cv/tailor")) return "ai";
         if (path.equals("/api/cv/extract") || path.equals("/api/documents/export")) return "files";
+        if (path.equals("/api/track")) return "track";
         return null;
     }
 }

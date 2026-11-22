@@ -1,5 +1,6 @@
 package com.rayen.backend;
 
+import com.rayen.backend.analytics.AiUsageRecorder;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -36,12 +37,15 @@ public class ClaudeClient {
     private final String effort;
     private final URI endpoint;
     private final Duration timeout;
+    private final AiUsageRecorder usage;
 
     public ClaudeClient(@Value("${ANTHROPIC_API_KEY:}") String apiKey,
                         @Value("${app.ai.model:claude-opus-5-5}") String model,
                         @Value("${app.ai.effort:medium}") String effort,
                         @Value("${app.ai.base-url:https://api.anthropic.com}") String baseUrl,
-                        @Value("${app.ai.timeout-seconds:120}") int timeoutSeconds) {
+                        @Value("${app.ai.timeout-seconds:120}") int timeoutSeconds,
+                        AiUsageRecorder usage) {
+        this.usage = usage;
         this.apiKey = apiKey.strip();
         this.model = model;
         this.effort = effort;
@@ -130,6 +134,8 @@ public class ClaudeClient {
     private JsonNode parse(String body) {
         try {
             JsonNode message = json.readTree(body);
+            // Every billed response counts, including refusals and answers we can't use.
+            usage.record(message.path("model").asString(model), message.path("usage"));
             String stop = message.path("stop_reason").asString("");
             if ("refusal".equals(stop)) {
                 throw new AiException(HttpStatus.UNPROCESSABLE_CONTENT, "The AI couldn't review this text. Check that it's a CV and try again.");

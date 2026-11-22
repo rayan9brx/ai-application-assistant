@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { CvLibrary } from './cv-library';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
+import { PageViewTracker } from './page-view-tracker';
 import { SiteFooter } from './site-footer';
 
 const FULL_SCREEN_PATHS = ['/login', '/signup'];
@@ -26,6 +27,7 @@ export class App {
   constructor() {
     // Listens for sign-in from the start, so a CV a guest asked to save is saved after sign-up.
     inject(CvLibrary);
+    inject(PageViewTracker).start();
   }
 
   @HostListener('document:click', ['$event'])

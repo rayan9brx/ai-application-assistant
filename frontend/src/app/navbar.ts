@@ -1,4 +1,5 @@
 import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
+import { AdminRole } from './admin-role';
 import { AuthService } from './auth.service';
 import { Navigation } from './navigation';
 import { ServicesMenu } from './services-menu';
@@ -23,6 +24,8 @@ export class Navbar {
   readonly menuOpen = signal(false);
   readonly accountOpen = signal(false);
   readonly auth = inject(AuthService);
+  /** Shows the Admin link; the backend enforces the role itself. */
+  readonly role = inject(AdminRole);
   private readonly navigation = inject(Navigation);
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
   private readonly accountButton = viewChild<ElementRef<HTMLButtonElement>>('accountButton');

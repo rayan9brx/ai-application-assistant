@@ -29,7 +29,7 @@ public class AccountController {
         this.accounts = accounts;
     }
 
-    public record ProfileView(UUID id, String email, String fullName, String plan, Instant createdAt) {}
+    public record ProfileView(UUID id, String email, String fullName, String plan, String role, Instant createdAt) {}
 
     public record ProfileUpdate(@Size(max = 200) String fullName) {}
 
@@ -148,7 +148,7 @@ public class AccountController {
 
     private static ProfileView view(Profile profile, Jwt jwt) {
         return new ProfileView(profile.getId(), jwt.getClaimAsString("email"), profile.getFullName(), profile.getPlan(),
-            profile.getCreatedAt());
+            profile.getRole(), profile.getCreatedAt());
     }
 
     private static CvView view(Cv cv) {
