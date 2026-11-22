@@ -1,5 +1,7 @@
 :host { display: block; }
-.app-shell { min-height: 100vh; }
+.app-shell { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; background: var(--page); }
+.app-shell > main { flex: 1 0 auto; }
+.app-shell > app-site-footer { display: block; flex-shrink: 0; }
 .skip-link { position: absolute; top: -80px; left: 20px; z-index: 20; padding: 12px 20px; background: var(--surface); border: 1px solid var(--accent); border-radius: var(--radius-sm); }
 .skip-link:focus { top: 12px; }
 .workspace { width: min(1184px, 100%); margin-inline: auto; padding: 0 var(--space-6) var(--space-7); }

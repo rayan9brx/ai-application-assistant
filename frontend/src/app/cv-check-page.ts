@@ -1,4 +1,13 @@
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  computed,
+  effect,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { CvFlow } from './cv-flow';
 import { CvLibrary } from './cv-library';
 import { IssueCard } from './issue-card';
@@ -27,6 +36,8 @@ export class CvCheckPage {
   readonly file = signal<File | null>(null);
   readonly pasted = signal('');
   readonly step = signal(0);
+  private readonly uploadBar = viewChild<UploadBar>('uploadBar');
+  private readonly pasteBox = viewChild<ElementRef<HTMLTextAreaElement>>('pasteBox');
   readonly canScore = computed(() =>
     this.mode() === 'file' ? !!this.file() : this.pasted().trim().length >= 50,
   );
@@ -59,6 +70,13 @@ export class CvCheckPage {
   /** "Try again" after a failure: re-run with the same file or text. */
   retry(): void {
     this.score();
+  }
+
+  /** "Score my CV": scores when ready, otherwise opens the file picker (or focuses the text box). */
+  scoreOrBrowse(): void {
+    if (this.canScore()) this.score();
+    else if (this.mode() === 'file') this.uploadBar()?.browse();
+    else this.pasteBox()?.nativeElement.focus();
   }
 
   score(): void {
