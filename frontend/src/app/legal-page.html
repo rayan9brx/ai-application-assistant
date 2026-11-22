@@ -1,0 +1,74 @@
+<header class="hero">
+  <p class="pill-badge">Legal</p>
+  <p class="hero-title">Terms &amp; Privacy</p>
+</header>
+
+<!-- Mobile: the sidebar becomes a row of tabs. -->
+<nav class="tabs" aria-label="Legal pages">
+  @for (page of pages; track page.doc) {
+    <a [href]="pageHref(page)" [class.active]="page.doc === legalDoc()"
+      [attr.aria-current]="page.doc === legalDoc() ? 'page' : null">{{ page.short }}</a>
+  }
+</nav>
+
+<div class="body">
+  <aside class="sidebar">
+    <nav aria-labelledby="legal-contents">
+      <p class="label" id="legal-contents">Contents</p>
+      <ul class="pages" role="list">
+        @for (page of pages; track page.doc) {
+          <li>
+            <a class="page-link" [href]="pageHref(page)" [class.active]="page.doc === legalDoc()"
+              [attr.aria-current]="page.doc === legalDoc() ? 'page' : null">{{ page.label }}</a>
+            @if (page.doc === legalDoc() && toc().length) {
+              <ul class="toc" role="list" aria-label="On this page">
+                @for (entry of toc(); track entry.id) {
+                  <li>
+                    <a [href]="'#' + entry.id" [class.current]="activeSection() === entry.id"
+                      [attr.aria-current]="activeSection() === entry.id ? 'location' : null"
+                      (click)="scrollTo($event, entry.id)">{{ entry.text }}</a>
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="cta-card">
+      <div class="gauge">
+        <app-score-gauge [score]="58" />
+        <p class="verdict">Needs improvement</p>
+      </div>
+      <p class="cta-text">Build a CV tailored to your dream job in minutes</p>
+      <a class="cta cta-small" [href]="auth.startHref()">Try it free</a>
+    </div>
+  </aside>
+
+  <article class="article" [attr.lang]="language()" aria-labelledby="legal-title">
+    <div class="toggle-row">
+      <div class="toggle" role="group" aria-label="Language / Sprache">
+        <button type="button" lang="en" [attr.aria-pressed]="language() === 'en'" (click)="setLang('en')">EN</button>
+        <button type="button" lang="de" [attr.aria-pressed]="language() === 'de'" (click)="setLang('de')">DE</button>
+      </div>
+    </div>
+    <h1 id="legal-title">{{ title() }}</h1>
+    @if (doc(); as d) {
+      @if (d.updated) { <p class="updated">{{ d.updated }}</p> }
+    }
+    @if (language() === 'en' && !noteInText()) {
+      <p class="note">In case of discrepancies, the German version prevails.</p>
+    }
+    @if (doc(); as d) {
+      <div class="content" #content [innerHTML]="d.html"></div>
+    } @else if (failed()) {
+      <p class="error" role="alert">
+        {{ language() === 'de' ? 'Der Text konnte nicht geladen werden. Bitte lade die Seite neu.'
+                               : 'The text couldn’t be loaded. Please reload the page.' }}
+      </p>
+    } @else {
+      <p class="updated" role="status">{{ language() === 'de' ? 'Wird geladen…' : 'Loading…' }}</p>
+    }
+  </article>
+</div>

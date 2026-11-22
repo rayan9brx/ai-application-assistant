@@ -1,9 +1,9 @@
 # Allgemeine Geschäftsbedingungen (AGB)
 
-*Stand: [Datum]*
+*Stand: 22. November 2026*
 
 ## 1. Geltungsbereich
-Diese AGB gelten für die Nutzung der Webanwendung ApplyCraft („Dienst“), betrieben von [Vor- und Nachname], [Anschrift] („wir“, „uns“). Mit der Erstellung eines Kontos akzeptierst du diese AGB.
+Diese AGB gelten für die Nutzung der Webanwendung ApplyCraft („Dienst“), betrieben von Rayan Brigui, [Straße, PLZ Ort, Deutschland] („wir“, „uns“). Mit der Erstellung eines Kontos akzeptierst du diese AGB.
 
 ## 2. Leistungen
 ApplyCraft unterstützt dich dabei, deinen Lebenslauf mithilfe künstlicher Intelligenz zu analysieren, zu verbessern und an Stellenanzeigen anzupassen. Zu den Funktionen gehören Lebenslauf-Scores, Keyword-Analysen, KI-Verbesserungsvorschläge und das Speichern von Lebensläufen in deinem Konto.

@@ -16,30 +16,57 @@ const HTML_BLOCK = /<(p|h[1-6]|ul|ol|li|div|br|strong|table)\b/i;
 export function renderLegal(source: string): LegalDocument {
   let text = source.replace(/\r\n?/g, '\n').replace(/<!--[\s\S]*?-->/g, '');
   let updated: string | null = null;
-  text = text.replace(/^[ \t]*((?:Last updated|Stand):[ \t]*\S.*)$/im, (_, line: string) => {
+  // "Last updated: …" / "Stand: …", also when written in italics or bold (*…*, **…**, _…_).
+  text = text.replace(/^[ \t]*[*_]*((?:Last updated|Stand):[ \t]*[^*_\n]*[^*_\s])[*_]*[ \t]*$/im, (_, line: string) => {
     updated = line.trim();
     return '';
   });
+  // The page shows its own title, so a leading "# Title" in the file is dropped.
+  text = text.replace(/^\s*#[ \t]+[^\n]*\n/, '');
   if (HTML_BLOCK.test(text)) return { updated, html: text.trim() };
 
   const html: string[] = [];
   for (const block of text.split(/\n[ \t]*\n/)) {
     const lines = block.split('\n').map((line) => line.trimEnd()).filter((line) => line.trim());
-    if (!lines.length) continue;
-    const heading = /^(#{1,6})\s+(.*)$/.exec(lines[0].trim());
-    if (heading) {
-      const level = Math.min(4, Math.max(2, heading[1].length));
-      html.push(`<h${level}>${inline(heading[2])}</h${level}>`);
-      if (lines.length > 1) html.push(paragraph(lines.slice(1)));
-    } else if (lines.every((line) => /^\s*[-*•]\s+/.test(line))) {
-      html.push(`<ul>${lines.map((line) => `<li>${inline(line.replace(/^\s*[-*•]\s+/, ''))}</li>`).join('')}</ul>`);
-    } else if (lines.every((line) => /^\s*\d+[.)]\s+/.test(line))) {
-      html.push(`<ol>${lines.map((line) => `<li>${inline(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`).join('')}</ol>`);
-    } else {
-      html.push(paragraph(lines));
-    }
+    renderLines(lines, html);
   }
   return { updated, html: html.join('\n') };
+}
+
+type LineKind = 'heading' | 'ul' | 'ol' | 'quote' | 'text';
+
+function kind(line: string): LineKind {
+  if (/^\s*#{1,6}\s+/.test(line)) return 'heading';
+  if (/^\s*[-*•]\s+/.test(line)) return 'ul';
+  if (/^\s*\d+[.)]\s+/.test(line)) return 'ol';
+  if (/^\s*>/.test(line)) return 'quote';
+  return 'text';
+}
+
+/** One block can mix a heading, text lines and list items without blank lines between them. */
+function renderLines(lines: string[], html: string[]): void {
+  let i = 0;
+  while (i < lines.length) {
+    const type = kind(lines[i]);
+    if (type === 'heading') {
+      const [, hashes, title] = /^\s*(#{1,6})\s+(.*)$/.exec(lines[i])!;
+      const level = Math.min(4, Math.max(2, hashes.length));
+      html.push(`<h${level}>${inline(title)}</h${level}>`);
+      i++;
+      continue;
+    }
+    const run: string[] = [];
+    while (i < lines.length && kind(lines[i]) === type) run.push(lines[i++]);
+    if (type === 'ul') {
+      html.push(`<ul>${run.map((line) => `<li>${inline(line.replace(/^\s*[-*•]\s+/, ''))}</li>`).join('')}</ul>`);
+    } else if (type === 'ol') {
+      html.push(`<ol>${run.map((line) => `<li>${inline(line.replace(/^\s*\d+[.)]\s+/, ''))}</li>`).join('')}</ol>`);
+    } else if (type === 'quote') {
+      html.push(`<blockquote>${paragraph(run.map((line) => line.replace(/^\s*>\s?/, '')).filter((l) => l.trim()))}</blockquote>`);
+    } else {
+      html.push(paragraph(run));
+    }
+  }
 }
 
 function paragraph(lines: string[]): string {

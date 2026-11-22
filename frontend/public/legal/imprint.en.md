@@ -2,17 +2,15 @@
 
 *Information pursuant to § 5 DDG (German Digital Services Act)*
 
-**[Your full name]**
-[Street and house number]
-[Postcode] [City]
+**Rayan Brigui**
+Magdeburg 39124
 Germany
 
 ## Contact
-Email: [your email address]
-Phone: [optional, or another fast electronic contact option]
+Email: brx.rayan@gmail.com
 
 ## Responsible for content pursuant to § 18 (2) MStV
-[Your full name], address as above
+Rayan Brigui, address as above
 
 ## Consumer dispute resolution
 We are neither willing nor obliged to participate in dispute resolution proceedings before a consumer arbitration board.

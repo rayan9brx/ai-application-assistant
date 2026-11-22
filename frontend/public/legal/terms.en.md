@@ -1,11 +1,11 @@
 # Terms of Service
 
-*Last updated: [date]*
+*Last updated: 22 November 2026*
 
 > In case of discrepancies, the German version prevails.
 
 ## 1. Scope
-These terms apply to the use of the web application ApplyCraft ("Service"), operated by [your full name], [address] ("we", "us"). By creating an account you accept these terms.
+These terms apply to the use of the web application ApplyCraft ("Service"), operated by Rayan Brigui, [Street, Postcode City, Germany] ("we", "us"). By creating an account you accept these terms.
 
 ## 2. Service
 ApplyCraft helps you analyse, improve and tailor your CV with the help of artificial intelligence. Features include CV scores, keyword analysis, AI improvement suggestions and saving CVs in your account.

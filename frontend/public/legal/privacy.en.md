@@ -1,15 +1,15 @@
 # Privacy Policy
 
-*Last updated: [date]*
+*Last updated: 22 November 2026*
 
 > In case of discrepancies, the German version prevails.
 
 ## 1. Controller
 The controller responsible for data processing on this website is:
 
-[Your full name]
-[Street and house number], [Postcode] [City], Germany
-Email: [your email address]
+Rayan Brigui
+Magdeburg 39124, Germany
+E-Mail: brx.rayen@gmail.com
 
 ## 2. Overview
 ApplyCraft is a web application that analyses CVs with AI, gives improvement suggestions and helps tailor CVs to job descriptions. We only process personal data where it is necessary to provide this service, to keep it secure, or where you have consented.

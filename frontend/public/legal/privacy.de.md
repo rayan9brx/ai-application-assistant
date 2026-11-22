@@ -1,13 +1,13 @@
 # Datenschutzerklärung
 
-*Stand: [Datum]*
+*Stand: 22. November 2026*
 
 ## 1. Verantwortlicher
 Verantwortlich für die Datenverarbeitung auf dieser Website ist:
 
-[Vor- und Nachname]
-[Straße und Hausnummer], [PLZ] [Ort], Deutschland
-E-Mail: [deine E-Mail-Adresse]
+Rayan Brigui
+Magdeburg 39124, Deutschland
+E-Mail: brx.rayen@gmail.com
 
 ## 2. Überblick
 ApplyCraft ist eine Webanwendung, die Lebensläufe mit KI analysiert, Verbesserungsvorschläge macht und hilft, Lebensläufe an Stellenanzeigen anzupassen. Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung dieses Dienstes oder zu seiner Sicherheit erforderlich ist oder du eingewilligt hast.

@@ -2,17 +2,15 @@
 
 *Angaben gemäß § 5 DDG*
 
-**[Vor- und Nachname]**
-[Straße und Hausnummer]
-[PLZ] [Ort]
+**Rayan Brigui**
+Magdeburg 39124
 Deutschland
 
 ## Kontakt
-E-Mail: [deine E-Mail-Adresse]
-Telefon: [optional, oder eine andere schnelle elektronische Kontaktmöglichkeit]
+E-Mail: brx.raya@gmail.com
 
 ## Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV
-[Vor- und Nachname], Anschrift wie oben
+Rayan Brigui, Anschrift wie oben
 
 ## Verbraucherstreitbeilegung
 Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
