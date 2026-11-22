@@ -1,0 +1,207 @@
+<section class="demo" aria-labelledby="demo-heading">
+  <header class="intro">
+    <p class="badge">See it in action</p>
+    <h2 id="demo-heading">Everything you need to land the interview</h2>
+    <p class="sub">Check, fix and tailor your CV in one place.</p>
+  </header>
+
+  <div
+    class="window"
+    [class.paused]="hovered()"
+    (mouseenter)="hovered.set(true)"
+    (mouseleave)="hovered.set(false)"
+  >
+    <div class="titlebar">
+      <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+      <div class="tabs" role="tablist" aria-label="ApplyCraft features" #tabBar (keydown)="onTabKey($event)">
+        @for (tab of tabs; track tab.id; let i = $index) {
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            [id]="'demo-tab-' + tab.id"
+            [class.active]="i === active()"
+            [attr.aria-selected]="i === active()"
+            aria-controls="demo-panel"
+            [tabindex]="i === active() ? 0 : -1"
+            (click)="select(i)"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="tab.icon" /></svg>
+            {{ tab.label }}
+            @if (autoplay && i === active()) {
+              @for (c of [cycle()]; track c) {
+                <span class="progress" aria-hidden="true" (animationend)="advance()"></span>
+              }
+            }
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="app">
+      <nav class="sidebar" aria-hidden="true">
+        <span class="logo">A</span>
+        @for (item of sidebar; track item.key) {
+          <span class="side-icon" [class.on]="item.key === tabs[active()].id">
+            <svg viewBox="0 0 24 24"><path [attr.d]="item.icon" /></svg>
+          </span>
+        }
+        <span class="side-icon bottom"><svg viewBox="0 0 24 24"><path [attr.d]="icons.settings" /></svg></span>
+      </nav>
+
+      <div class="stage" id="demo-panel" role="tabpanel" [attr.aria-labelledby]="'demo-tab-' + tabs[active()].id">
+        @for (key of [tabs[active()].id]; track key) {
+          <div class="panel">
+            @switch (key) {
+              @case ('checker') {
+                <div class="split">
+                  <div class="card cv">
+                    <div class="file"><span class="file-badge">PDF</span> jordan-avery-cv.pdf <span class="muted">· uploaded</span></div>
+                    <div class="sheet">
+                      <p class="cv-name">Jordan Avery</p>
+                      <p class="cv-role">Product Designer · Lisbon</p>
+                      <p class="cv-head">Experience</p>
+                      <p class="cv-job">Northpine — Product Designer <span>2021 – now</span></p>
+                      <i class="line w90"></i><i class="line w75"></i><i class="line w82"></i>
+                      <p class="cv-job">Brightfield — UI Designer <span>2018 – 2021</span></p>
+                      <i class="line w85"></i><i class="line w60"></i>
+                      <p class="cv-head">Skills</p>
+                      <i class="line w70"></i><i class="line w45"></i>
+                    </div>
+                  </div>
+                  <div class="card result">
+                    <p class="label">Overall score</p>
+                    <app-score-gauge class="gauge" [score]="62" />
+                    <p class="verdict">Good start — a few fixes away from strong.</p>
+                    <ul class="rings">
+                      @for (cat of categories; track cat.label) {
+                        <li><app-score-ring class="ring" [value]="cat.value" /><span>{{ cat.label }}</span></li>
+                      }
+                    </ul>
+                    <p class="label">Missing keywords</p>
+                    <ul class="pills">
+                      @for (kw of missingKeywords; track kw) {
+                        <li app-skill-pill [label]="kw" tone="missing"></li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+              }
+
+              @case ('fixes') {
+                <div class="fixes">
+                  <div class="fixes-head">
+                    <p class="title">4 issues found</p>
+                    <span class="chip">+18 pts if all fixed</span>
+                  </div>
+                  <ul class="issues">
+                    @for (issue of issues; track issue.title; let first = $first) {
+                      <li class="issue" [class.open]="first">
+                        <div class="issue-row">
+                          <span class="sev" [attr.data-sev]="issue.severity">{{ issue.severity }}</span>
+                          <span class="issue-title">{{ issue.title }}</span>
+                          <span class="muted where">{{ issue.where }}</span>
+                        </div>
+                        @if (first) {
+                          <div class="rewrite">
+                            <div class="before">
+                              <span class="tag">Before</span>
+                              <p>Responsible for helping the team with the redesign of the mobile app.</p>
+                            </div>
+                            <span class="arrow" aria-hidden="true">→</span>
+                            <div class="after">
+                              <span class="tag">After</span>
+                              <p>Led the redesign of the Northpine mobile app, lifting weekly active users by 23% in 4 months.</p>
+                            </div>
+                          </div>
+                          <div class="actions">
+                            @switch (fixDecision()) {
+                              @case ('accepted') { <span class="decided ok">✓ Accepted</span> }
+                              @case ('rejected') { <span class="decided">Kept original</span> }
+                              @default {
+                                <button type="button" class="btn primary" tabindex="-1" (click)="fixDecision.set('accepted')">Accept</button>
+                                <button type="button" class="btn" tabindex="-1" (click)="fixDecision.set('rejected')">Reject</button>
+                              }
+                            }
+                          </div>
+                        }
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+
+              @case ('tailor') {
+                <div class="split">
+                  <div class="card job">
+                    <p class="job-title">Senior Product Designer</p>
+                    <p class="muted">Lumen Labs · Remote (EU) · Full-time</p>
+                    <p>
+                      We're looking for a designer to own our <mark>design system</mark> and ship
+                      end-to-end features. You'll run <mark>user research</mark>, build
+                      <mark>Figma prototypes</mark> and validate ideas through <mark>A/B testing</mark>.
+                    </p>
+                    <p>
+                      You have 5+ years in <mark>product design</mark>, a strong eye for
+                      <mark>accessibility</mark>, and you're comfortable with
+                      <mark>stakeholder management</mark> across product and engineering.
+                    </p>
+                  </div>
+                  <div class="card result">
+                    <p class="label">Job match</p>
+                    <div class="match">
+                      <div class="match-step">
+                        <app-score-ring class="ring lg dim" [value]="47" suffix="%" />
+                        <span class="muted">Before</span>
+                      </div>
+                      <span class="arrow" aria-hidden="true">→</span>
+                      <div class="match-step">
+                        <app-score-ring class="ring lg" [value]="89" suffix="%" />
+                        <span>Tailored</span>
+                      </div>
+                    </div>
+                    <p class="label">Match breakdown</p>
+                    <ul class="bars">
+                      @for (c of criteria; track c.label) {
+                        <li>
+                          <span>{{ c.label }}</span>
+                          <span class="bar"><span [style.width.%]="c.value"></span></span>
+                          <span class="pct">{{ c.value }}%</span>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                </div>
+              }
+
+              @case ('dashboard') {
+                <div class="dash">
+                  <div class="fixes-head">
+                    <p class="title">My CVs</p>
+                    <span class="btn primary static">+ New CV</span>
+                  </div>
+                  <ul class="cvs">
+                    @for (cv of savedCvs; track cv.title) {
+                      <li>
+                        <span class="doc" aria-hidden="true"><svg viewBox="0 0 24 24"><path [attr.d]="icons.checker" /></svg></span>
+                        <span class="cv-meta">
+                          <span class="cv-title">{{ cv.title }}</span>
+                          <span class="muted">Edited {{ cv.edited }}</span>
+                        </span>
+                        <app-score-ring class="ring" [value]="cv.score" />
+                        <span class="cv-actions">
+                          <span class="btn">Open</span>
+                          <span class="btn ghost">Duplicate</span>
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

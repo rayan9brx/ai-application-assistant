@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CvFlow } from './cv-flow';
+import { DemoWindow } from './demo-window';
 import { Hero } from './hero';
 import { HurdlesSection } from './hurdles-section';
 import { CHECK_HREF } from './menu-config';
@@ -11,10 +12,11 @@ import { UploadBar } from './upload-bar';
 /** The landing page. */
 @Component({
   selector: 'app-home-page',
-  imports: [Hero, HurdlesSection, ProblemSection, Showcase, UploadBar],
+  imports: [DemoWindow, Hero, HurdlesSection, ProblemSection, Showcase, UploadBar],
   template: `
     <app-hero />
     <app-upload-bar id="get-started" [busy]="starting()" (submitted)="startCheck($event)" />
+    <app-demo-window />
     <app-showcase />
     <app-problem-section />
     <app-hurdles-section />
