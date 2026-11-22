@@ -1,8 +1,8 @@
 <section class="demo" aria-labelledby="demo-heading">
   <header class="intro">
     <p class="badge">See it in action</p>
-    <h2 id="demo-heading">Everything you need to land the interview</h2>
-    <p class="sub">Check, fix and tailor your CV in one place.</p>
+    <h2 id="demo-heading">From 62 to 89 in minutes</h2>
+    <p class="sub">Check your CV, fix weak points with AI and tailor it to every job, all in one place.</p>
   </header>
 
   <div
@@ -14,194 +14,286 @@
     <div class="titlebar">
       <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
       <div class="tabs" role="tablist" aria-label="ApplyCraft features" #tabBar (keydown)="onTabKey($event)">
-        @for (tab of tabs; track tab.id; let i = $index) {
+        @for (t of tabs; track t.id; let i = $index) {
           <button
             type="button"
             role="tab"
             class="tab"
-            [id]="'demo-tab-' + tab.id"
+            [id]="'demo-tab-' + t.id"
             [class.active]="i === active()"
             [attr.aria-selected]="i === active()"
             aria-controls="demo-panel"
             [tabindex]="i === active() ? 0 : -1"
             (click)="select(i)"
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="tab.icon" /></svg>
-            {{ tab.label }}
+            @if (working(i)) {
+              <span class="spinner" aria-hidden="true"></span>
+            } @else {
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="t.icon" /></svg>
+            }
+            {{ t.label }}
             @if (autoplay && i === active()) {
-              @for (c of [cycle()]; track c) {
-                <span class="progress" aria-hidden="true" (animationend)="advance()"></span>
-              }
+              <span class="progress" aria-hidden="true" [style.transform]="'scaleX(' + progress() + ')'"></span>
             }
           </button>
         }
       </div>
+      <span class="bar-actions" aria-hidden="true">
+        <span class="bar-btn"><svg viewBox="0 0 24 24"><path [attr.d]="icons.plus" /></svg></span>
+        <span class="bar-btn"><svg viewBox="0 0 24 24"><path [attr.d]="icons.share" /></svg></span>
+      </span>
     </div>
 
-    <div class="app">
+    <div class="app" id="demo-panel" role="tabpanel" [attr.aria-labelledby]="'demo-tab-' + tab().id">
+      <p class="sr-only">
+        @switch (tab().id) {
+          @case ('checker') { Sample CV scored 62 out of 100, with five missing keywords highlighted. }
+          @case ('fixes') { The AI rewrites the weak bullet “{{ weakBullet }}” into “{{ fixedBullet }}”. }
+          @case ('tailor') { Tailoring the CV to a Senior Frontend Engineer job raises the match from 47% to 89%. }
+          @case ('dashboard') { A dashboard of four saved CVs with scores and application status. }
+        }
+      </p>
+
       <nav class="sidebar" aria-hidden="true">
         <span class="logo">A</span>
         @for (item of sidebar; track item.key) {
-          <span class="side-icon" [class.on]="item.key === tabs[active()].id">
+          <span class="side-icon" [class.on]="item.key === tab().id">
             <svg viewBox="0 0 24 24"><path [attr.d]="item.icon" /></svg>
           </span>
         }
         <span class="side-icon bottom"><svg viewBox="0 0 24 24"><path [attr.d]="icons.settings" /></svg></span>
       </nav>
 
-      <div class="stage" id="demo-panel" role="tabpanel" [attr.aria-labelledby]="'demo-tab-' + tabs[active()].id">
-        @for (key of [tabs[active()].id]; track key) {
-          <div class="panel">
-            @switch (key) {
-              @case ('checker') {
-                <div class="split">
-                  <div class="card cv">
-                    <div class="file"><span class="file-badge">PDF</span> jordan-avery-cv.pdf <span class="muted">· uploaded</span></div>
-                    <div class="sheet">
-                      <p class="cv-name">Jordan Avery</p>
-                      <p class="cv-role">Product Designer · Lisbon</p>
-                      <p class="cv-head">Experience</p>
-                      <p class="cv-job">Northpine — Product Designer <span>2021 – now</span></p>
-                      <i class="line w90"></i><i class="line w75"></i><i class="line w82"></i>
-                      <p class="cv-job">Brightfield — UI Designer <span>2018 – 2021</span></p>
-                      <i class="line w85"></i><i class="line w60"></i>
-                      <p class="cv-head">Skills</p>
-                      <i class="line w70"></i><i class="line w45"></i>
-                    </div>
-                  </div>
-                  <div class="card result">
-                    <p class="label">Overall score</p>
-                    <app-score-gauge class="gauge" [score]="62" />
-                    <p class="verdict">Good start — a few fixes away from strong.</p>
-                    <ul class="rings">
-                      @for (cat of categories; track cat.label) {
-                        <li><app-score-ring class="ring" [value]="cat.value" /><span>{{ cat.label }}</span></li>
-                      }
-                    </ul>
-                    <p class="label">Missing keywords</p>
-                    <ul class="pills">
-                      @for (kw of missingKeywords; track kw) {
-                        <li app-skill-pill [label]="kw" tone="missing"></li>
-                      }
-                    </ul>
-                  </div>
-                </div>
-              }
+      <div class="main" aria-hidden="true">
+        <div class="toolbar">
+          <span class="select strong">My First CV <span class="caret-down">▾</span></span>
+          <span class="sections">
+            @for (s of sections; track s) {
+              <span class="section" [class.on]="s === tab().section">{{ s }}</span>
+            }
+          </span>
+          <span class="tb-btn primary"><svg viewBox="0 0 24 24"><path [attr.d]="icons.download" /></svg>Download PDF</span>
+        </div>
+        <div class="toolbar secondary">
+          <span class="select">Inter <span class="caret-down">▾</span></span>
+          <span class="stepper"><span>−</span><b>11</b><span>+</span></span>
+          <span class="tb-btn"><svg viewBox="0 0 24 24"><path [attr.d]="icons.spacing" /></svg>1.15</span>
+          <span class="divider"></span>
+          <span class="tb-btn"><svg viewBox="0 0 24 24"><path [attr.d]="icons.template" /></svg>Template</span>
+          <span class="tb-btn"><svg viewBox="0 0 24 24"><path [attr.d]="icons.wand" /></svg>Auto-adjust</span>
+          <span class="saved">✓ Saved</span>
+        </div>
 
-              @case ('fixes') {
-                <div class="fixes">
-                  <div class="fixes-head">
-                    <p class="title">4 issues found</p>
-                    <span class="chip">+18 pts if all fixed</span>
-                  </div>
-                  <ul class="issues">
-                    @for (issue of issues; track issue.title; let first = $first) {
-                      <li class="issue" [class.open]="first">
-                        <div class="issue-row">
-                          <span class="sev" [attr.data-sev]="issue.severity">{{ issue.severity }}</span>
-                          <span class="issue-title">{{ issue.title }}</span>
-                          <span class="muted where">{{ issue.where }}</span>
-                        </div>
-                        @if (first) {
-                          <div class="rewrite">
-                            <div class="before">
-                              <span class="tag">Before</span>
-                              <p>Responsible for helping the team with the redesign of the mobile app.</p>
-                            </div>
-                            <span class="arrow" aria-hidden="true">→</span>
-                            <div class="after">
-                              <span class="tag">After</span>
-                              <p>Led the redesign of the Northpine mobile app, lifting weekly active users by 23% in 4 months.</p>
-                            </div>
-                          </div>
-                          <div class="actions">
-                            @switch (fixDecision()) {
-                              @case ('accepted') { <span class="decided ok">✓ Accepted</span> }
-                              @case ('rejected') { <span class="decided">Kept original</span> }
-                              @default {
-                                <button type="button" class="btn primary" tabindex="-1" (click)="fixDecision.set('accepted')">Accept</button>
-                                <button type="button" class="btn" tabindex="-1" (click)="fixDecision.set('rejected')">Reject</button>
-                              }
-                            }
-                          </div>
-                        }
-                      </li>
+        <div class="workspace">
+          <div class="canvas">
+            <article class="paper">
+              <header class="cv-header">
+                <p class="cv-name">Jordan Avery</p>
+                <p class="cv-role">Frontend Developer · Berlin</p>
+                <p class="cv-contact">jordan.avery&#64;email.com · linkedin.com/in/jordanavery</p>
+              </header>
+
+              <p class="cv-head">Summary</p>
+              <p><ng-container *ngTemplateOutlet="text; context: { $implicit: cv.summary }" /></p>
+
+              <p class="cv-head">Experience</p>
+              @for (job of cv.jobs; track job.company) {
+                <div class="cv-job">
+                  <p class="cv-job-title"><b>{{ job.role }}</b>, {{ job.company }} <span>{{ job.dates }}</span></p>
+                  <ul>
+                    @for (bullet of job.bullets; track $index) {
+                      @if (bullet) {
+                        <li><ng-container *ngTemplateOutlet="text; context: { $implicit: bullet }" /></li>
+                      } @else {
+                        <li class="fix-line" [attr.data-state]="bulletState()">
+                          @if (bulletState() === 'fixed') {
+                            <span [class.flash]="tab().id === 'fixes'">{{ fixedBullet }}</span>
+                          } @else {
+                            <span>{{ weakBullet }}</span>
+                          }
+                          @if (autoplay && tab().id === 'fixes' && cursor().opacity > 0) {
+                            <span
+                              class="cursor"
+                              [class.clicking]="cursor().clicking"
+                              [style.transform]="cursor().transform"
+                              [style.opacity]="cursor().opacity"
+                            >
+                              <svg viewBox="0 0 24 24"><path d="M5 3l14 7-6 2-3 6z" /></svg>
+                            </span>
+                          }
+                        </li>
+                      }
                     }
                   </ul>
                 </div>
               }
 
-              @case ('tailor') {
-                <div class="split">
-                  <div class="card job">
-                    <p class="job-title">Senior Product Designer</p>
-                    <p class="muted">Lumen Labs · Remote (EU) · Full-time</p>
-                    <p>
-                      We're looking for a designer to own our <mark>design system</mark> and ship
-                      end-to-end features. You'll run <mark>user research</mark>, build
-                      <mark>Figma prototypes</mark> and validate ideas through <mark>A/B testing</mark>.
-                    </p>
-                    <p>
-                      You have 5+ years in <mark>product design</mark>, a strong eye for
-                      <mark>accessibility</mark>, and you're comfortable with
-                      <mark>stakeholder management</mark> across product and engineering.
-                    </p>
-                  </div>
-                  <div class="card result">
-                    <p class="label">Job match</p>
-                    <div class="match">
-                      <div class="match-step">
-                        <app-score-ring class="ring lg dim" [value]="47" suffix="%" />
-                        <span class="muted">Before</span>
+              <p class="cv-head">Projects</p>
+              <p><b>Shiftly</b>, open-source shift planner for small teams (React, Node.js) · 1.2k stars</p>
+
+              <p class="cv-head">Education</p>
+              <p class="cv-job-title"><b>B.Sc. Computer Science</b>, TU Berlin <span>2020</span></p>
+
+              <p class="cv-head">Skills</p>
+              <p><ng-container *ngTemplateOutlet="text; context: { $implicit: cv.skills }" /></p>
+            </article>
+          </div>
+
+          <aside class="side">
+            @for (key of [tab().id]; track key) {
+              <div class="panel">
+                @switch (key) {
+                  @case ('checker') {
+                    <div class="panel-head">
+                      <p class="panel-title">ATS score</p>
+                      <span class="chip">{{ after(4000) ? 'Scan complete' : 'Scanning…' }}</span>
+                    </div>
+                    <app-score-gauge class="gauge" [score]="score()" />
+                    <p class="verdict">Good start, a few fixes away from strong</p>
+                    <ul class="rings">
+                      @for (cat of categories; track cat.label) {
+                        <li><app-score-ring class="ring" [value]="cat.value * ringScale()" /><span>{{ cat.label }}</span></li>
+                      }
+                    </ul>
+                    <div class="panel-head small">
+                      <p class="label">Missing keywords</p>
+                      <span class="hint"><i class="swatch"></i> where they fit</span>
+                    </div>
+                    <ul class="pills">
+                      @for (kw of missing; track kw.label; let i = $index) {
+                        <li app-skill-pill class="pop" [class.shown]="missingShown(i)" [label]="kw.label" tone="missing"></li>
+                      }
+                    </ul>
+                    <p class="stats"><b>14</b> checks passed · <b>5</b> issues · <b>2</b> pages</p>
+                  }
+
+                  @case ('fixes') {
+                    <div class="panel-head">
+                      <p class="panel-title">AI Fixes</p>
+                      <span class="chip">Issue 1 of 4</span>
+                    </div>
+                    <div class="fix-card">
+                      <div class="issue-row">
+                        <span class="sev" data-sev="High">High</span>
+                        <span class="issue-title">Vague bullet, no result</span>
                       </div>
-                      <span class="arrow" aria-hidden="true">→</span>
-                      <div class="match-step">
-                        <app-score-ring class="ring lg" [value]="89" suffix="%" />
-                        <span>Tailored</span>
+                      <div class="before">
+                        <span class="tag">Before</span>
+                        <p>{{ weakBullet }}</p>
+                      </div>
+                      <div class="after" [attr.data-stage]="fixStage()">
+                        <span class="tag">After</span>
+                        @switch (fixStage()) {
+                          @case ('idle') { <p class="placeholder">Select a bullet to improve it</p> }
+                          @case ('writing') {
+                            <p class="writing">✨ AI writer working…</p>
+                            <span class="shimmer"></span><span class="shimmer short"></span>
+                          }
+                          @default {
+                            <p>{{ typed() }}@if (fixStage() === 'typing') {<span class="type-caret"></span>}</p>
+                          }
+                        }
+                      </div>
+                      <div class="actions">
+                        <span class="btn primary" [class.pulse]="after(4900)">Accept &amp; next</span>
+                        <span class="btn">Reject</span>
                       </div>
                     </div>
-                    <p class="label">Match breakdown</p>
-                    <ul class="bars">
-                      @for (c of criteria; track c.label) {
+                    <p class="label">Up next</p>
+                    <ul class="issues">
+                      @for (issue of upNext; track issue.title) {
                         <li>
-                          <span>{{ c.label }}</span>
-                          <span class="bar"><span [style.width.%]="c.value"></span></span>
-                          <span class="pct">{{ c.value }}%</span>
+                          <span class="sev" [attr.data-sev]="issue.severity">{{ issue.severity }}</span>
+                          <span class="issue-meta">
+                            <span class="issue-title">{{ issue.title }}</span>
+                            <span class="muted">{{ issue.where }}</span>
+                          </span>
                         </li>
                       }
                     </ul>
-                  </div>
-                </div>
-              }
+                  }
 
-              @case ('dashboard') {
-                <div class="dash">
-                  <div class="fixes-head">
-                    <p class="title">My CVs</p>
-                    <span class="btn primary static">+ New CV</span>
-                  </div>
-                  <ul class="cvs">
-                    @for (cv of savedCvs; track cv.title) {
-                      <li>
-                        <span class="doc" aria-hidden="true"><svg viewBox="0 0 24 24"><path [attr.d]="icons.checker" /></svg></span>
-                        <span class="cv-meta">
-                          <span class="cv-title">{{ cv.title }}</span>
-                          <span class="muted">Edited {{ cv.edited }}</span>
-                        </span>
-                        <app-score-ring class="ring" [value]="cv.score" />
-                        <span class="cv-actions">
-                          <span class="btn">Open</span>
-                          <span class="btn ghost">Duplicate</span>
-                        </span>
-                      </li>
-                    }
-                  </ul>
-                </div>
-              }
+                  @case ('tailor') {
+                    <div class="job-card">
+                      <p class="job-title">Senior Frontend Engineer</p>
+                      <p class="muted">Lumen Labs · Berlin / Remote</p>
+                      <p class="job-text">
+                        Build fast product UIs with <mark>React</mark> and <mark>TypeScript</mark>. You own
+                        <mark>unit testing</mark>, <mark>accessibility</mark> and <mark>performance</mark>, and
+                        integrate <mark>REST APIs</mark>.
+                      </p>
+                    </div>
+                    <div class="match">
+                      <app-score-ring class="ring lg" [value]="match()" suffix="%" />
+                      <div>
+                        <p class="label">Job match</p>
+                        <p class="match-delta">
+                          was 47% @if (after(3600)) {<span class="chip up">+42</span>}
+                        </p>
+                      </div>
+                    </div>
+                    <ul class="bars">
+                      @for (c of criteria; track c.label; let i = $index) {
+                        <li>
+                          <span>{{ c.label }}</span>
+                          <span class="bar"><span [style.width.%]="c.value * ease(900 + i * 250, 1300)"></span></span>
+                          <span class="pct">{{ c.value * ease(900 + i * 250, 1300) | number: '1.0-0' }}</span>
+                        </li>
+                      }
+                    </ul>
+                    <ul class="pills">
+                      @for (kw of required; track kw.label; let i = $index) {
+                        <li app-skill-pill [class.flipped]="matched(i)" [label]="kw.label" [tone]="matched(i) ? 'matched' : 'missing'"></li>
+                      }
+                    </ul>
+                  }
+
+                  @case ('dashboard') {
+                    <div class="panel-head">
+                      <p class="panel-title">Your CVs</p>
+                      <span class="btn primary">+ New CV</span>
+                    </div>
+                    <ul class="cvs">
+                      @for (item of savedCvs; track item.title) {
+                        <li>
+                          <app-score-ring class="ring" [value]="cardScore(item)" />
+                          <span class="cv-meta">
+                            <span class="cv-title">{{ item.title }}</span>
+                            <span class="muted">Edited {{ item.edited }}</span>
+                          </span>
+                          <span class="status" [attr.data-status]="item.status">{{ item.status }}</span>
+                          <span class="cv-actions">
+                            <span class="btn">Open</span>
+                            <span class="btn ghost">Duplicate</span>
+                          </span>
+                        </li>
+                      }
+                    </ul>
+                    <div class="toast" [class.in]="toastIn()">
+                      <span class="toast-icon">▲</span>
+                      <span><b>Score improved +27</b><span class="muted">Frontend – Lumen Labs is now 89</span></span>
+                    </div>
+                  }
+                }
+              </div>
             }
-          </div>
-        }
+          </aside>
+        </div>
       </div>
     </div>
   </div>
+
+  <div class="after-cta">
+    <a class="cta" href="/check">Try it free on your CV <span aria-hidden="true">→</span></a>
+  </div>
 </section>
+
+<ng-template #text let-segments>
+  @for (seg of segments; track $index) {
+    @if (seg.mark) {
+      <mark [attr.data-tone]="markTone(seg.mark)">{{ seg.text }}</mark>
+    } @else {
+      {{ seg.text }}
+    }
+  }
+</ng-template>
