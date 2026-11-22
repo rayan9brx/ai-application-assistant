@@ -26,6 +26,13 @@ public class Profile {
     @Column(length = 2)
     private String country;
 
+    /** The onboarding question's answer key, or 'skipped'; null until answered. */
+    @Column(name = "onboarding_answer", length = 40)
+    private String onboardingAnswer;
+
+    @Column(name = "onboarding_done", nullable = false)
+    private boolean onboardingDone;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -44,5 +51,11 @@ public class Profile {
     public String getRole() { return role; }
     public boolean isAdmin() { return "admin".equals(role); }
     public String getCountry() { return country; }
+    public String getOnboardingAnswer() { return onboardingAnswer; }
+    public boolean isOnboardingDone() { return onboardingDone; }
+    public void completeOnboarding(String answer) {
+        this.onboardingAnswer = answer;
+        this.onboardingDone = true;
+    }
     public Instant getCreatedAt() { return createdAt; }
 }

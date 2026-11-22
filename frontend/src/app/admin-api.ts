@@ -36,6 +36,8 @@ export interface AdminStats {
   topReferrers: KeyCount[];
   devices: KeyCount[];
   funnel: { visitors: number; signups: number; firstScored: number };
+  /** All time, whatever the range. */
+  onboardingAnswers: KeyCount[];
 }
 export interface AdminPage<T> {
   items: T[];

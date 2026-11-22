@@ -2,6 +2,8 @@ import {
   Component,
   DestroyRef,
   ElementRef,
+  afterNextRender,
+  input,
   computed,
   effect,
   inject,
@@ -32,12 +34,15 @@ const SCORING_STEPS = [
 export class CvCheckPage {
   readonly flow = inject(CvFlow);
   readonly library = inject(CvLibrary);
+  /** ?focus=job (from onboarding's "tailor to a job" answer) puts the cursor in the job field. */
+  readonly focus = input<string>();
   readonly mode = signal<'file' | 'paste'>('file');
   readonly file = signal<File | null>(null);
   readonly pasted = signal('');
   readonly step = signal(0);
   private readonly uploadBar = viewChild<UploadBar>('uploadBar');
   private readonly pasteBox = viewChild<ElementRef<HTMLTextAreaElement>>('pasteBox');
+  private readonly jobBox = viewChild<ElementRef<HTMLTextAreaElement>>('jobBox');
   readonly canScore = computed(() =>
     this.mode() === 'file' ? !!this.file() : this.pasted().trim().length >= 50,
   );
@@ -57,6 +62,10 @@ export class CvCheckPage {
     inject(DestroyRef).onDestroy(() => clearInterval(timer));
     effect(() => {
       if (this.flow.phase() !== 'scoring') this.step.set(0);
+    });
+    afterNextRender(() => {
+      // After the navigation's scroll-to-top, so the field is scrolled into view.
+      if (this.focus() === 'job') setTimeout(() => this.jobBox()?.nativeElement.focus());
     });
     // A file from the landing page's upload bar: score it right away.
     const handedOff = this.flow.takeHandOff();

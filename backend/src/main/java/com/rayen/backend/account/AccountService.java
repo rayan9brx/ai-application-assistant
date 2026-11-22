@@ -24,6 +24,8 @@ public class AccountService {
     static final int MAX_CVS = 200;
     static final int MAX_ANALYSES_PER_CV = 500;
     static final int MAX_JSON_CHARS = 200_000;
+    /** Answers to the onboarding question; the frontend sends one of these keys. */
+    public static final List<String> ONBOARDING_ANSWERS = List.of("cv_quality", "ats", "tailor", "job_search", "skipped");
 
     private final ProfileRepository profiles;
     private final CvRepository cvs;
@@ -67,6 +69,20 @@ public class AccountService {
     public Profile rename(UUID userId, String fullName) {
         Profile profile = profile(userId, null);
         profile.setFullName(clean(fullName));
+        return profiles.saveAndFlush(profile);
+    }
+
+    /**
+     * Stores the onboarding answer (or "skipped") once; later calls keep the first answer.
+     * Not @Transactional on purpose: profile() may insert and must not share a transaction.
+     */
+    public Profile completeOnboarding(UUID userId, String nameFromSignup, String answer) {
+        if (!ONBOARDING_ANSWERS.contains(answer)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown answer.");
+        }
+        Profile profile = profile(userId, nameFromSignup);
+        if (profile.isOnboardingDone()) return profile;
+        profile.completeOnboarding(answer);
         return profiles.saveAndFlush(profile);
     }
 

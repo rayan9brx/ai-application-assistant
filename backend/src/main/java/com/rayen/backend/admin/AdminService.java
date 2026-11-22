@@ -67,7 +67,8 @@ public class AdminService {
     public record Count(String key, long count) {}
     public record Funnel(long visitors, long signups, long firstScored) {}
     public record Stats(String range, Instant from, Kpis kpis, List<DayPoint> series, List<Count> topPages,
-                        List<Count> topCountries, List<Count> topReferrers, List<Count> devices, Funnel funnel) {}
+                        List<Count> topCountries, List<Count> topReferrers, List<Count> devices, Funnel funnel,
+                        List<Count> onboardingAnswers) {}
     public record UserRow(UUID id, String email, Instant createdAt, Instant lastSignInAt, String country,
                           String plan, String role, long cvCount) {}
     public record CvRow(UUID id, String ownerEmail, String title, Instant createdAt, Integer lastScore) {}
@@ -120,7 +121,11 @@ public class AdminService {
             counts("""
                 select device_type as key, count(distinct visitor_hash) as n
                 from public.page_views where created_at >= :from group by device_type""", p),
-            new Funnel(kpis.visitors(), signups, firstScored));
+            new Funnel(kpis.visitors(), signups, firstScored),
+            // All time: profiles don't record when the question was answered.
+            counts("""
+                select onboarding_answer as key, count(*) as n from public.profiles
+                where onboarding_done and onboarding_answer is not null group by onboarding_answer""", p));
     }
 
     /** Visitors and sign-ups per day in the admin time zone, with zero days filled in. */

@@ -4,6 +4,7 @@ import { safeNext } from './auth.guard';
 import { AuthShell } from './auth-shell';
 import { GoogleButton } from './google-button';
 import { Navigation } from './navigation';
+import { Onboarding } from './onboarding';
 
 export const MIN_PASSWORD = 8;
 
@@ -104,6 +105,7 @@ export class SignupPage {
     try {
       const destination = safeNext(this.returnUrl());
       // The form no longer asks for a name; it can be added later in Settings.
+      this.deferOnboarding();
       const signedIn = await this.auth.signUp(email, this.password(), '', destination);
       if (signedIn) await this.navigation.go(destination);
       else this.confirmSent.set(true);
@@ -120,11 +122,17 @@ export class SignupPage {
     this.googleBusy.set(true);
     this.error.set('');
     try {
+      this.deferOnboarding();
       await this.auth.signInWithGoogle(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Signing up with Google failed. Please try again.'));
       this.googleBusy.set(false);
     }
+  }
+
+  /** Headed to a returnUrl: go straight there; the onboarding question waits for the next visit. */
+  private deferOnboarding(): void {
+    if (this.returnUrl()) Onboarding.deferForThisVisit();
   }
 
   value(event: Event): string {

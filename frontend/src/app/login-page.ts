@@ -4,6 +4,7 @@ import { safeNext } from './auth.guard';
 import { AuthShell } from './auth-shell';
 import { GoogleButton } from './google-button';
 import { Navigation } from './navigation';
+import { Onboarding } from './onboarding';
 
 /** /login */
 @Component({
@@ -89,6 +90,7 @@ export class LoginPage {
     this.busy.set(true);
     this.error.set('');
     try {
+      this.deferOnboarding();
       await this.auth.signIn(this.email().trim(), this.password());
       await this.navigation.go(safeNext(this.returnUrl()));
     } catch (error) {
@@ -103,11 +105,17 @@ export class LoginPage {
     this.googleBusy.set(true);
     this.error.set('');
     try {
+      this.deferOnboarding();
       await this.auth.signInWithGoogle(safeNext(this.returnUrl()));
     } catch (error) {
       this.error.set(AuthService.message(error, 'Logging in with Google failed. Please try again.'));
       this.googleBusy.set(false);
     }
+  }
+
+  /** Headed to a returnUrl: go straight there; the onboarding question waits for the next visit. */
+  private deferOnboarding(): void {
+    if (this.returnUrl()) Onboarding.deferForThisVisit();
   }
 
   value(event: Event): string {

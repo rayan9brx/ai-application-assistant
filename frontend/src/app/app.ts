@@ -3,6 +3,8 @@ import { RouterOutlet } from '@angular/router';
 import { CvLibrary } from './cv-library';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
+import { Onboarding } from './onboarding';
+import { OnboardingDialog } from './onboarding-dialog';
 import { PageViewTracker } from './page-view-tracker';
 import { SiteFooter } from './site-footer';
 
@@ -10,7 +12,7 @@ const FULL_SCREEN_PATHS = ['/login', '/signup'];
 
 @Component({
   selector: 'app-root',
-  imports: [Navbar, RouterOutlet, SiteFooter],
+  imports: [Navbar, OnboardingDialog, RouterOutlet, SiteFooter],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -27,6 +29,8 @@ export class App {
   constructor() {
     // Listens for sign-in from the start, so a CV a guest asked to save is saved after sign-up.
     inject(CvLibrary);
+    // Checks from the start whether the one-time onboarding question is due.
+    inject(Onboarding);
     inject(PageViewTracker).start();
   }
 

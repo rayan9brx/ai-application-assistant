@@ -29,7 +29,10 @@ public class AccountController {
         this.accounts = accounts;
     }
 
-    public record ProfileView(UUID id, String email, String fullName, String plan, String role, Instant createdAt) {}
+    public record ProfileView(UUID id, String email, String fullName, String plan, String role,
+                              boolean onboardingDone, Instant createdAt) {}
+
+    public record OnboardingRequest(@NotBlank @Size(max = 40) String answer) {}
 
     public record ProfileUpdate(@Size(max = 200) String fullName) {}
 
@@ -55,6 +58,12 @@ public class AccountController {
     @PatchMapping("/me")
     public ProfileView updateMe(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody ProfileUpdate update) {
         return view(accounts.rename(userId(jwt), update.fullName()), jwt);
+    }
+
+    /** The one-time onboarding question: an answer key or "skipped". */
+    @PutMapping("/me/onboarding")
+    public ProfileView onboarding(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody OnboardingRequest request) {
+        return view(accounts.completeOnboarding(userId(jwt), signupName(jwt), request.answer()), jwt);
     }
 
     @DeleteMapping("/me")
@@ -148,7 +157,7 @@ public class AccountController {
 
     private static ProfileView view(Profile profile, Jwt jwt) {
         return new ProfileView(profile.getId(), jwt.getClaimAsString("email"), profile.getFullName(), profile.getPlan(),
-            profile.getRole(), profile.getCreatedAt());
+            profile.getRole(), profile.isOnboardingDone(), profile.getCreatedAt());
     }
 
     private static CvView view(Cv cv) {

@@ -11,6 +11,8 @@ export interface Profile {
   plan: 'free' | 'pro' | 'lifetime';
   /** Set only in the database; the backend checks it again on every admin request. */
   role: 'user' | 'admin';
+  /** True once the onboarding question was answered or skipped. */
+  onboardingDone: boolean;
   createdAt: string;
 }
 export interface CvContent {
@@ -56,6 +58,9 @@ export class CvApi {
   }
   updateMe(fullName: string): Promise<Profile> {
     return firstValueFrom(this.http.patch<Profile>('/api/me', { fullName }));
+  }
+  completeOnboarding(answer: string): Promise<Profile> {
+    return firstValueFrom(this.http.put<Profile>('/api/me/onboarding', { answer }));
   }
   deleteMe(): Promise<void> {
     return firstValueFrom(this.http.delete<void>('/api/me'));
