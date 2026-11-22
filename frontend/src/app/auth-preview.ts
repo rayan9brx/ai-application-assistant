@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { Logo } from './logo';
 
 interface PreviewCv {
   title: string;
@@ -12,6 +13,7 @@ interface PreviewCv {
  */
 @Component({
   selector: 'app-auth-preview',
+  imports: [Logo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="stage" aria-hidden="true">
@@ -22,7 +24,7 @@ interface PreviewCv {
         </div>
         <div class="body">
           <aside class="sidebar">
-            <p class="side-brand"><span class="mark">A</span>ApplyCraft</p>
+            <p class="side-brand"><app-logo variant="white" [size]="16" /></p>
             @for (item of nav; track item.label; let first = $first) {
               <p class="side-item" [class.active]="first">
                 <svg viewBox="0 0 20 20"><path [attr.d]="item.icon" /></svg>{{ item.label }}

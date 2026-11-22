@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { SAMPLE_JOBS } from './hurdles-config';
+import { ScoreTone, scoreTone } from './score-tone';
 
 /** Fictional job list with match badges; rows and bars animate in when `play` turns on. */
 @Component({
@@ -36,7 +37,7 @@ export class JobMatchMock {
   readonly play = input(false);
   readonly jobs = SAMPLE_JOBS;
 
-  tone(match: number): 'good' | 'fair' | 'poor' {
-    return match >= 85 ? 'good' : match >= 60 ? 'fair' : 'poor';
+  tone(match: number): ScoreTone {
+    return scoreTone(match);
   }
 }

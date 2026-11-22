@@ -1,40 +1,40 @@
 /* The CV page shown in the left of the demo app: an A4-style sheet cut off by the window edge. */
-.canvas { display: flex; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: 20px 24px 0; background: #f1f2f6; background-image: radial-gradient(#dfe1e8 1px, transparent 1px); background-size: 16px 16px; }
-.paper { position: relative; width: 100%; max-width: 560px; min-height: 0; overflow: hidden; padding: 30px 36px 0; border-radius: 3px 3px 0 0; background: #fff; color: #2b3242; box-shadow: 0 0 0 1px #20293d0f, 0 12px 32px -12px #20293d38; font-size: 9.5px; line-height: 1.4; }
-.paper::after { content: ''; position: absolute; right: 0; bottom: 0; left: 0; z-index: 3; height: 72px; background: linear-gradient(#fff0, #fff 85%); pointer-events: none; }
+.canvas { display: flex; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: 20px 24px 0; background: var(--surface-raised); background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 16px 16px; }
+.paper { position: relative; width: 100%; max-width: 560px; min-height: 0; overflow: hidden; padding: 30px 36px 0; border-radius: 3px 3px 0 0; background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent), 0 12px 32px -12px color-mix(in srgb, var(--text) 22%, transparent); font-size: 9.5px; line-height: 1.4; }
+.paper::after { content: ''; position: absolute; right: 0; bottom: 0; left: 0; z-index: 3; height: 72px; background: linear-gradient(color-mix(in srgb, var(--surface) 0%, transparent), var(--surface) 85%); pointer-events: none; }
 .paper p { margin: 0; }
-.paper b { color: var(--ink); font-weight: 650; }
+.paper b { color: var(--text); font-weight: 650; }
 .cv-header { margin-bottom: 10px; text-align: center; }
-.cv-name { color: var(--ink); font-size: 16px; font-weight: 700; letter-spacing: .03em; line-height: 1.2; }
-.cv-contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 5px; margin-top: 3px !important; color: var(--muted); font-size: 8.5px; }
-.sep { color: #b7bbc6; }
+.cv-name { color: var(--text); font-size: 16px; font-weight: 700; letter-spacing: .03em; line-height: 1.2; }
+.cv-contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 5px; margin-top: 3px !important; color: var(--text-secondary); font-size: 8.5px; }
+.sep { color: var(--border-strong); }
 .cv-section { margin-top: 9px; }
-.cv-head { margin: 0 0 4px; padding-bottom: 2px; border-bottom: .75px solid #c9ccd6; color: var(--ink); font-size: 11px; font-weight: 700; font-variant-caps: all-small-caps; letter-spacing: .09em; line-height: 1.3; }
+.cv-head { margin: 0 0 4px; padding-bottom: 2px; border-bottom: .75px solid var(--border-strong); color: var(--text); font-size: 11px; font-weight: 700; font-variant-caps: all-small-caps; letter-spacing: .09em; line-height: 1.3; }
 .cv-entry + .cv-entry { margin-top: 6px; }
 .cv-row { display: flex; justify-content: space-between; gap: 10px; }
-.cv-meta { flex: none; color: var(--muted); white-space: nowrap; }
+.cv-meta { flex: none; color: var(--text-secondary); white-space: nowrap; }
 .paper ul { margin: 1px 0 0; padding: 0; list-style: none; }
 .paper li { position: relative; padding-left: 11px; }
-.paper li::before { content: '•'; position: absolute; left: 3px; color: #2b3242; }
-.cv-note { color: var(--muted); font-style: italic; }
+.paper li::before { content: '•'; position: absolute; left: 3px; color: var(--text); }
+.cv-note { color: var(--text-secondary); font-style: italic; }
 
 /* Highlights driven by the side panel. */
 mark { margin: 0 -2px; padding: 0 2px; border-radius: 3px; background: transparent; color: inherit; transition: background-color .45s ease, box-shadow .45s ease, color .45s ease; }
-mark[data-tone='warn'] { background: #fff0b3; box-shadow: 0 0 0 1px #f0d36a; }
-mark[data-tone='ok'] { background: #daf3e5; box-shadow: 0 0 0 1px #9fd9b8; color: #1d6340; }
+mark[data-tone='warn'] { background: var(--warning-bg); box-shadow: 0 0 0 1px var(--border-strong); }
+mark[data-tone='ok'] { background: var(--border); box-shadow: 0 0 0 1px var(--border-strong); color: var(--success-text); }
 
 /* The weak bullet the AI Fixes tab rewrites. */
 .fix-line > span:first-child { margin: 0 -3px; padding: 1px 3px; border-radius: 4px; transition: background-color .3s ease, box-shadow .3s ease; }
-.fix-line[data-state='target'] > span:first-child { background: #ece9ff; box-shadow: 0 0 0 1.5px #8d86e0; }
+.fix-line[data-state='target'] > span:first-child { background: var(--surface-raised); box-shadow: 0 0 0 1.5px var(--primary-400); }
 .flash { animation: flash 1.4s ease-out both; }
 @keyframes flash {
-  0% { background: #b9ecd0; box-shadow: 0 0 0 2px #3ecf8e; }
+  0% { background: var(--border); box-shadow: 0 0 0 2px var(--success); }
   100% { background: transparent; box-shadow: 0 0 0 0 transparent; }
 }
 
-.cursor { position: absolute; top: 3px; left: 52px; z-index: 2; width: 15px; height: 15px; pointer-events: none; filter: drop-shadow(0 2px 3px #20293d59); }
-.cursor svg { display: block; width: 100%; height: 100%; fill: #20293d; stroke: #fff; stroke-width: 1.5; stroke-linejoin: round; }
-.cursor::after { content: ''; position: absolute; top: -6px; left: -6px; width: 14px; height: 14px; border-radius: 50%; background: #4e46a866; opacity: 0; transform: scale(.4); }
+.cursor { position: absolute; top: 3px; left: 52px; z-index: 2; width: 15px; height: 15px; pointer-events: none; filter: drop-shadow(0 2px 3px color-mix(in srgb, var(--text) 35%, transparent)); }
+.cursor svg { display: block; width: 100%; height: 100%; fill: var(--text); stroke: var(--surface); stroke-width: 1.5; stroke-linejoin: round; }
+.cursor::after { content: ''; position: absolute; top: -6px; left: -6px; width: 14px; height: 14px; border-radius: 50%; background: color-mix(in srgb, var(--primary-700) 40%, transparent); opacity: 0; transform: scale(.4); }
 .cursor.clicking::after { animation: click .35s ease-out; }
 @keyframes click { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(2); } }
 

@@ -1,15 +1,12 @@
 import { Component, computed, input } from '@angular/core';
 
-export type ScoreTone = 'low' | 'mid' | 'high';
-
-export const scoreTone = (score: number): ScoreTone =>
-  score < 50 ? 'low' : score < 75 ? 'mid' : 'high';
+import { scoreTone } from './score-tone';
 
 const RADIUS = 15;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 /**
- * Circular 0–100 score with the number in the middle, coloured red/orange/teal by value.
+ * Circular 0–100 score with the number in the middle, coloured by scoreTone().
  * Size it from the parent with width/height on the host and `--ring-font` for the number.
  */
 @Component({

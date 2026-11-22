@@ -1,5 +1,5 @@
 @if (visible()) {
-  <div class="overlay">
+  <div class="overlay theme-dark">
     <section
       #frame
       class="frame"
@@ -8,6 +8,7 @@
       [attr.aria-labelledby]="finished() ? 'ob-done-title' : 'ob-title'"
       (keydown)="keydown($event)"
     >
+      <app-logo class="ob-logo" variant="white" [size]="22" />
       @if (!finished()) {
         <header class="top">
           <div class="progress-row">
@@ -159,7 +160,7 @@
   </div>
 }
 @if (note()) {
-  <div class="note" role="status">
+  <div class="note theme-dark" role="status">
     <span>Job search is coming soon. We’ll use your preferences when it’s ready.</span>
     <button type="button" aria-label="Dismiss" (click)="note.set(false)">×</button>
   </div>

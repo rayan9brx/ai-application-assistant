@@ -1,16 +1,16 @@
 :host { display: block; }
-.mock { margin: 0; padding: 22px; border: 1px solid var(--sc-line); border-radius: 20px; background: var(--sc-surface); box-shadow: 0 24px 60px #0007; }
-.head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 16px; color: var(--sc-muted); font-size: .8125rem; font-weight: 600; }
-.hint { color: var(--sc-dim); font-weight: 500; }
-.line { padding: 16px; border: 1px solid var(--sc-line); border-radius: 14px; background: var(--sc-bg); transition: opacity .5s ease, transform .5s ease, border-color .5s ease; }
+.mock { margin: 0; padding: 22px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); box-shadow: 0 24px 60px color-mix(in srgb, var(--black) 47%, transparent); }
+.head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 16px; color: var(--text-secondary); font-size: .8125rem; font-weight: 600; }
+.hint { color: var(--text-muted); font-weight: 500; }
+.line { padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); transition: opacity .5s ease, transform .5s ease, border-color .5s ease; }
 .line p { margin-top: 10px; font-size: 1rem; line-height: 1.5; }
-.tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--sc-raised); color: var(--sc-muted); font-size: .75rem; font-weight: 700; }
-.tag.ai { background: var(--sc-accent-bg); color: var(--sc-accent); }
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; background: var(--surface-raised); color: var(--text-secondary); font-size: .75rem; font-weight: 700; }
+.tag.ai { background: var(--accent-soft); color: var(--accent); }
 .strike { background: linear-gradient(currentColor, currentColor) no-repeat 0 55% / 0 1.5px; transition: background-size .5s ease, color .5s ease; }
 .rewritten .before { opacity: .6; }
-.rewritten .strike { background-size: 100% 1.5px; color: var(--sc-dim); }
-.arrow { display: grid; place-items: center; height: 36px; color: var(--sc-dim); }
+.rewritten .strike { background-size: 100% 1.5px; color: var(--text-muted); }
+.arrow { display: grid; place-items: center; height: 36px; color: var(--text-muted); }
 .arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .after { opacity: 0; transform: translateY(12px); transition-delay: .35s; }
-.rewritten .after { opacity: 1; transform: none; border-color: color-mix(in srgb, var(--sc-accent) 55%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--sc-accent) 12%, transparent); }
-.after p { color: var(--sc-text); font-weight: 550; }
+.rewritten .after { opacity: 1; transform: none; border-color: color-mix(in srgb, var(--accent) 55%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent); }
+.after p { color: var(--text); font-weight: 550; }

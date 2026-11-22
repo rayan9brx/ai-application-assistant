@@ -4,6 +4,7 @@ import { AdminCvs } from './admin-cvs';
 import { AdminOnboarding } from './admin-onboarding';
 import { AdminOverview } from './admin-overview';
 import { AdminUsers } from './admin-users';
+import { Logo } from './logo';
 
 type AdminTab = 'overview' | 'onboarding' | 'users' | 'cvs' | 'audit';
 
@@ -13,11 +14,11 @@ type AdminTab = 'overview' | 'onboarding' | 'users' | 'cvs' | 'audit';
  */
 @Component({
   selector: 'app-admin-page',
-  imports: [AdminAudit, AdminCvs, AdminOnboarding, AdminOverview, AdminUsers],
+  imports: [AdminAudit, AdminCvs, AdminOnboarding, AdminOverview, AdminUsers, Logo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="head">
-      <p class="pill-badge">Admin</p>
+      <div class="brand-row"><app-logo variant="white" [size]="22" /><p class="pill-badge">Admin</p></div>
       <h1>Admin dashboard</h1>
       <p class="muted">Cookieless analytics: no IP addresses or cookies are stored. Admin visits aren’t counted.</p>
     </header>
@@ -48,12 +49,13 @@ type AdminTab = 'overview' | 'onboarding' | 'users' | 'cvs' | 'audit';
   styles: `
     :host { display: block; padding-block: var(--space-6); }
     .head { margin-bottom: var(--space-5); }
+    .brand-row { display: flex; align-items: center; gap: var(--space-4); }
     .head h1 { margin: var(--space-3) 0 var(--space-1); }
-    .muted { color: var(--muted); font-size: var(--text-sm); }
-    .tabs { display: flex; gap: var(--space-1); margin-bottom: var(--space-5); border-bottom: 1px solid var(--line); overflow-x: auto; }
-    .tabs button { min-height: 42px; margin-bottom: -1px; padding: 8px 16px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--muted); white-space: nowrap; }
-    .tabs button[aria-selected='true'] { border-bottom-color: var(--accent); color: var(--ink); }
-    .tabs button:hover { color: var(--ink); }
+    .muted { color: var(--text-secondary); font-size: var(--text-sm); }
+    .tabs { display: flex; gap: var(--space-1); margin-bottom: var(--space-5); border-bottom: 1px solid var(--border); overflow-x: auto; }
+    .tabs button { min-height: 42px; margin-bottom: -1px; padding: 8px 16px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text-secondary); white-space: nowrap; }
+    .tabs button[aria-selected='true'] { border-bottom-color: var(--accent); color: var(--text); }
+    .tabs button:hover { color: var(--text); }
   `,
 })
 export class AdminPage {

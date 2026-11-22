@@ -13,6 +13,7 @@ import {
 import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
 import { AuthService } from './auth.service';
 import { prefersReducedMotion } from './in-view';
+import { Logo } from './logo';
 import { ScoreGauge } from './score-gauge';
 import { ScoreRing } from './score-ring';
 import { SkillPill } from './skill-pill';
@@ -167,7 +168,7 @@ const easeInOut = (v: number) => (v < 0.5 ? 4 * v ** 3 : 1 - (-2 * v + 2) ** 3 /
 /** Homepage "product demo window": a fake desktop app that cycles through what ApplyCraft does. */
 @Component({
   selector: 'app-demo-window',
-  imports: [DecimalPipe, NgTemplateOutlet, ScoreGauge, ScoreRing, SkillPill],
+  imports: [DecimalPipe, Logo, NgTemplateOutlet, ScoreGauge, ScoreRing, SkillPill],
   templateUrl: './demo-window.html',
   styleUrls: ['./demo-window.scss', './demo-window-cv.scss', './demo-window-panels.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,

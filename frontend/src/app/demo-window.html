@@ -55,7 +55,7 @@
       </p>
 
       <nav class="sidebar" aria-hidden="true">
-        <span class="logo">A</span>
+        <app-logo class="logo" variant="white" [size]="16" [showName]="false" />
         @for (item of sidebar; track item.key) {
           <span class="side-icon" [class.on]="item.key === tab().id">
             <svg viewBox="0 0 24 24"><path [attr.d]="item.icon" /></svg>

@@ -1,3 +1,3 @@
-:host { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid color-mix(in srgb, var(--sc-ok) 35%, transparent); border-radius: 999px; background: var(--sc-ok-bg); color: var(--sc-ok); font-size: .8125rem; font-weight: 600; line-height: 1.3; }
-:host(.missing) { border-color: color-mix(in srgb, var(--sc-low) 45%, transparent); background: var(--sc-danger-bg); color: var(--sc-danger-text); }
+:host { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border: 1px solid color-mix(in srgb, var(--success) 35%, transparent); border-radius: 999px; background: var(--success-bg); color: var(--success-text); font-size: .8125rem; font-weight: 600; line-height: 1.3; }
+:host(.missing) { border-color: color-mix(in srgb, var(--score-low) 45%, transparent); background: var(--danger-bg); color: var(--danger-text); }
 span { font-size: .6875rem; font-weight: 800; }

@@ -1,24 +1,32 @@
+/*
+ * Design tokens: the app's only colour definitions. Components use these variables and never
+ * hardcode colours (see "Design tokens" in the README).
+ *
+ * 1. Palette (fixed values).
+ * 2. Theme tokens (--bg, --surface, --text…): light by default (and under .theme-light, for
+ *    things that stay light inside a dark layout, like a CV page), dark under .theme-dark.
+ * 3. Semantic aliases built from 1 and 2 (--accent, --button-*, --pill-*, --score-*…).
+ */
 :root {
-  color-scheme: light;
-  --page: #f7f6f2;
-  --surface: #fff;
-  --surface-muted: #f4f4f8;
-  --ink: #20293d;
-  --muted: #5f6676;
-  --ink-soft: #424a59;
-  --accent: #4e46a8;
-  --accent-hover: #3e368c;
-  --accent-soft: #f0eef9;
-  --line: #e1e2e7;
-  --line-strong: #babeca;
-  --success: #276349;
-  --success-soft: #eff7f2;
-  --danger: #9c3039;
-  --danger-soft: #fff2f2;
-  --warning: #805d20;
+  /* 1. Palette */
+  --primary-50: #F1F0FE;
+  --primary-100: #E2DFFD;
+  --primary-200: #C7C1FA;
+  --primary-400: #8577EE;
+  --primary-600: #5B4FD6;
+  --primary-700: #4A3FB8;
+  --primary-900: #282366;
+  --primary-gradient: linear-gradient(135deg, #6D5DF5, #4338CA);
+  --white: #FFFFFF;
+  --black: #000000;
+
+  --danger: #E5484D;
+  --warning: #E8A13A;
+  --success: #12A594;
+
+  /* Spacing, radius, type */
   --radius-sm: 8px;
   --radius: 12px;
-  --shadow: 0 3px 16px #20293d06;
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -30,30 +38,92 @@
   --text-sm: .8125rem;
   --text-base: .9375rem;
   --text-lg: 1.125rem;
-  --sc-bg: #141414;
-  --sc-surface: #1c1c1f;
-  --sc-raised: #2a2a2e;
-  --sc-line: #2e2e33;
-  --sc-text: #fff;
-  --sc-muted: #a1a1a8;
-  --sc-dim: #6e6e76;
-  --sc-badge-bg: #0f2647;
-  --sc-badge-text: #6aa8ff;
-  --sc-focus: #8ab4ff;
-  --sc-low: #f0524f;
-  --sc-mid: #f59e2c;
-  --sc-high: #2dd4bf;
-  --sc-star: #f5c542;
-  --sc-danger-bg: #3b1517;
-  --sc-danger-text: #ff8a87;
-  --sc-ok: #3ecf8e;
-  --sc-ok-bg: #10291f;
-  --sc-accent: #9a94ff;
-  --sc-accent-bg: #23204a;
+}
+
+:root, .theme-light {
+  color-scheme: light;
+  --danger-bg: #FDECEC;
+  --danger-text: #B4232A;
+  --warning-bg: #FDF3E1;
+  --warning-text: #A15C07;
+  --success-bg: #E6F6F3;
+  --success-text: #0D7A6E;
+
+  /* 2. Light theme (marketing pages) */
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --border: #E7E6E1;
+  --text: #1C1B29;
+  --text-secondary: #5F5E6E;
+  --text-muted: #7A7987;
+
+  /* 3. Semantic aliases */
+  --surface-muted: color-mix(in srgb, var(--text) 4%, var(--surface));
+  --surface-raised: color-mix(in srgb, var(--text) 7%, var(--surface));
+  --border-strong: color-mix(in srgb, var(--text) 22%, var(--surface));
+  --accent: var(--primary-600);
+  --accent-hover: var(--primary-700);
+  --accent-soft: var(--primary-50);
+  --button-bg: var(--primary-600);
+  --button-bg-hover: var(--primary-700);
+  --button-text: var(--white);
+  --pill-bg: var(--primary-50);
+  --pill-text: var(--primary-900);
+  --focus-ring: var(--primary-600);
+  --overlay: color-mix(in srgb, var(--primary-900) 45%, transparent);
+  --shadow-color: color-mix(in srgb, var(--text) 8%, transparent);
+  --shadow: 0 3px 16px var(--shadow-color);
+  --shadow-lg: 0 24px 60px color-mix(in srgb, var(--text) 16%, transparent);
+  /* Scores: 0–39 low, 40–79 mid, 80–100 high (score-tone.ts decides which). */
+  --score-low: var(--danger);
+  --score-mid: var(--warning);
+  --score-high: var(--success);
+}
+.theme-light { color: var(--text); }
+
+/*
+ * Dark theme: the app shell, log-in / sign-up, the dashboard, onboarding and the dark product
+ * mock-ups on the marketing pages. Put .theme-dark on the layout's root element.
+ */
+.theme-dark {
+  color-scheme: dark;
+  --bg: #0F1629;
+  --surface: #161F36;
+  --border: #1F2A44;
+  --text: #F5F6FA;
+  --text-secondary: #A9B0C3;
+  --text-muted: #7C849A;
+
+  --surface-muted: color-mix(in srgb, var(--text) 4%, var(--surface));
+  --surface-raised: color-mix(in srgb, var(--text) 8%, var(--surface));
+  --border-strong: color-mix(in srgb, var(--text) 18%, var(--surface));
+  --accent: var(--primary-400);
+  --accent-hover: var(--primary-200);
+  --accent-soft: color-mix(in srgb, var(--primary-400) 16%, transparent);
+  /* Buttons in dark mode: --primary-400 with --primary-900 text. */
+  --button-bg: var(--primary-400);
+  --button-bg-hover: var(--primary-200);
+  --button-text: var(--primary-900);
+  --pill-bg: color-mix(in srgb, var(--primary-400) 18%, transparent);
+  --pill-text: var(--primary-100);
+  --focus-ring: var(--primary-200);
+  --overlay: color-mix(in srgb, var(--bg) 88%, transparent);
+  --shadow-color: color-mix(in srgb, var(--black) 40%, transparent);
+  --shadow: 0 4px 20px var(--shadow-color);
+  --shadow-lg: 0 24px 60px color-mix(in srgb, var(--black) 45%, transparent);
+  /* Status pills stay readable on dark surfaces: tinted backgrounds, light text. */
+  --danger-bg: color-mix(in srgb, var(--danger) 18%, var(--surface));
+  --danger-text: color-mix(in srgb, var(--danger) 45%, var(--text));
+  --warning-bg: color-mix(in srgb, var(--warning) 18%, var(--surface));
+  --warning-text: color-mix(in srgb, var(--warning) 45%, var(--text));
+  --success-bg: color-mix(in srgb, var(--success) 18%, var(--surface));
+  --success-text: color-mix(in srgb, var(--success) 45%, var(--text));
+  background-color: var(--bg);
+  color: var(--text);
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--page); }
-body { margin: 0; background: var(--page); color: var(--ink); font: var(--text-base)/1.65 var(--font); }
+html { scroll-behavior: smooth; background: var(--bg); }
+body { margin: 0; background: var(--bg); color: var(--text); font: var(--text-base)/1.65 var(--font); }
 p, h1, h2, h3 { margin: 0; }
 h1, h2, h3 { line-height: 1.3; font-weight: 650; }
 h1 { font-size: clamp(1.6rem, 3vw, 2rem); letter-spacing: -.8px; }
@@ -62,51 +132,23 @@ h3 { font-size: var(--text-base); }
 a { color: var(--accent); text-underline-offset: 4px; }
 a:hover { color: var(--accent-hover); }
 button, input { font: inherit; }
-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 10px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; cursor: pointer; text-align: center; line-height: 1.4; }
-button:disabled { background: #eeedf1; border-color: var(--line); color: #717583; cursor: not-allowed; }
-.cta { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 24px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent); color: #fff; font-size: var(--text-base); font-weight: 600; line-height: 1.3; text-decoration: none; white-space: nowrap; transition: background-color .15s, border-color .15s; }
-.cta:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 44px; padding: 10px 16px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font-size: var(--text-sm); font-weight: 600; cursor: pointer; text-align: center; line-height: 1.4; }
+button:disabled { background: var(--surface-muted); border-color: var(--border); color: var(--text-muted); cursor: not-allowed; }
+.cta { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 12px 24px; border: 1px solid var(--button-bg); border-radius: 999px; background: var(--button-bg); color: var(--button-text); font-size: var(--text-base); font-weight: 600; line-height: 1.3; text-decoration: none; white-space: nowrap; transition: background-color .15s, border-color .15s; }
+.cta:hover:not(:disabled) { background: var(--button-bg-hover); border-color: var(--button-bg-hover); color: var(--button-text); }
 .cta:disabled { border-color: transparent; }
+.cta:not(.cta-secondary):disabled { background: var(--button-bg); color: var(--button-text); opacity: .45; }
 .cta-small { min-height: 40px; padding: 8px 18px; font-size: var(--text-sm); }
-.cta-secondary { border-color: var(--line-strong); background: var(--surface); color: var(--ink); }
-.cta-secondary:hover:not(:disabled) { border-color: var(--ink); background: var(--surface-muted); color: var(--ink); }
-.pill-badge { display: inline-flex; padding: 6px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: var(--text-sm); font-weight: 600; }
+.cta-secondary { border-color: var(--border); background: var(--surface); color: var(--text); }
+.cta-secondary:hover:not(:disabled) { border-color: var(--border-strong); background: var(--surface-muted); color: var(--text); }
+.pill-badge { display: inline-flex; padding: 6px 14px; border-radius: 999px; background: var(--pill-bg); color: var(--pill-text); font-size: var(--text-sm); font-weight: 600; }
 /* Marks demo content with sample data, so it is never mistaken for the visitor's own result. */
 .example-badge { display: inline-flex; align-items: center; padding: 2px 8px; border: 1px solid color-mix(in srgb, currentColor 30%, transparent); border-radius: 999px; color: inherit; font-size: .6875rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .75; }
 /* A call to action closing a section. */
 .section-cta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-4); font-size: var(--text-sm); }
-:where(a, button, [tabindex='-1']):focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+:where(a, button, [tabindex='-1']):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
 [id] { scroll-margin-top: 96px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-/*
- * The logged-in app (AppShell) is dark. Redefining the colour tokens here lets every page
- * inside it (checker, settings, admin, coming soon) switch with it.
- */
-.app-dark {
-  color-scheme: dark;
-  --page: #0b1124;
-  --surface: #131b31;
-  --surface-muted: #1a2340;
-  --ink: #e7e9f3;
-  --ink-soft: #c9cede;
-  --muted: #8d95ad;
-  --accent: #b4adff;
-  --accent-hover: #c7c2ff;
-  --accent-soft: #8b85ff24;
-  --line: #252e4a;
-  --line-strong: #36416a;
-  --success: #3ecf8e;
-  --success-soft: #10291f;
-  --danger: #ff8a87;
-  --danger-soft: #3b1517;
-  --warning: #f5b14c;
-  --shadow: 0 4px 20px #0005;
-}
-/* Light purple buttons need dark text. */
-.app-dark .cta:not(.cta-secondary), .app-dark .cta:not(.cta-secondary):hover:not(:disabled) { color: #0f1629; }
-.app-dark button:disabled { background: #1a2340; border-color: #252e4a; color: #6f7894; }
-.app-dark .cta:not(.cta-secondary):disabled { background: var(--accent); color: #0f1629; opacity: .45; }
-.app-dark a:hover { color: var(--accent-hover); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }

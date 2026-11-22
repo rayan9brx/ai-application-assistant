@@ -65,26 +65,26 @@ import {
   styles: `
     :host { display: block; }
     form { display: grid; gap: var(--space-5); }
-    .help { color: var(--muted); font-size: var(--text-sm); }
+    .help { color: var(--text-secondary); font-size: var(--text-sm); }
     .question { display: grid; gap: var(--space-2); min-width: 0; margin: 0; padding: 0; border: 0; }
     .q-title { padding: 0; font-size: var(--text-sm); font-weight: 650; }
     .options, .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
     .option {
       position: relative; display: inline-flex; align-items: center; min-height: 36px; padding: 6px 14px;
-      border: 1px solid var(--line-strong); border-radius: 999px; background: var(--surface);
+      border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface);
       font-size: var(--text-sm); font-weight: 500; cursor: pointer; transition: border-color .15s, background-color .15s;
     }
-    .option:hover { border-color: var(--ink); }
+    .option:hover { border-color: var(--text); }
     .option.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
     .option:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
     .option input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
     .chip { display: inline-flex; align-items: center; gap: 2px; padding: 2px 2px 2px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: var(--text-sm); font-weight: 600; }
     .chip button { width: 28px; min-height: 28px; padding: 0; border: 0; border-radius: 50%; background: none; color: inherit; font-size: 1rem; }
-    .chip button:hover { background: #4e46a81f; }
-    input[type='text'] { min-height: 44px; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink); font: inherit; }
+    .chip button:hover { background: color-mix(in srgb, var(--primary-700) 12%, transparent); }
+    input[type='text'] { min-height: 44px; padding: 10px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); font: inherit; }
     input[type='text']:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
-    .error { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--danger); font-size: var(--text-sm); }
-    .notice { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--success-soft); color: var(--success); font-size: var(--text-sm); }
+    .error { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-bg); color: var(--danger-text); font-size: var(--text-sm); }
+    .notice { padding: 10px 12px; border-radius: var(--radius-sm); background: var(--success-bg); color: var(--success-text); font-size: var(--text-sm); }
     .cta { justify-self: start; }
   `,
 })

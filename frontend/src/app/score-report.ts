@@ -2,7 +2,8 @@ import { Component, computed, input } from '@angular/core';
 import { CvScore } from './cv-flow';
 import { ParsedField, ParsedFieldRow } from './parsed-field-row';
 import { ScoreGauge } from './score-gauge';
-import { ScoreRing, scoreTone } from './score-ring';
+import { ScoreRing } from './score-ring';
+import { scoreTone } from './score-tone';
 import { SkillPill } from './skill-pill';
 
 const CATEGORY_LABELS: [keyof CvScore['categories'], string][] = [

@@ -1,6 +1,6 @@
-:host { display: block; padding: 10px 12px; border-radius: 12px; color: var(--ink); text-decoration: none; transition: background-color .15s; }
-:host(:hover) { background: var(--surface-muted); color: var(--ink); }
+:host { display: block; padding: 10px 12px; border-radius: 12px; color: var(--text); text-decoration: none; transition: background-color .15s; }
+:host(:hover) { background: var(--surface-muted); color: var(--text); }
 .title { display: flex; align-items: center; gap: 8px; font-size: 1rem; font-weight: 600; line-height: 1.35; }
-.description { display: block; margin-top: 2px; color: var(--muted); font-size: .9375rem; line-height: 1.4; }
-.badge { padding: 2px 8px; border-radius: 999px; background: #0d9488; color: #fff; font-size: .6875rem; font-weight: 700; letter-spacing: .3px; line-height: 1.5; text-transform: uppercase; }
-.badge.soon { background: var(--surface-muted); color: var(--muted); }
+.description { display: block; margin-top: 2px; color: var(--text-secondary); font-size: .9375rem; line-height: 1.4; }
+.badge { padding: 2px 8px; border-radius: 999px; background: var(--success-bg); color: var(--success-text); font-size: .6875rem; font-weight: 700; letter-spacing: .3px; line-height: 1.5; text-transform: uppercase; }
+.badge.soon { background: var(--surface-muted); color: var(--text-secondary); }

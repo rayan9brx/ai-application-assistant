@@ -18,12 +18,12 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   styles: `
     :host { display: block; }
     .google {
-      width: 100%; min-height: 46px; gap: 10px; border: 1px solid #333e5e; border-radius: 10px;
-      background: transparent; color: #e7e9f3; font-size: .875rem; transition: background-color .15s, border-color .15s;
+      width: 100%; min-height: 46px; gap: 10px; border: 1px solid var(--border-strong); border-radius: 10px;
+      background: transparent; color: var(--text); font-size: .875rem; transition: background-color .15s, border-color .15s;
     }
-    .google:hover:not(:disabled) { border-color: #4a5680; background: #ffffff0a; }
+    .google:hover:not(:disabled) { border-color: var(--border-strong); background: color-mix(in srgb, var(--text) 4%, transparent); }
     .google:disabled { opacity: .7; cursor: progress; }
-    .google:focus-visible { outline: none; border-color: #8b85ff; box-shadow: 0 0 0 3px #8b85ff59; }
+    .google:focus-visible { outline: none; border-color: var(--primary-400); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-400) 35%, transparent); }
     svg { width: 18px; height: 18px; }
   `,
 })

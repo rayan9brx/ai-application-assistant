@@ -1,7 +1,7 @@
-:host { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid color-mix(in srgb, var(--sc-ok) 28%, transparent); border-radius: 10px; background: var(--sc-ok-bg); font-size: .875rem; line-height: 1.4; }
-:host(.problem) { border-color: color-mix(in srgb, var(--sc-low) 40%, transparent); background: var(--sc-danger-bg); }
-.icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--sc-ok); color: #0b1f16; font-size: .6875rem; font-weight: 800; }
-:host(.problem) .icon { background: var(--sc-low); color: #2a0a0b; }
-.label { color: var(--sc-text); font-weight: 600; }
-.value { color: var(--sc-muted); }
-:host(.problem) .value { color: var(--sc-danger-text); }
+:host { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid color-mix(in srgb, var(--success) 28%, transparent); border-radius: 10px; background: var(--success-bg); font-size: .875rem; line-height: 1.4; }
+:host(.problem) { border-color: color-mix(in srgb, var(--score-low) 40%, transparent); background: var(--danger-bg); }
+.icon { display: grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--success); color: var(--bg); font-size: .6875rem; font-weight: 800; }
+:host(.problem) .icon { background: var(--score-low); color: var(--bg); }
+.label { color: var(--text); font-weight: 600; }
+.value { color: var(--text-secondary); }
+:host(.problem) .value { color: var(--danger-text); }

@@ -1,7 +1,7 @@
 :host { display: block; }
 .coming-soon { max-width: 640px; margin: 0 auto; padding-block: 96px; text-align: center; animation: fade-up .5s cubic-bezier(.2, .7, .2, 1) both; }
 h1 { margin-top: 20px; font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.1; letter-spacing: -.04em; text-wrap: balance; }
-.lede { margin-top: 16px; color: var(--ink-soft); font-size: 1.125rem; line-height: 1.55; }
+.lede { margin-top: 16px; color: var(--text-secondary); font-size: 1.125rem; line-height: 1.55; }
 .actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px 24px; margin-top: 32px; }
-.secondary { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-weight: 600; }
+.secondary { display: inline-flex; align-items: center; min-height: 44px; color: var(--text); font-weight: 600; }
 @keyframes fade-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }

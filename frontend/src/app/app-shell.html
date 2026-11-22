@@ -1,4 +1,4 @@
-<div class="shell app-dark" [class.drawer-open]="drawerOpen()">
+<div class="shell theme-dark" [class.drawer-open]="drawerOpen()">
   <a class="skip-link" href="#main">Skip to main content</a>
 
   @if (drawerOpen()) {
@@ -6,9 +6,7 @@
   }
   <aside class="sidebar" id="app-sidebar" aria-label="App" [attr.inert]="drawerHidden() ? '' : null">
     <div class="sidebar-top">
-      <a class="logo" href="/dashboard" aria-label="ApplyCraft dashboard"
-        ><span class="mark" aria-hidden="true">A</span>ApplyCraft</a
-      >
+      <a class="logo" href="/dashboard" [attr.aria-label]="appName + ' dashboard'"><app-logo variant="white" [size]="26" /></a>
       <button type="button" class="icon-button close" aria-label="Close menu" (click)="closeDrawer()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>

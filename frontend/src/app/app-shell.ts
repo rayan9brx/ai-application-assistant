@@ -12,6 +12,8 @@ import {
 import { AdminRole } from './admin-role';
 import { APP_NAV, AppNavItem, isActive } from './app-shell-config';
 import { AuthService } from './auth.service';
+import { APP_NAME } from './brand';
+import { Logo } from './logo';
 import { CvFlow } from './cv-flow';
 import { Navigation } from './navigation';
 import { UsageStore } from './usage-store';
@@ -24,6 +26,7 @@ const MOBILE = '(max-width: 960px)';
  */
 @Component({
   selector: 'app-shell',
+  imports: [Logo],
   templateUrl: './app-shell.html',
   styleUrl: './app-shell.scss',
 })
@@ -39,6 +42,7 @@ export class AppShell {
   private readonly avatarButton = viewChild<ElementRef<HTMLButtonElement>>('avatarButton');
 
   readonly nav = APP_NAV;
+  readonly appName = APP_NAME;
   readonly path = this.navigation.path;
   readonly drawerOpen = signal(false);
   readonly openMenu = signal<'bell' | 'account' | null>(null);

@@ -1,18 +1,18 @@
 // The text column of the legal pages: toggle, title, note and the rendered Markdown.
 .article { min-width: 0; max-width: 760px; }
 .toggle-row { display: flex; justify-content: flex-end; margin-bottom: var(--space-3); }
-.toggle { display: inline-flex; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.toggle button { min-height: 32px; padding: 4px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 12px; }
-.toggle button[aria-pressed='true'] { background: var(--accent); color: #fff; }
-.toggle button:hover:not([aria-pressed='true']) { color: var(--ink); }
+.toggle { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+.toggle button { min-height: 32px; padding: 4px 14px; border: 0; border-radius: 999px; background: transparent; color: var(--text-secondary); font-size: 12px; }
+.toggle button[aria-pressed='true'] { background: var(--button-bg); color: var(--button-text); }
+.toggle button:hover:not([aria-pressed='true']) { color: var(--text); }
 h1 { font-size: 2rem; letter-spacing: -.8px; }
-.updated { margin-top: var(--space-2); color: var(--muted); font-size: var(--text-sm); }
+.updated { margin-top: var(--space-2); color: var(--text-secondary); font-size: var(--text-sm); }
 .note { margin-top: var(--space-4); padding: 10px 14px; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--accent-soft); font-size: var(--text-sm); }
-.error { margin-top: var(--space-5); padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-soft); color: var(--danger); font-size: var(--text-sm); }
+.error { margin-top: var(--space-5); padding: 10px 12px; border-radius: var(--radius-sm); background: var(--danger-bg); color: var(--danger-text); font-size: var(--text-sm); }
 
 // The Markdown arrives through [innerHTML], so these rules reach into it.
-.content { margin-top: var(--space-6); color: #374151; font-size: 1rem; line-height: 1.7; overflow-wrap: anywhere; }
-.content ::ng-deep :is(h2, h3, h4) { color: var(--ink); scroll-margin-top: 96px; }
+.content { margin-top: var(--space-6); color: var(--text-secondary); font-size: 1rem; line-height: 1.7; overflow-wrap: anywhere; }
+.content ::ng-deep :is(h2, h3, h4) { color: var(--text); scroll-margin-top: 96px; }
 .content ::ng-deep :is(h2, h3, h4):focus { outline: none; }
 .content ::ng-deep h2 { margin: var(--space-7) 0 var(--space-3); font-size: 1.5rem; letter-spacing: -.5px; }
 .content ::ng-deep h2:first-child { margin-top: 0; }
@@ -23,10 +23,10 @@ h1 { font-size: 2rem; letter-spacing: -.8px; }
 .content ::ng-deep li { padding-left: .25em; }
 .content ::ng-deep li + li { margin-top: .4em; }
 .content ::ng-deep li::marker { color: var(--accent); }
-.content ::ng-deep strong { color: var(--ink); }
-.content ::ng-deep blockquote { margin: 0 0 1.5em; padding: 10px 14px; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--accent-soft); color: var(--ink); font-size: var(--text-sm); }
+.content ::ng-deep strong { color: var(--text); }
+.content ::ng-deep blockquote { margin: 0 0 1.5em; padding: 10px 14px; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--accent-soft); color: var(--text); font-size: var(--text-sm); }
 .content ::ng-deep blockquote p { margin: 0; }
 .content ::ng-deep a { overflow-wrap: anywhere; }
 .content ::ng-deep table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
-.content ::ng-deep :is(th, td) { padding: 8px 10px; border: 1px solid var(--line); text-align: left; }
-.content ::ng-deep th { background: var(--surface-muted); color: var(--ink); }
+.content ::ng-deep :is(th, td) { padding: 8px 10px; border: 1px solid var(--border); text-align: left; }
+.content ::ng-deep th { background: var(--surface-muted); color: var(--text); }

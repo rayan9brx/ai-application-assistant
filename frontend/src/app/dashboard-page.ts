@@ -14,6 +14,7 @@ import { CvFlow, MAX_FILE_BYTES } from './cv-flow';
 import { Navigation } from './navigation';
 import { ONBOARDING_STEPS, OnboardingAnswers } from './onboarding-options';
 import { ScoreRing } from './score-ring';
+import { scoreTone } from './score-tone';
 
 type SortKey = 'created' | 'edited' | 'score';
 type ViewMode = 'grid' | 'list';
@@ -244,7 +245,7 @@ export class DashboardPage {
   }
 
   scoreClass(score: number | null): string {
-    return score === null ? 'none' : score >= 75 ? 'high' : score >= 50 ? 'mid' : 'low';
+    return score === null ? 'none' : scoreTone(score);
   }
 
   value(event: Event): string {

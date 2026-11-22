@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { AuthService } from './auth.service';
+import { Logo } from './logo';
 import { Navigation } from './navigation';
 import { Onboarding } from './onboarding';
 import {
@@ -28,6 +29,7 @@ import {
  */
 @Component({
   selector: 'app-onboarding-dialog',
+  imports: [Logo],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './onboarding-dialog.html',
   styleUrl: './onboarding-dialog.scss',

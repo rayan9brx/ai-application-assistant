@@ -27,6 +27,8 @@ export interface CvData {
 /** Renders a CV as a white paper sheet. Place it on an `<article>` and label it. */
 @Component({
   selector: 'article[app-cv-preview]',
+  // A CV page stays a white sheet, also inside dark sections.
+  host: { class: 'theme-light' },
   templateUrl: './cv-preview.html',
   styleUrl: './cv-preview.scss',
 })

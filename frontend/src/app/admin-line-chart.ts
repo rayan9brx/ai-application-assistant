@@ -39,12 +39,12 @@ const PAD = { top: 12, right: 12, bottom: 28, left: 36 };
   `,
   styles: `
     :host { display: block; }
-    .legend { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); color: var(--muted); font-size: 12px; }
+    .legend { display: flex; gap: var(--space-4); margin-bottom: var(--space-2); color: var(--text-secondary); font-size: 12px; }
     .legend span { display: inline-flex; align-items: center; gap: 6px; }
     .swatch { display: inline-block; width: 12px; height: 3px; border-radius: 2px; }
     svg { display: block; width: 100%; height: auto; overflow: visible; }
-    .grid { stroke: var(--line); stroke-width: 1; }
-    .axis { fill: var(--muted); font-size: 11px; }
+    .grid { stroke: var(--border); stroke-width: 1; }
+    .axis { fill: var(--text-secondary); font-size: 11px; }
     .line { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
     .dot { stroke: var(--surface); stroke-width: 1.5; }
     .visitors { stroke: var(--accent); background: var(--accent); }

@@ -1,5 +1,7 @@
 import { Component, ElementRef, computed, inject, input, signal, viewChild } from '@angular/core';
 import { AdminRole } from './admin-role';
+import { Logo } from './logo';
+import { APP_NAME } from './brand';
 import { AuthService } from './auth.service';
 import { Navigation } from './navigation';
 import { ServicesMenu } from './services-menu';
@@ -11,7 +13,7 @@ export interface NavLink {
 
 @Component({
   selector: 'app-navbar',
-  imports: [ServicesMenu],
+  imports: [Logo, ServicesMenu],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss',
   host: {
@@ -26,6 +28,7 @@ export class Navbar {
   readonly auth = inject(AuthService);
   /** Shows the Admin link; the backend enforces the role itself. */
   readonly role = inject(AdminRole);
+  readonly appName = APP_NAME;
   private readonly navigation = inject(Navigation);
   private readonly menuButton = viewChild.required<ElementRef<HTMLButtonElement>>('menuButton');
   private readonly accountButton = viewChild<ElementRef<HTMLButtonElement>>('accountButton');

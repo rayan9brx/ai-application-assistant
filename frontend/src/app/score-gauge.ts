@@ -3,17 +3,19 @@ import { Component, computed, input } from '@angular/core';
 const GAUGE = { cx: 100, cy: 100, r: 80 };
 let nextId = 0;
 
-/** Half-circle 0–100 gauge, red → teal, with a knob at the score and the number inside. */
+/** Half-circle 0–100 gauge in the score-tone colours, with a knob at the score and the number inside. */
 @Component({
   selector: 'app-score-gauge',
   template: `
     <svg viewBox="0 0 200 112" aria-hidden="true">
       <defs>
         <linearGradient [id]="gradientId" x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0" stop-color="#f0524f" />
-          <stop offset="0.45" stop-color="#f59e2c" />
-          <stop offset="0.65" stop-color="#f3cf3c" />
-          <stop offset="1" stop-color="#2dd4bf" />
+          <!-- Bands from score-tone.ts: 0–39 low, 40–79 mid, 80–100 high. -->
+          <stop offset="0" class="low" />
+          <stop offset="0.3" class="low" />
+          <stop offset="0.5" class="mid" />
+          <stop offset="0.72" class="mid" />
+          <stop offset="0.9" class="high" />
         </linearGradient>
       </defs>
       <path
@@ -37,16 +39,19 @@ let nextId = 0;
       max-width: 220px;
       margin-inline: auto;
     }
+    .low { stop-color: var(--score-low); }
+    .mid { stop-color: var(--score-mid); }
+    .high { stop-color: var(--score-high); }
     .knob {
-      fill: #fff;
-      stroke: var(--sc-surface);
+      fill: var(--white);
+      stroke: var(--surface);
       stroke-width: 3;
       transition:
         cx 0.6s ease,
         cy 0.6s ease;
     }
     .value {
-      fill: var(--sc-text);
+      fill: var(--text);
       font-size: 44px;
       font-weight: 700;
       letter-spacing: -1px;

@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CvData, CvPreview } from './cv-preview';
 import { whenInView } from './in-view';
+import { scoreTone } from './score-tone';
 import { ParsedField, ParsedFieldRow } from './parsed-field-row';
 import { SkillPill } from './skill-pill';
 
@@ -41,10 +42,7 @@ export class AtsPanel {
   /** The percentage as currently drawn: counting up, then the real value. */
   readonly shownMatch = computed(() => (this.done() ? this.result().match : this.counted()));
   readonly revealed = this.done.asReadonly();
-  readonly tone = computed(() => {
-    const match = this.result().match;
-    return match < 50 ? 'low' : match < 75 ? 'mid' : 'high';
-  });
+  readonly tone = computed(() => scoreTone(this.result().match));
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private frame = 0;

@@ -9,17 +9,17 @@
   overflow: hidden;
   padding: 64px var(--sc-pad) 0;
   border-radius: 28px;
-  background: var(--sc-bg);
-  color: var(--sc-text);
+  background: var(--bg);
+  color: var(--text);
 }
-.showcase :focus-visible { outline-color: var(--sc-focus); }
+.showcase :focus-visible { outline-color: var(--focus-ring); }
 
 .badge {
   display: inline-flex;
   padding: 6px 14px;
   border-radius: 999px;
-  background: var(--sc-badge-bg);
-  color: var(--sc-badge-text);
+  background: var(--pill-bg);
+  color: var(--pill-text);
   font-size: .8125rem;
   font-weight: 600;
 }
@@ -43,8 +43,8 @@ h2 span { display: block; }
 .showcase-left { min-width: 0; padding-bottom: var(--sc-pad); }
 
 /* Feature accordion */
-.feature { position: relative; border-bottom: 1px solid var(--sc-line); }
-.feature:first-child { border-top: 1px solid var(--sc-line); }
+.feature { position: relative; border-bottom: 1px solid var(--border); }
+.feature:first-child { border-top: 1px solid var(--border); }
 .feature h3 { margin: 0; font-size: inherit; }
 .feature-toggle {
   display: block;
@@ -54,7 +54,7 @@ h2 span { display: block; }
   border: 0;
   border-radius: 0;
   background: none;
-  color: var(--sc-dim);
+  color: var(--text-muted);
   font-size: clamp(1.625rem, 2.6vw, 2.25rem);
   font-weight: 650;
   line-height: 1.2;
@@ -62,8 +62,8 @@ h2 span { display: block; }
   text-align: left;
   transition: color .2s;
 }
-.feature-toggle:hover { color: var(--sc-muted); }
-.feature.active .feature-toggle { color: var(--sc-text); }
+.feature-toggle:hover { color: var(--text-secondary); }
+.feature.active .feature-toggle { color: var(--text); }
 
 .feature-panel {
   display: grid;
@@ -75,11 +75,11 @@ h2 span { display: block; }
 .feature-panel-inner { min-height: 0; overflow: hidden; }
 .feature-copy {
   padding-top: 2px;
-  color: var(--sc-muted);
+  color: var(--text-secondary);
   font-size: 1rem;
   line-height: 1.6;
 }
-.lead { color: var(--sc-text); }
+.lead { color: var(--text); }
 .learn-more {
   display: inline-flex;
   align-items: center;
@@ -87,14 +87,14 @@ h2 span { display: block; }
   margin-block: 18px 26px;
   padding: 8px 18px;
   border-radius: 999px;
-  background: var(--sc-raised);
-  color: var(--sc-text);
+  background: var(--surface-raised);
+  color: var(--text);
   font-size: .875rem;
   font-weight: 600;
   text-decoration: none;
   transition: background .2s;
 }
-.learn-more:hover { background: #3a3a3f; color: var(--sc-text); }
+.learn-more:hover { background: var(--surface-raised); color: var(--text); }
 
 .progress {
   position: absolute;
@@ -102,7 +102,7 @@ h2 span { display: block; }
   bottom: -1px;
   width: 100%;
   height: 2px;
-  background: var(--sc-text);
+  background: var(--text);
   transform: scaleX(0);
   transform-origin: left;
   animation: showcase-progress linear forwards;
@@ -116,13 +116,13 @@ h2 span { display: block; }
   padding: 4px 0;
   border: 0;
   background: none;
-  color: var(--sc-dim);
+  color: var(--text-muted);
   font-size: .75rem;
   font-weight: 600;
 }
-.autoplay-toggle:hover { color: var(--sc-muted); text-decoration: underline; }
+.autoplay-toggle:hover { color: var(--text-secondary); text-decoration: underline; }
 
-.section-cta { margin-top: 40px; color: var(--sc-muted); }
+.section-cta { margin-top: 40px; color: var(--text-secondary); }
 .score-card .example-badge { position: absolute; top: 14px; right: 14px; }
 
 /* Right column: CV preview + score card */
@@ -138,7 +138,7 @@ h2 span { display: block; }
   left: 0;
   width: 720px;
   min-height: 820px;
-  box-shadow: 0 20px 60px #0006;
+  box-shadow: 0 20px 60px color-mix(in srgb, var(--black) 40%, transparent);
 }
 
 .score-card {
@@ -148,15 +148,15 @@ h2 span { display: block; }
   right: 40px;
   width: 300px;
   padding: 24px;
-  border: 1px solid var(--sc-line);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: var(--sc-surface);
-  box-shadow: 0 24px 60px #0008;
+  background: var(--surface);
+  box-shadow: 0 24px 60px color-mix(in srgb, var(--black) 53%, transparent);
 }
 .gauge-label { margin-top: 4px; text-align: center; font-size: .9375rem; font-weight: 600; }
-.score-hint { margin: 10px 0 16px; color: var(--sc-muted); font-size: .8125rem; line-height: 1.5; text-align: center; }
+.score-hint { margin: 10px 0 16px; color: var(--text-secondary); font-size: .8125rem; line-height: 1.5; text-align: center; }
 .categories { margin: 0; padding: 0; list-style: none; }
-.categories li { display: flex; align-items: center; gap: 12px; padding-block: 9px; border-top: 1px solid var(--sc-line); }
+.categories li { display: flex; align-items: center; gap: 12px; padding-block: 9px; border-top: 1px solid var(--border); }
 .category-label { font-size: .875rem; }
 
 @media (max-width: 1080px) {
