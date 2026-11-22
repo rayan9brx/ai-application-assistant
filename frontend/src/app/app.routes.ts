@@ -46,6 +46,19 @@ export const routes: Routes = [
     title: 'Reset your password — ApplyCraft',
     loadComponent: () => import('./reset-password-page').then((m) => m.ResetPasswordPage),
   },
+  // Legal pages are not written yet; they show the Coming Soon page until then.
+  {
+    path: 'terms',
+    title: 'Terms of Service — ApplyCraft',
+    data: { pageTitle: 'Terms of Service' },
+    loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
+  },
+  {
+    path: 'privacy',
+    title: 'Privacy Policy — ApplyCraft',
+    data: { pageTitle: 'Privacy Policy' },
+    loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
+  },
   {
     path: 'dashboard',
     title: 'Dashboard — ApplyCraft',

@@ -7,9 +7,9 @@ import { TOOLS_HREF, itemBySlug } from './menu-config';
   template: `
     <section class="coming-soon" aria-labelledby="coming-soon-title">
       <p class="pill-badge">Coming soon</p>
-      <h1 id="coming-soon-title">{{ item()?.title ?? 'This tool' }} is on its way</h1>
+      <h1 id="coming-soon-title">{{ item()?.title ?? pageTitle() ?? 'This tool' }} is on its way</h1>
       <p class="lede">
-        {{ item()?.description ? item()!.description + '. ' : '' }}We're still building this tool.
+        {{ item()?.description ? item()!.description + '. ' : '' }}We're still {{ pageTitle() && !item() ? 'writing this page' : 'building this tool' }}.
         In the meantime, you can check and improve your CV with the CV Checker.
       </p>
       <div class="actions">
@@ -23,6 +23,8 @@ import { TOOLS_HREF, itemBySlug } from './menu-config';
 export class ComingSoon {
   /** The :slug route parameter. */
   readonly slug = input<string>();
+  /** Route data for pages that are not tools, such as /terms. */
+  readonly pageTitle = input<string>();
   readonly item = computed(() => itemBySlug(this.slug() ?? ''));
   readonly toolsHref = TOOLS_HREF;
 }

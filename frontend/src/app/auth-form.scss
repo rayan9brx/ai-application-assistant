@@ -1,0 +1,51 @@
+// The dark form of /login and /signup (inside app-auth-shell).
+:host { display: block; }
+h1 { color: #fff; font-size: clamp(1.5rem, 2.6vw, 1.75rem); letter-spacing: -.6px; }
+.subtitle { margin-top: 6px; color: #8d95ad; font-size: var(--text-sm); }
+.save-note { margin-top: 10px; color: #b9bfd2; font-size: var(--text-sm); }
+.social { margin-top: 28px; }
+.divider { display: flex; align-items: center; gap: 14px; margin-block: 22px; color: #6f7894; font-size: 11px; font-weight: 600; letter-spacing: 1px; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #262f4b; }
+form { display: grid; gap: 14px; }
+.field { display: grid; gap: 6px; }
+.label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+label { color: #c9cede; font-size: var(--text-sm); font-weight: 600; }
+input {
+  width: 100%; min-height: 46px; padding: 11px 14px; border: 1px solid #29334f; border-radius: 10px;
+  background: #161f37; color: #fff; font: inherit; font-size: .9rem; transition: border-color .15s, box-shadow .15s;
+}
+input::placeholder { color: #6a7390; }
+input:hover { border-color: #36416a; }
+input:focus-visible { outline: none; border-color: #8b85ff; box-shadow: 0 0 0 3px #8b85ff59; }
+input[aria-invalid='true'] { border-color: #b8505a; }
+.password { position: relative; }
+.password input { padding-right: 48px; }
+.eye {
+  position: absolute; top: 50%; right: 4px; width: 40px; min-height: 38px; padding: 0; border: 0;
+  border-radius: 8px; background: transparent; color: #8d95ad; transform: translateY(-50%);
+}
+.eye:hover { color: #fff; }
+.eye:focus-visible { outline: 2px solid #8b85ff; outline-offset: 0; }
+.eye svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.hint { color: #6f7894; font-size: 12px; }
+.link { color: #b4adff; font-size: var(--text-sm); text-decoration: none; }
+.link:hover { color: #d4cfff; text-decoration: underline; }
+.link:focus-visible { outline: 2px solid #b4adff; outline-offset: 3px; border-radius: 4px; }
+.primary {
+  width: 100%; min-height: 48px; margin-top: 6px; gap: 10px; border: 0; border-radius: 10px;
+  background: #b4adff; color: #0f1629; font-size: .9rem; font-weight: 700; transition: background-color .15s;
+}
+.primary:hover:not(:disabled) { background: #c7c2ff; }
+.primary:disabled { opacity: .75; cursor: progress; }
+.primary:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.spinner { width: 16px; height: 16px; border: 2px solid #0f162955; border-top-color: #0f1629; border-radius: 50%; animation: spin .7s linear infinite; }
+.legal { margin-top: 14px; color: #6f7894; font-size: 12px; text-align: center; }
+.legal a { color: #a3aac0; }
+.legal a:hover { color: #fff; }
+.error { margin-top: 14px; padding: 10px 12px; border: 1px solid #5a2229; border-radius: 10px; background: #2a1219; color: #ff9b98; font-size: var(--text-sm); }
+.notice { margin-top: 24px; padding: 14px 16px; border: 1px solid #1f4d38; border-radius: 10px; background: #0f2a1f; color: #9be6c3; font-size: var(--text-sm); }
+.alt { margin-top: 28px; color: #8d95ad; font-size: var(--text-sm); text-align: center; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 2s; }
+}

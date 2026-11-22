@@ -18,6 +18,8 @@ export class AuthService {
   readonly session = signal<Session | null>(null);
   readonly user = computed(() => this.session()?.user ?? null);
   readonly signedIn = computed(() => !!this.session());
+  /** Where every "Try it free" button leads: sign-up for guests, the dashboard once signed in. */
+  readonly startHref = computed(() => (this.signedIn() ? '/dashboard' : '/signup'));
   /** True after opening a password-reset link, until the new password is set. */
   readonly recovering = signal(false);
   readonly displayName = computed(() => {
@@ -75,6 +77,19 @@ export class AuthService {
 
   async signIn(email: string, password: string): Promise<void> {
     const { error } = await this.client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }
+
+  /**
+   * Redirects to Google and back to `next`; the session is picked up from the URL on return.
+   * TODO(supabase): enable the Google provider (client ID + secret) in the Supabase dashboard under
+   * Authentication → Providers, and add this site's origin to the allowed redirect URLs.
+   */
+  async signInWithGoogle(next: string): Promise<void> {
+    const { error } = await this.client.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: location.origin + next },
+    });
     if (error) throw error;
   }
 

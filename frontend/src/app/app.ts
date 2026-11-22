@@ -1,9 +1,11 @@
-import { Component, HostListener, inject } from '@angular/core';
+import { Component, HostListener, computed, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CvLibrary } from './cv-library';
 import { Navbar, NavLink } from './navbar';
 import { Navigation } from './navigation';
 import { SiteFooter } from './site-footer';
+
+const FULL_SCREEN_PATHS = ['/login', '/signup'];
 
 @Component({
   selector: 'app-root',
@@ -18,6 +20,8 @@ export class App {
     { href: '/#problem', label: 'Why ATS matters' },
     { href: '/pricing', label: 'Pricing' },
   ];
+  /** Log-in and sign-up are full-screen pages without the site's navbar and footer. */
+  readonly fullScreen = computed(() => FULL_SCREEN_PATHS.includes(this.navigation.path()));
 
   constructor() {
     // Listens for sign-in from the start, so a CV a guest asked to save is saved after sign-up.

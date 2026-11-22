@@ -1,0 +1,33 @@
+// The app window of the auth-page preview. Cards and the keyword panel: auth-preview-cards.scss.
+:host { display: block; }
+.stage { position: relative; width: 720px; animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+p { margin: 0; }
+svg { flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.window { overflow: hidden; border: 1px solid #2a3554; border-radius: 14px; background: #121a30; box-shadow: 0 30px 80px #0009, 0 0 0 1px #ffffff08 inset; }
+.titlebar { display: flex; align-items: center; gap: 6px; padding: 11px 14px; border-bottom: 1px solid #222c47; background: #0f1629; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #2c3757; }
+.address { margin-left: 14px; padding: 3px 12px; border-radius: 6px; background: #19223b; color: #6f7894; font-size: 11px; }
+
+.body { display: grid; grid-template-columns: 168px 1fr; min-height: 430px; }
+.sidebar { display: grid; align-content: start; gap: 4px; padding: 16px 12px; border-right: 1px solid #222c47; background: #0f1629; }
+.side-brand { display: flex; align-items: center; gap: 8px; margin: 0 6px 14px; color: #fff; font-size: 13px; font-weight: 650; }
+.mark { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: #8b85ff; color: #0f1629; font-size: 12px; font-weight: 750; }
+.side-item { display: flex; align-items: center; gap: 9px; padding: 7px 8px; border-radius: 8px; color: #8d95ad; font-size: 12px; }
+.side-item svg { width: 15px; height: 15px; }
+.side-item.active { background: #1e2745; color: #fff; }
+.side-item.active svg { color: #b4adff; }
+
+.main { padding: 20px 22px; }
+.main-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.main-title { color: #fff; font-size: 15px; font-weight: 650; }
+.main-sub { color: #6f7894; font-size: 11px; }
+.new-cv { display: inline-flex; align-items: center; gap: 6px; padding: 7px 13px; border-radius: 999px; background: #b4adff; color: #0f1629; font-size: 12px; font-weight: 650; }
+.new-cv svg { width: 13px; height: 13px; stroke-width: 2.2; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage, .keywords { animation: none; }
+}

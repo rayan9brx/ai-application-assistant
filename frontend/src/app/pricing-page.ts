@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { AuthService } from './auth.service';
 import { BillingToggle } from './billing-toggle';
 import { ComparisonTable } from './comparison-table';
 import { Faq } from './faq';
@@ -17,4 +18,5 @@ export class PricingPage {
   readonly comparison = COMPARISON;
   readonly faq = FAQ;
   readonly saving = yearlySaving();
+  readonly startHref = inject(AuthService).startHref;
 }

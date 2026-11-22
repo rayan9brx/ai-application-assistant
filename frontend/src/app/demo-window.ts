@@ -11,6 +11,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { AuthService } from './auth.service';
 import { prefersReducedMotion } from './in-view';
 import { ScoreGauge } from './score-gauge';
 import { ScoreRing } from './score-ring';
@@ -172,6 +173,7 @@ const easeInOut = (v: number) => (v < 0.5 ? 4 * v ** 3 : 1 - (-2 * v + 2) ** 3 /
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DemoWindow {
+  readonly startHref = inject(AuthService).startHref;
   readonly icons = ICONS;
   readonly cv = CV;
   readonly weakBullet = WEAK_BULLET;

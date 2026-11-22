@@ -1,3 +1,5 @@
+import { SIGNUP_HREF } from './menu-config';
+
 /**
  * Single source of truth for the /pricing page: plans, prices, comparison rows and FAQ.
  * Prices are plain numbers in euros; formatEuro() renders them in German format (9,99 €).
@@ -21,14 +23,14 @@ export interface Plan {
   cta: { label: string; href: string; style: 'primary' | 'secondary' };
 }
 
-/** The Free plan needs no account: it starts the CV Checker right away. */
-const FREE_HREF = '/check';
+/** The Free plan starts with a free account (or the dashboard when already signed in). */
+const FREE_HREF = SIGNUP_HREF;
 /**
  * Paid plans lead to sign-up for now; nothing is charged yet.
  * TODO(stripe): send Pro and Lifetime to Stripe Checkout (after sign-up) and set profiles.plan
  * from the Stripe webhook on the backend.
  */
-const PAID_HREF = '/signup';
+const PAID_HREF = SIGNUP_HREF;
 
 export const PLANS: readonly Plan[] = [
   {

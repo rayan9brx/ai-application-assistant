@@ -1,4 +1,6 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { AuthService } from './auth.service';
+import { SIGNUP_HREF } from './menu-config';
 import { Billing, Plan, formatEuro } from './pricing-config';
 
 @Component({
@@ -10,6 +12,10 @@ import { Billing, Plan, formatEuro } from './pricing-config';
 export class PricingCard {
   readonly plan = input.required<Plan>();
   readonly billing = input<Billing>('monthly');
+  private readonly auth = inject(AuthService);
+  readonly href = computed(() =>
+    this.plan().cta.href === SIGNUP_HREF ? this.auth.startHref() : this.plan().cta.href,
+  );
 
   /** The big number, its suffix and the short line under it for the chosen billing period. */
   readonly display = computed(() => {

@@ -18,7 +18,7 @@
   </p>
   <p class="note">{{ d.note }}</p>
 
-  <a class="cta" [class.cta-secondary]="p.cta.style === 'secondary'" [href]="p.cta.href">{{
+  <a class="cta" [class.cta-secondary]="p.cta.style === 'secondary'" [href]="href()">{{
     p.cta.label
   }}</a>
 

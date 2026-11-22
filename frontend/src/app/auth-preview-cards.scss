@@ -1,0 +1,25 @@
+// CV thumbnail cards and the floating keyword-matching card of the auth-page preview.
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.cv-card { overflow: hidden; border: 1px solid #26304d; border-radius: 10px; background: #172039; }
+.thumb { display: grid; align-content: start; gap: 4px; height: 150px; margin: 8px 8px 0; padding: 12px 10px; border-radius: 6px 6px 0 0; background: #eef0f6; }
+.thumb span { display: block; height: 3px; border-radius: 2px; background: #c9cdda; }
+.thumb .t-name { width: 55%; height: 6px; background: #2b3350; }
+.thumb .t-role { width: 38%; height: 3px; margin-bottom: 4px; background: #8b85ff; }
+.thumb .t-rule { height: 2px; margin-block: 4px 2px; background: #a5abbd; width: 30%; }
+.thumb .short { width: 62%; }
+.thumb .mid { width: 80%; }
+.cv-meta { padding: 9px 10px 10px; }
+.cv-title { overflow: hidden; color: #e7e9f3; font-size: 11.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.cv-edited { display: flex; align-items: center; justify-content: space-between; gap: 6px; color: #6f7894; font-size: 10px; }
+.cv-score { padding: 0 6px; border-radius: 999px; background: #10291f; color: #3ecf8e; font-weight: 650; }
+
+.keywords { position: absolute; left: -56px; bottom: -64px; width: 268px; padding: 16px; border: 1px solid #2f3a5c; border-radius: 14px; background: #18213b; box-shadow: 0 24px 60px #000a; animation: rise .7s .25s cubic-bezier(.2, .7, .2, 1) both; }
+.kw-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.kw-title { display: flex; white-space: nowrap; align-items: center; gap: 7px; color: #fff; font-size: 13px; font-weight: 650; }
+.kw-title svg { width: 15px; height: 15px; color: #b4adff; }
+.score { padding: 3px 9px; border-radius: 999px; background: #10291f; color: #8fe6bd; font-size: 11px; white-space: nowrap; }
+.score strong { color: #3ecf8e; }
+ul { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; }
+li { display: flex; align-items: center; gap: 9px; color: #c9cede; font-size: 12.5px; }
+.check { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #10291f; color: #3ecf8e; }
+.check svg { width: 11px; height: 11px; stroke-width: 2.2; }

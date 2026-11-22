@@ -7,6 +7,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { AuthService } from './auth.service';
 import { HurdleStep } from './hurdle-step';
 import { HURDLES, HURDLES_CLOSING, HURDLES_HEADER } from './hurdles-config';
 import { Stepper } from './stepper';
@@ -25,6 +26,7 @@ export class HurdlesSection {
   readonly header = HURDLES_HEADER;
   readonly hurdles = HURDLES;
   readonly closing = HURDLES_CLOSING;
+  readonly startHref = inject(AuthService).startHref;
 
   readonly fill = signal(0);
   readonly progress = signal(0);

@@ -1,9 +1,14 @@
 <div class="app-shell">
   <a class="skip-link" href="#main">Skip to main content</a>
-  <app-navbar [links]="navLinks" />
-
-  <main class="workspace" id="main" tabindex="-1">
-    <router-outlet />
-  </main>
-  <app-site-footer />
+  @if (fullScreen()) {
+    <main id="main" tabindex="-1">
+      <router-outlet />
+    </main>
+  } @else {
+    <app-navbar [links]="navLinks" />
+    <main class="workspace" id="main" tabindex="-1">
+      <router-outlet />
+    </main>
+    <app-site-footer />
+  }
 </div>
