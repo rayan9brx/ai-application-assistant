@@ -1,16 +1,16 @@
 /* The CV page shown in the left of the demo app. */
-.canvas { display: flex; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: 24px 28px 0; background: #f1f2f6; background-image: radial-gradient(#dfe1e8 1px, transparent 1px); background-size: 16px 16px; }
-.paper { width: 100%; max-width: 600px; height: max-content; padding: 30px 38px 34px; border-radius: 4px; background: #fff; color: #2b3242; box-shadow: 0 1px 2px #20293d14, 0 18px 40px -16px #20293d38; font-size: 11px; line-height: 1.5; }
+.canvas { display: flex; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; padding: 20px 24px 0; background: #f1f2f6; background-image: radial-gradient(#dfe1e8 1px, transparent 1px); background-size: 16px 16px; }
+.paper { width: 100%; max-width: 560px; height: max-content; padding: 26px 32px 28px; border-radius: 4px; background: #fff; color: #2b3242; box-shadow: 0 1px 2px #20293d14, 0 18px 40px -16px #20293d38; font-size: 9.5px; line-height: 1.4; }
 .paper p { margin: 0; }
 .paper ul { margin: 3px 0 0; padding-left: 14px; }
 .paper li { position: relative; margin-bottom: 1px; }
 .paper li::marker { color: var(--accent); }
-.cv-header { margin-bottom: 4px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
-.cv-name { color: var(--ink); font-size: 21px; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
-.cv-role { color: var(--accent); font-size: 12px; font-weight: 650; }
-.cv-contact { color: var(--muted); font-size: 10.5px; }
-.cv-head { margin-top: 11px !important; margin-bottom: 3px !important; color: var(--accent); font-size: 9.5px; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
-.cv-job + .cv-job { margin-top: 6px; }
+.cv-header { margin-bottom: 2px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+.cv-name { color: var(--ink); font-size: 16px; font-weight: 750; letter-spacing: -.02em; line-height: 1.2; }
+.cv-role { color: var(--accent); font-size: 10px; font-weight: 650; }
+.cv-contact { color: var(--muted); font-size: 9px; }
+.cv-head { margin-top: 9px !important; margin-bottom: 2px !important; color: var(--accent); font-size: 10.5px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.cv-job + .cv-job { margin-top: 5px; }
 .cv-job-title { display: flex; gap: 4px; color: var(--ink); }
 .cv-job-title span { margin-left: auto; color: var(--muted); white-space: nowrap; }
 
@@ -28,7 +28,7 @@ mark[data-tone='ok'] { background: #daf3e5; box-shadow: 0 0 0 1px #9fd9b8; color
   100% { background: transparent; box-shadow: 0 0 0 0 transparent; }
 }
 
-.cursor { position: absolute; top: 4px; left: 64px; z-index: 2; width: 18px; height: 18px; pointer-events: none; filter: drop-shadow(0 2px 3px #20293d59); }
+.cursor { position: absolute; top: 3px; left: 52px; z-index: 2; width: 15px; height: 15px; pointer-events: none; filter: drop-shadow(0 2px 3px #20293d59); }
 .cursor svg { display: block; width: 100%; height: 100%; fill: #20293d; stroke: #fff; stroke-width: 1.5; stroke-linejoin: round; }
 .cursor::after { content: ''; position: absolute; top: -6px; left: -6px; width: 14px; height: 14px; border-radius: 50%; background: #4e46a866; opacity: 0; transform: scale(.4); }
 .cursor.clicking::after { animation: click .35s ease-out; }
@@ -36,7 +36,7 @@ mark[data-tone='ok'] { background: #daf3e5; box-shadow: 0 0 0 1px #9fd9b8; color
 
 @media (max-width: 1100px) {
   .canvas { padding: 20px 18px 0; }
-  .paper { padding: 24px 26px; font-size: 10.5px; }
+  .paper { padding: 22px 24px; font-size: 9px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
