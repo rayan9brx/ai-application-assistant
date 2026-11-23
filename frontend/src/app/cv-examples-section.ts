@@ -30,13 +30,11 @@ const CATEGORIES: readonly Category[] = [
   selector: 'app-cv-examples-section',
   template: `
     <section class="examples" aria-labelledby="cv-examples-title">
-      <div class="head">
-        <div>
-          <h2 id="cv-examples-title">CV examples for every role</h2>
-          <p class="sub">Real-world structures for students, graduates and professionals.</p>
-        </div>
-        <a class="all" [href]="examplesHref">All CV examples <span aria-hidden="true">→</span></a>
-      </div>
+      <header class="intro">
+        <p class="pill-badge">Examples</p>
+        <h2 id="cv-examples-title">CV examples for every role</h2>
+        <p class="sub">Real-world structures for students, graduates and professionals.</p>
+      </header>
 
       <div class="tabs" role="tablist" aria-label="Example type">
         @for (tab of tabs; track tab; let i = $index) {
@@ -56,7 +54,7 @@ const CATEGORIES: readonly Category[] = [
         }
       </div>
 
-      <div class="panel theme-light" role="tabpanel" id="examples-panel" [attr.aria-labelledby]="'examples-tab-' + tabs.indexOf(active())">
+      <div class="panel" role="tabpanel" id="examples-panel" [attr.aria-labelledby]="'examples-tab-' + tabs.indexOf(active())">
         @if (active() === 'CVs') {
           <ul class="pills" role="list">
             @for (c of categories; track c.slug) {
@@ -77,38 +75,44 @@ const CATEGORIES: readonly Category[] = [
             }
           </ul>
         } @else {
-          <p class="coming">Cover letter examples are <strong>coming soon</strong>.</p>
+          <p class="coming">Cover letter examples are coming soon.</p>
         }
+      </div>
+
+      <div class="after">
+        <a class="cta cta-secondary" [href]="examplesHref">All CV examples <span aria-hidden="true">→</span></a>
       </div>
     </section>
   `,
   styles: `
-    :host { display: block; margin-top: var(--space-7); }
-    .examples { display: grid; gap: 28px; padding: 64px 56px 56px; border-radius: 40px 40px 0 0; background: var(--primary-600); color: var(--white); }
-    .examples :focus-visible { outline-color: var(--white); }
-    .head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; }
-    h2 { font-size: clamp(2rem, 4.2vw, 3rem); font-weight: 700; letter-spacing: -1.5px; line-height: 1.1; }
-    .sub { margin-top: 10px; color: var(--primary-50); font-size: var(--text-lg); }
-    .all { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; padding: 12px 22px; border-radius: 999px; background: var(--white); color: var(--primary-700); font-weight: 600; text-decoration: none; white-space: nowrap; }
-    .all:hover { background: var(--primary-50); color: var(--primary-900); }
+    :host { display: block; padding-block: 120px; }
+    .intro { display: grid; justify-items: center; gap: 16px; margin-bottom: 40px; text-align: center; }
+    h2 { max-width: 20ch; font-size: clamp(2rem, 4.4vw, 3rem); font-weight: 700; line-height: 1.05; letter-spacing: -.04em; text-wrap: balance; }
+    .sub { max-width: 46ch; color: var(--text-secondary); font-size: var(--text-lg); text-wrap: balance; }
 
-    .tabs { display: flex; gap: 8px; }
-    .tab { min-height: 44px; padding: 8px 20px; border: 1px solid color-mix(in srgb, var(--white) 40%, transparent); border-radius: 999px; background: none; color: var(--white); font-size: var(--text-base); }
-    .tab:hover { background: color-mix(in srgb, var(--white) 12%, transparent); }
-    .tab.active { border-color: var(--white); background: var(--white); color: var(--primary-700); }
+    .tabs { display: flex; justify-content: center; gap: 32px; margin-bottom: 24px; }
+    .tab { min-height: 44px; padding: 8px 2px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--text-muted); font-size: var(--text-base); }
+    .tab:hover { color: var(--text); }
+    .tab.active { border-bottom-color: var(--accent); color: var(--text); }
 
-    .panel { padding: 28px; border-radius: 24px; background: var(--surface); }
-    .pills { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none; }
-    .pill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border: 1.5px solid var(--primary-600); border-radius: 999px; color: var(--primary-700); font-size: var(--text-sm); font-weight: 600; text-decoration: none; }
-    a.pill:hover { background: var(--primary-50); color: var(--primary-900); }
-    .soon-pill { border-color: color-mix(in srgb, var(--primary-600) 35%, transparent); color: var(--text-secondary); cursor: default; }
-    .pill svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .soon { padding: 2px 8px; border-radius: 999px; background: var(--pill-bg); color: var(--pill-text); font-size: .6875rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-    .coming { color: var(--text-secondary); }
+    .panel { padding: 32px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); }
+    .pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
+    .pill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: var(--text); font-size: var(--text-sm); font-weight: 600; text-decoration: none; transition: background-color .15s, border-color .15s, transform .15s, box-shadow .15s; }
+    .pill svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--primary-600); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    a.pill:hover { border-color: var(--primary-200); background: var(--primary-50); color: var(--text); transform: translateY(-1px); box-shadow: var(--shadow); }
+    .soon-pill { color: var(--text-muted); cursor: default; }
+    .soon-pill svg { stroke: var(--text-muted); }
+    .soon { padding: 2px 8px; border-radius: 999px; background: var(--surface-raised); color: var(--text-secondary); font-size: .6875rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .coming { padding-block: 8px; color: var(--text-secondary); text-align: center; }
 
-    @media (max-width: 720px) {
-      .examples { padding: 44px 20px 32px; border-radius: 28px 28px 0 0; }
-      .panel { padding: 18px; }
+    .after { display: flex; justify-content: center; margin-top: 40px; }
+    .after .cta { gap: 8px; }
+
+    @media (prefers-reduced-motion: reduce) { a.pill:hover { transform: none; } }
+    @media (max-width: 900px) {
+      :host { padding-block: 72px; }
+      .panel { padding: 20px; }
+      .pills { justify-content: flex-start; }
     }
   `,
 })
