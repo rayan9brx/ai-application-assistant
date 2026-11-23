@@ -1,8 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
 import { AuthService, signupUrl } from './auth.service';
+import { CvExamplesSection } from './cv-examples-section';
 import { CvFlow } from './cv-flow';
 import { DemoWindow } from './demo-window';
 import { Hero } from './hero';
+import { HowItWorks } from './how-it-works';
 import { HurdlesSection } from './hurdles-section';
 import { CHECK_HREF } from './menu-config';
 import { Navigation } from './navigation';
@@ -13,7 +15,7 @@ import { UploadBar } from './upload-bar';
 /** The landing page. */
 @Component({
   selector: 'app-home-page',
-  imports: [DemoWindow, Hero, HurdlesSection, ProblemSection, Showcase, UploadBar],
+  imports: [CvExamplesSection, DemoWindow, Hero, HowItWorks, HurdlesSection, ProblemSection, Showcase, UploadBar],
   template: `
     <app-hero />
     <app-upload-bar
@@ -28,6 +30,8 @@ import { UploadBar } from './upload-bar';
     <app-showcase />
     <app-problem-section />
     <app-hurdles-section />
+    <app-how-it-works />
+    <app-cv-examples-section />
   `,
 })
 export class HomePage {
