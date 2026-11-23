@@ -1,0 +1,33 @@
+@let p = plan();
+@let d = display();
+<article class="card" [attr.aria-labelledby]="'plan-' + p.id">
+  <div class="head">
+    <h2 [id]="'plan-' + p.id">{{ p.name }}</h2>
+    @if (p.highlight) {
+      <span class="highlight">{{ p.highlight }}</span>
+    }
+  </div>
+  <p class="tagline">{{ p.tagline }}</p>
+
+  <p class="price">
+    <span class="amount">{{ d.amount }}</span
+    >&ngsp;
+    @if (d.suffix) {
+      <span class="suffix">{{ d.suffix }}</span>
+    }
+  </p>
+  <p class="note">{{ d.note }}</p>
+
+  <a class="cta" [class.cta-secondary]="p.cta.style === 'secondary'" [href]="href()">{{
+    p.cta.label
+  }}</a>
+
+  <ul class="features" role="list" [attr.aria-label]="p.name + ' features'">
+    @for (feature of p.features; track feature) {
+      <li>
+        <svg appCheckIcon></svg>
+        {{ feature }}
+      </li>
+    }
+  </ul>
+</article>

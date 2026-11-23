@@ -1,6 +1,6 @@
 package com.rayen.backend;
 
-import com.rayen.backend.account.SupabaseAdminClient;
+import com.rayen.backend.auth.SupabaseAdminClient;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;

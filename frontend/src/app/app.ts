@@ -1,14 +1,14 @@
 import { Component, HostListener, computed, inject } from '@angular/core';
-import { AppShell } from './app-shell';
-import { AuthService } from './auth.service';
+import { AppShell } from './layout/app-shell';
+import { AuthService } from './core/auth.service';
 import { RouterOutlet } from '@angular/router';
-import { CvLibrary } from './cv-library';
-import { Navbar, NavLink } from './navbar';
-import { Navigation } from './navigation';
-import { Onboarding } from './onboarding';
-import { OnboardingDialog } from './onboarding-dialog';
-import { PageViewTracker } from './page-view-tracker';
-import { SiteFooter } from './site-footer';
+import { CvLibrary } from './core/cv-library';
+import { Navbar, NavLink } from './layout/navbar';
+import { Navigation } from './core/navigation';
+import { Onboarding } from './features/onboarding/onboarding';
+import { OnboardingDialog } from './features/onboarding/onboarding-dialog';
+import { PageViewTracker } from './core/page-view-tracker';
+import { SiteFooter } from './layout/site-footer';
 
 const FULL_SCREEN_PATHS = ['/login', '/signup'];
 /** Pages of the logged-in app, shown in AppShell (sidebar + top bar). */

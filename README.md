@@ -98,7 +98,7 @@ All colours live as CSS variables in [`frontend/src/styles.scss`](frontend/src/s
 
 **Rules**
 - **Small text:** never use the bright status colours (`--danger`, `--warning`, `--success`) for small text. Use the `*-text` variant on the matching `*-bg` background.
-- **Score colours:** `scoreTone()` in [`score-tone.ts`](frontend/src/app/score-tone.ts) is the only place that decides them: 0–39 danger, 40–79 warning, 80–100 success. ScoreRing, ScoreGauge, progress bars and match values all use it.
+- **Score colours:** `scoreTone()` in [`score-tone.ts`](frontend/src/app/core/score-tone.ts) is the only place that decides them: 0–39 danger, 40–79 warning, 80–100 success. ScoreRing, ScoreGauge, progress bars and match values all use it.
 
 ## Author
 **Rayan Brigui**, [GitHub](https://github.com/rayan9brx) · [X](https://x.com/Barga_Ray)
