@@ -1,0 +1,17 @@
+/* Shared by /templates, /templates/:name and /examples. */
+:host { display: block; padding-block: 72px 96px; }
+.intro { max-width: 680px; margin: 0 auto; text-align: center; }
+h1 { margin-top: 16px; font-size: clamp(2rem, 4.6vw, 3.25rem); font-weight: 700; line-height: 1.08; letter-spacing: -.04em; text-wrap: balance; }
+.lede { margin-top: 14px; color: var(--text-secondary); font-size: 1.125rem; line-height: 1.55; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap: 28px; margin: 48px 0 0; padding: 0; list-style: none; }
+.card { display: flex; flex-direction: column; height: 100%; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); color: var(--text); text-decoration: none; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.card:hover { border-color: var(--primary-200); color: var(--text); box-shadow: var(--shadow); transform: translateY(-3px); }
+.preview { display: block; padding: 28px 40px 0; background: var(--surface-muted); border-bottom: 1px solid var(--border); }
+.preview app-cv-sheet { border-radius: 8px 8px 0 0; box-shadow: 0 1px 6px var(--shadow-color); }
+.info { display: grid; gap: 8px; padding: 18px 20px 20px; }
+.name { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 650; }
+.description { color: var(--text-secondary); font-size: var(--text-base); line-height: 1.5; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.tag { padding: 3px 10px; border-radius: 999px; background: var(--surface-muted); color: var(--text-secondary); font-size: .75rem; font-weight: 600; }
+.tag:first-child { background: var(--success-bg); color: var(--success-text); }

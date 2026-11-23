@@ -30,6 +30,10 @@ public class Cv {
     @Column(name = "job_description", length = 15000)
     private String jobDescription;
 
+    /** The PDF layout: simple, modern, compact or creative (see CvTemplate). */
+    @Column(nullable = false, length = 20)
+    private String template = "simple";
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -55,6 +59,8 @@ public class Cv {
     public void setContent(JsonNode content) { this.content = content; }
     public String getJobDescription() { return jobDescription; }
     public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
+    public String getTemplate() { return template; }
+    public void setTemplate(String template) { this.template = template; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     /** Marks the CV as changed, e.g. after re-scoring, so it sorts first on the dashboard. */

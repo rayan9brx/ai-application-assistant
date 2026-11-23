@@ -5,6 +5,7 @@ import { APP_NAME } from './brand';
 import { AuthService } from './auth.service';
 import { Navigation } from './navigation';
 import { ServicesMenu } from './services-menu';
+import { TemplatesMenu } from './templates-menu';
 
 export interface NavLink {
   href: string;
@@ -13,7 +14,7 @@ export interface NavLink {
 
 @Component({
   selector: 'app-navbar',
-  imports: [Logo, ServicesMenu],
+  imports: [Logo, ServicesMenu, TemplatesMenu],
   templateUrl: './navbar.html',
   styleUrl: './navbar.scss',
   host: {
@@ -57,7 +58,8 @@ export class Navbar {
   }
 
   mobileLinkClicked(event: MouseEvent): void {
-    if ((event.target as Element).closest('a, button')) this.closeMenu();
+    // Accordion triggers (Services, Templates) only expand their section.
+    if ((event.target as Element).closest('a, button:not([aria-expanded])')) this.closeMenu();
   }
 
   toggleAccount(): void {

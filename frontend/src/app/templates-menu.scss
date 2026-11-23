@@ -1,0 +1,19 @@
+/* Trigger, panel and accordion styles are in disclosure-menu.scss. */
+.panel { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); border-radius: 16px; }
+.cards { grid-template-columns: 1fr 1fr; gap: 12px; padding-inline: 4px; }
+.card { display: block; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); text-decoration: none; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.card:hover { border-color: var(--primary-200); color: var(--text); box-shadow: var(--shadow); transform: translateY(-2px); }
+.thumb { border-bottom: 1px solid var(--border); pointer-events: none; }
+.card-foot { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+.card-text { display: grid; min-width: 0; }
+.card-name { font-size: var(--text-sm); font-weight: 650; line-height: 1.3; }
+.card-tagline { display: none; color: var(--text-secondary); font-size: .9375rem; line-height: 1.4; }
+
+/* Accordion (mobile menu): plain rows without previews. */
+:host(.accordion) .panel { grid-template-columns: 1fr; }
+:host(.accordion) .cards { grid-template-columns: 1fr; gap: 4px; padding: 0; }
+:host(.accordion) .card { border: 0; border-radius: 12px; background: none; box-shadow: none; transform: none; }
+:host(.accordion) .card:hover { background: var(--surface-muted); }
+:host(.accordion) .card-foot { align-items: flex-start; gap: 12px; padding: 10px 12px; }
+:host(.accordion) .card-name { font-size: 1rem; font-weight: 600; }
+:host(.accordion) .card-tagline { display: block; margin-top: 2px; }

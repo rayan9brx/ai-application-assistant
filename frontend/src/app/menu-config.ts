@@ -18,9 +18,12 @@ export interface MenuItemConfig {
   description: string;
   href: string;
   badge?: string;
-  column: MenuColumnId;
+  /** The Services menu column; other menus (Templates) list their items themselves. */
+  column?: MenuColumnId;
   /** Not built yet: shown with a "Soon" badge instead of `badge`. */
   soon?: boolean;
+  /** A public page (like /examples): linked directly instead of behind sign-up. */
+  public?: boolean;
 }
 
 export const MENU_COLUMNS: readonly MenuColumn[] = [

@@ -160,6 +160,7 @@ export class DashboardPage {
         saved.jobDescription ?? '',
         runs[0]?.result ?? null,
         runs[1]?.overallScore ?? null,
+        saved.template,
       );
       await this.navigation.go('/check');
       // A CV saved without a score has nothing to show yet: score it now (saved to its history).

@@ -3,11 +3,13 @@ package com.rayen.backend.account;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.rayen.backend.CvTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -34,15 +36,17 @@ public class AccountController {
     public record ProfileUpdate(@Size(max = 200) String fullName) {}
 
     public record CvRequest(@NotBlank @Size(max = 200) String title, @NotNull JsonNode content,
-                            @Size(max = 15000) String jobDescription) {}
+                            @Size(max = 15000) String jobDescription,
+                            // Optional: null creates the CV with "simple" and keeps the current one on update.
+                            @Pattern(regexp = CvTemplate.IDS) String template) {}
 
     /** preview: the start of the CV text, for the dashboard's mini page. */
     public record CvSummary(UUID id, String title, Instant createdAt, Instant updatedAt,
-                            Integer lastScore, Instant lastScoredAt, String preview) {}
+                            Integer lastScore, Instant lastScoredAt, String preview, String template) {}
 
     static final int PREVIEW_CHARS = 700;
 
-    public record CvView(UUID id, String title, JsonNode content, String jobDescription,
+    public record CvView(UUID id, String title, JsonNode content, String jobDescription, String template,
                          Instant createdAt, Instant updatedAt) {}
 
     public record AnalysisRequest(@NotNull JsonNode result) {}
@@ -74,7 +78,7 @@ public class AccountController {
             Analysis last = latest.get(cv.getId());
             return new CvSummary(cv.getId(), cv.getTitle(), cv.getCreatedAt(), cv.getUpdatedAt(),
                 last == null ? null : last.getOverallScore(), last == null ? null : last.getCreatedAt(),
-                preview(cv.getContent()));
+                preview(cv.getContent()), cv.getTemplate());
         }).toList();
     }
 
@@ -83,7 +87,8 @@ public class AccountController {
     public CvView createCv(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CvRequest request) {
         // Saving is often a new user's first request: create the profile with their sign-up name.
         accounts.profile(userId(jwt), signupName(jwt));
-        return view(accounts.createCv(userId(jwt), request.title(), request.content(), request.jobDescription()));
+        return view(accounts.createCv(userId(jwt), request.title(), request.content(), request.jobDescription(),
+            request.template()));
     }
 
     @GetMapping("/cvs/{id}")
@@ -94,7 +99,8 @@ public class AccountController {
     @PutMapping("/cvs/{id}")
     public CvView updateCv(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
                            @Valid @RequestBody CvRequest request) {
-        return view(accounts.updateCv(userId(jwt), id, request.title(), request.content(), request.jobDescription()));
+        return view(accounts.updateCv(userId(jwt), id, request.title(), request.content(), request.jobDescription(),
+            request.template()));
     }
 
     @PostMapping("/cvs/{id}/duplicate")
@@ -163,7 +169,8 @@ public class AccountController {
     }
 
     private static CvView view(Cv cv) {
-        return new CvView(cv.getId(), cv.getTitle(), cv.getContent(), cv.getJobDescription(), cv.getCreatedAt(),
+        return new CvView(cv.getId(), cv.getTitle(), cv.getContent(), cv.getJobDescription(), cv.getTemplate(),
+            cv.getCreatedAt(),
             cv.getUpdatedAt());
     }
 

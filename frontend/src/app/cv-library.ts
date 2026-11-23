@@ -3,6 +3,7 @@ import { Injectable, effect, inject, signal, untracked } from '@angular/core';
 import { AuthService } from './auth.service';
 import { CvApi, CvInput } from './cv-api';
 import { CvFlow } from './cv-flow';
+import { CvTemplateId } from './cv-templates';
 
 /**
  * Saving the CV checker's work to the account. Only signed-in users can use the checker, and
@@ -51,6 +52,32 @@ export class CvLibrary {
     return this.running;
   }
 
+  /**
+   * Picks a template for the checker's CV. A CV already in the account keeps its saved text and
+   * only gets the new template, so unsaved edits stay unsaved.
+   */
+  async setTemplate(template: CvTemplateId): Promise<void> {
+    this.flow.setTemplate(template);
+    await this.running;
+    const id = this.flow.savedCvId();
+    if (!id || !this.auth.signedIn()) return;
+    try {
+      const saved = await this.api.get(id);
+      if (saved.template === template) return;
+      await this.api.update(id, {
+        title: saved.title,
+        content: saved.content,
+        jobDescription: saved.jobDescription,
+        template,
+      });
+    } catch (error) {
+      // Deleted elsewhere: the next save creates it again, with this template.
+      if (error instanceof HttpErrorResponse && error.status === 404) return;
+      this.state.set('error');
+      this.error.set(CvFlow.message(error, 'Your template choice couldn’t be saved.'));
+    }
+  }
+
   private async doSave(): Promise<boolean> {
     const text = this.flow.cvText();
     if (!text.trim()) return false;
@@ -61,6 +88,7 @@ export class CvLibrary {
         title: titleFor(text),
         content: { text },
         jobDescription: this.flow.jobDescription().trim() || null,
+        template: this.flow.template(),
       };
       let id = this.flow.savedCvId();
       if (id) {

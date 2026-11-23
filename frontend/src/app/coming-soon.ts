@@ -23,6 +23,13 @@ import { TOOLS_HREF, itemBySlug } from './menu-config';
 export class ComingSoon {
   /** The :slug route parameter. */
   readonly slug = input<string>();
-  readonly item = computed(() => itemBySlug(this.slug() ?? ''));
+  /** Route data for placeholders that aren't in the Services menu (e.g. cover letter examples). */
+  readonly soonTitle = input<string>();
+  readonly soonDescription = input<string>();
+  readonly item = computed(() => {
+    const title = this.soonTitle();
+    if (title) return { title, description: this.soonDescription() ?? '' };
+    return itemBySlug(this.slug() ?? '');
+  });
   readonly toolsHref = TOOLS_HREF;
 }

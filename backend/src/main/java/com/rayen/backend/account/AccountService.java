@@ -96,20 +96,26 @@ public class AccountService {
     }
 
     /** Not @Transactional on purpose: profile() may insert and must not share a transaction. */
-    public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription) {
+    /** A null template means the default, 'simple'. */
+    public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription, String template) {
         profile(userId, null);
         if (cvs.countByUserId(userId) >= MAX_CVS) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You have reached the limit of saved CVs.");
         }
-        return cvs.saveAndFlush(new Cv(userId, title.strip(), checkedJson(content), blankToNull(jobDescription)));
+        var cv = new Cv(userId, title.strip(), checkedJson(content), blankToNull(jobDescription));
+        if (template != null) cv.setTemplate(template);
+        return cvs.saveAndFlush(cv);
     }
 
+    /** A null template keeps the CV's current one. */
     @Transactional
-    public Cv updateCv(UUID userId, UUID cvId, String title, JsonNode content, String jobDescription) {
+    public Cv updateCv(UUID userId, UUID cvId, String title, JsonNode content, String jobDescription,
+                       String template) {
         Cv cv = cv(userId, cvId);
         cv.setTitle(title.strip());
         cv.setContent(checkedJson(content));
         cv.setJobDescription(blankToNull(jobDescription));
+        if (template != null) cv.setTemplate(template);
         cv.touch();
         return cvs.saveAndFlush(cv);
     }
@@ -118,7 +124,8 @@ public class AccountService {
     public Cv duplicateCv(UUID userId, UUID cvId) {
         Cv source = cv(userId, cvId);
         String title = source.getTitle().length() > 190 ? source.getTitle().substring(0, 190) : source.getTitle();
-        return createCv(userId, title + " (copy)", source.getContent().deepCopy(), source.getJobDescription());
+        return createCv(userId, title + " (copy)", source.getContent().deepCopy(), source.getJobDescription(),
+            source.getTemplate());
     }
 
     @Transactional

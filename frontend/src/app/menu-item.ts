@@ -22,6 +22,9 @@ import { MenuItemConfig } from './menu-config';
 export class MenuItem {
   readonly item = input.required<MenuItemConfig>();
   private readonly auth = inject(AuthService);
-  /** Live tools need an account; "Coming soon" pages stay public. */
-  readonly href = computed(() => (this.item().soon ? this.item().href : this.auth.gate(this.item().href)));
+  /** Live tools need an account; "Coming soon" and public pages stay public. */
+  readonly href = computed(() => {
+    const item = this.item();
+    return item.soon || item.public ? item.href : this.auth.gate(item.href);
+  });
 }

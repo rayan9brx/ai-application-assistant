@@ -52,3 +52,9 @@ app-tailor-panel { margin-top: 16px; }
   .toolbar { width: 100%; }
   .toolbar .cta { flex: 1; }
 }
+
+.template-note strong { color: var(--text); }
+.picker { margin-top: 12px; }
+.preview-stage { margin-top: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface-muted); }
+.preview-sheet { max-width: 560px; margin-inline: auto; border-radius: 6px; box-shadow: var(--shadow); }
+@media (max-width: 520px) { .preview-stage { padding: 10px; } }

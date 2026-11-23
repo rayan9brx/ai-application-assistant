@@ -1,12 +1,21 @@
-import { ResolveFn, Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { CanActivateFn, ResolveFn, Router, Routes } from '@angular/router';
 import { adminGuard } from './admin-role';
 import { authGuard, guestGuard } from './auth.guard';
+import { TEMPLATES_HREF, templateById } from './cv-templates';
 import { itemBySlug } from './menu-config';
 
 export const SITE_TITLE = 'ApplyCraft — Your application workspace';
 
 const comingSoonTitle: ResolveFn<string> = (route) =>
   `${itemBySlug(route.paramMap.get('slug') ?? '')?.title ?? 'Coming soon'} — ApplyCraft`;
+
+const templateTitle: ResolveFn<string> = (route) =>
+  `${templateById(route.paramMap.get('name'))?.name ?? 'CV'} CV template — ApplyCraft`;
+
+/** Unknown template names go to the list of templates. */
+const knownTemplate: CanActivateFn = (route) =>
+  templateById(route.paramMap.get('name')) ? true : inject(Router).parseUrl(TEMPLATES_HREF);
 
 export const routes: Routes = [
   { path: '', title: SITE_TITLE, loadComponent: () => import('./home-page').then((m) => m.HomePage) },
@@ -20,6 +29,28 @@ export const routes: Routes = [
     path: 'pricing',
     title: 'Pricing — ApplyCraft',
     loadComponent: () => import('./pricing-page').then((m) => m.PricingPage),
+  },
+  {
+    path: 'templates',
+    title: 'ATS-friendly CV templates — ApplyCraft',
+    loadComponent: () => import('./templates-page').then((m) => m.TemplatesPage),
+  },
+  {
+    path: 'templates/:name',
+    title: templateTitle,
+    canActivate: [knownTemplate],
+    loadComponent: () => import('./template-detail-page').then((m) => m.TemplateDetailPage),
+  },
+  {
+    path: 'examples',
+    title: 'CV examples — ApplyCraft',
+    loadComponent: () => import('./examples-page').then((m) => m.ExamplesPage),
+  },
+  {
+    path: 'examples/cover-letters',
+    title: 'Cover Letter Examples — ApplyCraft',
+    data: { soonTitle: 'Cover Letter Examples', soonDescription: 'Effective cover letter samples' },
+    loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
   },
   {
     path: 'tools',

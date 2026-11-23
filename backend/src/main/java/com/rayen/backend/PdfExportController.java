@@ -18,7 +18,9 @@ public class PdfExportController {
 
     public record ExportRequest(
         @NotBlank @Pattern(regexp = "cv|motivationLetter") String documentType,
-        @NotBlank @Size(max = 60000) String text
+        @NotBlank @Size(max = 60000) String text,
+        // CV only; optional, defaults to "simple".
+        @Pattern(regexp = CvTemplate.IDS) String template
     ) {}
 
     // Export exactly the submitted editor text, using fixed safe download filenames.
@@ -33,14 +35,14 @@ public class PdfExportController {
             .contentType(MediaType.APPLICATION_PDF)
             .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
             .cacheControl(CacheControl.noStore())
-            .body(cv ? pdfExport.generateCv(request.text()) : pdfExport.generate(request.text()));
+            .body(cv ? pdfExport.generateCv(request.text(), CvTemplate.of(request.template())) : pdfExport.generate(request.text()));
     }
 
     // Suppress default validation logging, which can include rejected document text.
     @ExceptionHandler({org.springframework.web.bind.MethodArgumentNotValidException.class,
         org.springframework.http.converter.HttpMessageNotReadableException.class})
     public ResponseEntity<Map<String, String>> invalidRequest() {
-        return error(HttpStatus.BAD_REQUEST, "Use document type cv or motivationLetter and nonempty text of at most 60,000 characters.");
+        return error(HttpStatus.BAD_REQUEST, "Use document type cv or motivationLetter, a known template, and nonempty text of at most 60,000 characters.");
     }
 
     // Explain unsupported symbols instead of silently deleting or replacing text.

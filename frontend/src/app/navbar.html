@@ -4,6 +4,7 @@
     <nav class="desktop-nav" aria-label="Main navigation">
       <ul role="list">
         <li><app-services-menu /></li>
+        <li><app-templates-menu /></li>
         @for (link of links(); track link.href) {
           <li>
             <a
@@ -76,6 +77,7 @@
   >
     <ul role="list">
       <li><app-services-menu variant="accordion" /></li>
+      <li><app-templates-menu variant="accordion" /></li>
       @for (link of links(); track link.href) {
         <li>
           <a

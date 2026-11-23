@@ -1,6 +1,7 @@
 import { Injectable, effect, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { CvTemplateId, DEFAULT_TEMPLATE, isTemplateId } from './cv-templates';
 
 /** Mirrors the backend's CvAnalysis records. */
 export interface CvField {
@@ -60,6 +61,19 @@ interface SavedFlow {
   stale: boolean;
   tailoring: CvTailoring | null;
   savedCvId?: string | null;
+  template?: CvTemplateId;
+}
+
+/** The template last picked on this device (e.g. on /templates before signing up). */
+const TEMPLATE_KEY = 'applycraft.cv-template.v1';
+
+function preferredTemplate(): CvTemplateId {
+  try {
+    const stored = localStorage.getItem(TEMPLATE_KEY);
+    return isTemplateId(stored) ? stored : DEFAULT_TEMPLATE;
+  } catch {
+    return DEFAULT_TEMPLATE;
+  }
 }
 
 /**
@@ -86,6 +100,8 @@ export class CvFlow {
   readonly savedCvId = signal<string | null>(null);
   /** Counts successful scoring runs (not restores), so saving can follow each new score. */
   readonly scoreRuns = signal(0);
+  /** The template for the preview and the PDF; saved with the CV by CvLibrary. */
+  readonly template = signal<CvTemplateId>(preferredTemplate());
   /** A file picked on another page (the landing upload bar) for /check to score on arrival. */
   private handedOff: File | null = null;
 
@@ -102,6 +118,7 @@ export class CvFlow {
             stale: this.stale(),
             tailoring: this.tailoring(),
             savedCvId: this.savedCvId(),
+            template: this.template(),
           }
         : null;
       try {
@@ -111,6 +128,16 @@ export class CvFlow {
         /* Storage can be full or blocked (private mode); the flow still works without it. */
       }
     });
+  }
+
+  /** Picks a template and remembers it on this device as the default for new CVs. */
+  setTemplate(id: CvTemplateId): void {
+    this.template.set(id);
+    try {
+      localStorage.setItem(TEMPLATE_KEY, id);
+    } catch {
+      /* Blocked storage: the choice still applies to this visit. */
+    }
   }
 
   /** Hands a file to /check, which starts scoring it as soon as it opens. */
@@ -204,7 +231,7 @@ export class CvFlow {
       const blob = await firstValueFrom(
         this.http.post(
           '/api/documents/export',
-          { documentType: 'cv', text: this.cvText() },
+          { documentType: 'cv', text: this.cvText(), template: this.template() },
           { responseType: 'blob' },
         ),
       );
@@ -241,12 +268,21 @@ export class CvFlow {
     this.busy.set(null);
     this.tailoring.set(null);
     this.savedCvId.set(null);
+    this.template.set(preferredTemplate());
   }
 
   /** Opens a CV from the account, with its latest score when it has one. */
-  loadSaved(id: string, text: string, jobDescription: string, score: CvScore | null, previous: number | null): void {
+  loadSaved(
+    id: string,
+    text: string,
+    jobDescription: string,
+    score: CvScore | null,
+    previous: number | null,
+    template?: CvTemplateId,
+  ): void {
     this.reset();
     this.savedCvId.set(id);
+    if (isTemplateId(template)) this.template.set(template);
     this.cvText.set(text);
     this.jobDescription.set(jobDescription);
     if (score) {
@@ -301,6 +337,7 @@ export class CvFlow {
       this.stale.set(!!saved.stale);
       this.tailoring.set(saved.tailoring ?? null);
       this.savedCvId.set(typeof saved.savedCvId === 'string' ? saved.savedCvId : null);
+      if (isTemplateId(saved.template)) this.template.set(saved.template);
       this.phase.set('results');
     } catch {
       /* Blocked or corrupt storage: start fresh. */

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { CvScore } from './cv-flow';
+import { CvTemplateId } from './cv-templates';
 import { OnboardingAnswers } from './onboarding-options';
 
 /** Mirrors AccountController's records on the backend. */
@@ -33,6 +34,7 @@ export interface CvSummary {
   updatedAt: string;
   lastScore: number | null;
   lastScoredAt: string | null;
+  template: CvTemplateId;
   /** The start of the CV text, for the dashboard's mini page. */
   preview: string;
 }
@@ -45,6 +47,7 @@ export interface SavedCv {
   title: string;
   content: CvContent;
   jobDescription: string | null;
+  template: CvTemplateId;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +63,8 @@ export interface CvInput {
   title: string;
   content: CvContent;
   jobDescription: string | null;
+  /** Omitted: "simple" for a new CV, unchanged on update. */
+  template?: CvTemplateId;
 }
 
 /** Account and saved-CV endpoints; the auth interceptor adds the access token. */

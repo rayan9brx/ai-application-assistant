@@ -10,8 +10,12 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { Router } from '@angular/router';
 import { CvFlow } from './cv-flow';
 import { CvLibrary } from './cv-library';
+import { CvSheet } from './cv-sheet';
+import { CvTemplateId, TEMPLATES_HREF, exampleBySlug, isTemplateId, templateById } from './cv-templates';
+import { TemplatePicker } from './template-picker';
 import { IssueCard } from './issue-card';
 import { ScoreReport } from './score-report';
 import { TailorPanel } from './tailor-panel';
@@ -27,7 +31,7 @@ const SCORING_STEPS = [
 /** /check: Upload → Score → Fix → Download. */
 @Component({
   selector: 'app-cv-check-page',
-  imports: [IssueCard, ScoreReport, TailorPanel, UploadBar],
+  imports: [CvSheet, IssueCard, ScoreReport, TailorPanel, TemplatePicker, UploadBar],
   templateUrl: './cv-check-page.html',
   styleUrl: './cv-check-page.scss',
 })
@@ -39,6 +43,13 @@ export class CvCheckPage {
    * (AI Fixes) scrolls to the report's issues. Re-runs when only the query changes.
    */
   readonly focus = input<string>();
+  /** ?template=modern (from /templates/:name) picks that template. */
+  readonly template = input<string>();
+  /** ?example=data-analyst (from /examples) opens that example CV as a starting point. */
+  readonly example = input<string>();
+  readonly templateName = computed(() => templateById(this.flow.template())?.name ?? '');
+  readonly templatesHref = TEMPLATES_HREF;
+  private readonly router = inject(Router);
   readonly mode = signal<'file' | 'paste'>('file');
   readonly file = signal<File | null>(null);
   readonly pasted = signal('');
@@ -80,6 +91,29 @@ export class CvCheckPage {
         });
       });
     });
+    effect(() => {
+      const template = this.template();
+      const example = exampleBySlug(this.example());
+      if (!template && !this.example()) return;
+      untracked(() => {
+        if (example) {
+          // Replaces what was in the checker; the CV is saved once it is scored.
+          this.flow.reset();
+          this.file.set(null);
+          this.mode.set('paste');
+          this.pasted.set(example.text);
+          void this.library.setTemplate(example.template);
+        } else if (isTemplateId(template)) {
+          void this.library.setTemplate(template);
+        }
+        // Drop the parameters so a refresh doesn't apply them again.
+        void this.router.navigate([], {
+          queryParams: { template: null, example: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
+      });
+    });
     // A file from the landing page's upload bar: score it right away.
     const handedOff = this.flow.takeHandOff();
     if (handedOff) {
@@ -106,6 +140,10 @@ export class CvCheckPage {
     const file = this.file();
     if (this.mode() === 'file' && file) void this.flow.startWithFile(file);
     else void this.flow.startWithText(this.pasted());
+  }
+
+  selectTemplate(template: CvTemplateId): void {
+    void this.library.setTemplate(template);
   }
 
   startOver(): void {

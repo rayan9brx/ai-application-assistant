@@ -118,6 +118,37 @@
             ></textarea>
             <p class="count-line">{{ flow.cvText().length }} / 30,000 characters</p>
           </section>
+
+          <section aria-labelledby="design-title">
+            <h2 id="design-title">Template and preview</h2>
+            <p class="muted">
+              Pick a template for your PDF. Every template is ATS-friendly: one column of real text
+              with standard headings.
+            </p>
+            <app-template-picker
+              class="picker"
+              [text]="flow.cvText()"
+              [value]="flow.template()"
+              (valueChange)="selectTemplate($event)"
+            />
+            <div class="preview-stage">
+              <!-- The same text as the editor above, so screen readers skip this visual copy. -->
+              <app-cv-sheet
+                class="preview-sheet"
+                [text]="flow.cvText()"
+                [template]="flow.template()"
+                [decorative]="true"
+              />
+            </div>
+            <button
+              class="cta cta-small"
+              type="button"
+              [disabled]="!!flow.busy()"
+              (click)="flow.download()"
+            >
+              {{ flow.busy() === 'download' ? 'Creating PDF…' : 'Download PDF (' + templateName() + ')' }}
+            </button>
+          </section>
         </div>
       </div>
     </section>
@@ -185,6 +216,10 @@
       @if (mode() === 'paste' && pasted().trim().length < 50) {
         <p class="muted small">Paste at least a few lines of your CV.</p>
       }
+      <p class="muted small template-note">
+        Template: <strong>{{ templateName() }}</strong>. You can change it after scoring.
+        <a [href]="templatesHref">See all templates</a>
+      </p>
     </div>
   }
   @default {
