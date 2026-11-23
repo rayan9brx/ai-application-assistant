@@ -1,0 +1,7 @@
+target
+build
+.git
+.idea
+# Local secrets and downloaded data never go into the image.
+.env
+data
