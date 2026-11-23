@@ -34,7 +34,7 @@ export const SHOWCASE_FEATURES: readonly ShowcaseFeature[] = [
     id: 'score',
     title: 'Score',
     lead: 'Know exactly where you stand.',
-    rest: "The ApplyCraft Score breaks down your CV section by section. No guessing what's weak. You see it, then fix it.",
+    rest: "The Rezumo Score breaks down your CV section by section. No guessing what's weak. You see it, then fix it.",
     href: CHECK_HREF,
   },
   {

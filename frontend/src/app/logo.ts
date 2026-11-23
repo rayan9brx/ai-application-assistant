@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { APP_NAME } from './brand';
 
 /**
- * The ApplyCraft mark (public/brand/logo-mark.svg), drawn inline so it takes its colour from a
+ * The Rezumo mark (public/brand/logo-mark.svg), drawn inline so it takes its colour from a
  * token: 'color' uses --primary-600 on light backgrounds, 'white' is for dark ones.
  * `size` is the mark's height in px; the name scales with it. Decorative: label the link around it.
  */

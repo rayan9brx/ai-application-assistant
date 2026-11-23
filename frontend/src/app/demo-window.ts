@@ -165,7 +165,7 @@ const clamp = (v: number) => Math.min(1, Math.max(0, v));
 const easeOut = (v: number) => 1 - (1 - v) ** 3;
 const easeInOut = (v: number) => (v < 0.5 ? 4 * v ** 3 : 1 - (-2 * v + 2) ** 3 / 2);
 
-/** Homepage "product demo window": a fake desktop app that cycles through what ApplyCraft does. */
+/** Homepage "product demo window": a fake desktop app that cycles through what Rezumo does. */
 @Component({
   selector: 'app-demo-window',
   imports: [DecimalPipe, Logo, NgTemplateOutlet, ScoreGauge, ScoreRing, SkillPill],

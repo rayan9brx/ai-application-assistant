@@ -125,12 +125,12 @@ export const FAQ: readonly FaqItem[] = [
     // long Anthropic retains API inputs and the region of the Supabase project.
     question: 'Is my data safe?',
     answer:
-      'We are building ApplyCraft to follow the GDPR (DSGVO). When you check your CV, it is sent over an encrypted connection to our server to read the text, and to our AI provider (Anthropic) for the analysis. Without an account, your CV is never stored: your progress stays in your browser on this device. If you save CVs to your account, they are stored securely in the EU and you can delete them, or your whole account, anytime in Settings. We never sell your data.',
+      'We are building Rezumo to follow the GDPR (DSGVO). When you check your CV, it is sent over an encrypted connection to our server to read the text, and to our AI provider (Anthropic) for the analysis. Without an account, your CV is never stored: your progress stays in your browser on this device. If you save CVs to your account, they are stored securely in the EU and you can delete them, or your whole account, anytime in Settings. We never sell your data.',
   },
   {
     question: 'Will my CV pass ATS systems?',
     answer:
-      'No tool can guarantee that, because every company configures its ATS differently. ApplyCraft helps you avoid the common problems, like layouts the ATS cannot read and missing keywords from the job description, so your CV has a much better chance.',
+      'No tool can guarantee that, because every company configures its ATS differently. Rezumo helps you avoid the common problems, like layouts the ATS cannot read and missing keywords from the job description, so your CV has a much better chance.',
   },
   {
     question: "What's the difference between Pro and Lifetime?",

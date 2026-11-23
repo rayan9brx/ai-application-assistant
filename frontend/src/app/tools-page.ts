@@ -9,7 +9,7 @@ import { MenuItem } from './menu-item';
   template: `
     <section class="tools" aria-labelledby="tools-title">
       <h1 id="tools-title">All tools</h1>
-      <p class="lede">Everything ApplyCraft offers for your CV and job search.</p>
+      <p class="lede">Everything Rezumo offers for your CV and job search.</p>
       @for (group of groups; track group.id) {
         <h2 [id]="'tools-' + group.id">{{ group.label }}</h2>
         <ul class="grid" role="list" [attr.aria-labelledby]="'tools-' + group.id">

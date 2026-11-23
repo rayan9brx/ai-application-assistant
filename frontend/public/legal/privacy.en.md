@@ -8,18 +8,18 @@
 The controller responsible for data processing on this website is:
 
 Rayan Brigui
-Magdeburg 39124, Germany
-E-Mail: brx.rayen@gmail.com
+[Street and house number], [Postcode] [City], Germany
+Email: [your email address]
 
 ## 2. Overview
-ApplyCraft is a web application that analyses CVs with AI, gives improvement suggestions and helps tailor CVs to job descriptions. We only process personal data where it is necessary to provide this service, to keep it secure, or where you have consented.
+Rezumo is a web application that analyses CVs with AI, gives improvement suggestions and helps tailor CVs to job descriptions. We only process personal data where it is necessary to provide this service, to keep it secure, or where you have consented.
 
 ## 3. Hosting and server log files
 Our website is hosted by [hosting provider, e.g. Vercel Inc. / Render Services Inc., address]. When you visit the website, the hosting provider automatically processes technical data such as IP address, date and time of access, browser type and operating system in server log files. This is necessary to deliver the website securely and to detect attacks.
 **Legal basis:** Art. 6(1)(f) GDPR (legitimate interest in secure and stable operation). [Add the provider's storage period and data processing agreement once known.]
 
 ## 4. User account
-To use ApplyCraft you need an account. We process your email address, your password (stored only in encrypted/hashed form), your name if provided, and the times of registration and login.
+To use Rezumo you need an account. We process your email address, your password (stored only in encrypted/hashed form), your name if provided, and the times of registration and login.
 Registration, login, email confirmation and password reset are handled by **Supabase Inc.** (970 Toa Payoh North #07-04, Singapore 318992). Your data is stored on servers in the EU (Ireland). We have concluded a data processing agreement with Supabase.
 **Legal basis:** Art. 6(1)(b) GDPR (performance of the user agreement).
 **Storage period:** until you delete your account.

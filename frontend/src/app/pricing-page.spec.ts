@@ -101,6 +101,6 @@ describe('Pricing route', () => {
     expect(root.querySelector('main app-pricing-page')).not.toBeNull();
     const current = Array.from(root.querySelectorAll('nav a[aria-current="page"]'), text);
     expect(current).toEqual(['Pricing', 'Pricing']);
-    expect(document.title).toBe('Pricing — ApplyCraft');
+    expect(document.title).toBe('Pricing — Rezumo');
   });
 });

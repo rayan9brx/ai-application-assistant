@@ -50,7 +50,7 @@ export type FlowPhase = 'input' | 'reading' | 'scoring' | 'results';
 
 export const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-const STORAGE_KEY = 'applycraft.cv-check.v1';
+const STORAGE_KEY = 'rezumo.cv-check.v1';
 
 /** What survives a page refresh. */
 interface SavedFlow {
@@ -65,7 +65,7 @@ interface SavedFlow {
 }
 
 /** The template last picked on this device (e.g. on /templates before signing up). */
-const TEMPLATE_KEY = 'applycraft.cv-template.v1';
+const TEMPLATE_KEY = 'rezumo.cv-template.v1';
 
 function preferredTemplate(): CvTemplateId {
   try {

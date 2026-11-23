@@ -20,7 +20,7 @@ interface PreviewCv {
       <div class="window">
         <div class="titlebar">
           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          <span class="address">app.applycraft.com/dashboard</span>
+          <span class="address">app.rezumo.com/dashboard</span>
         </div>
         <div class="body">
           <aside class="sidebar">

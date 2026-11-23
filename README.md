@@ -1,8 +1,8 @@
-# ApplyCraft: AI Application Assistant
+# Rezumo: AI Application Assistant
 
 > 🚧 **In active development.** Not production-ready yet.
 
-ApplyCraft helps job seekers find the right job, tailor their CV to it, and get past ATS filters. Upload a CV to get an AI-powered ATS score, see missing keywords and fix issues with one click.
+Rezumo helps job seekers find the right job, tailor their CV to it, and get past ATS filters. Upload a CV to get an AI-powered ATS score, see missing keywords and fix issues with one click.
 
 ## Features
 - ATS score with category breakdown

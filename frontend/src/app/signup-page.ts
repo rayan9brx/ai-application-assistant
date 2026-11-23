@@ -15,7 +15,7 @@ export const MIN_PASSWORD = 8;
   template: `
     <app-auth-shell>
       <section aria-labelledby="signup-title">
-        <h1 id="signup-title">Create your ApplyCraft account</h1>
+        <h1 id="signup-title">Create your Rezumo account</h1>
         <p class="subtitle">Free forever. No credit card required.</p>
         @if (returnUrl()) {
           <p class="return-note" role="status">Create a free account to score your CV</p>

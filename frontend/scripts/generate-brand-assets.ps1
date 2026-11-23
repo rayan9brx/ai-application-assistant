@@ -97,7 +97,7 @@ Save-Png (New-Icon 512 $false) 'icon-512.png'
 Save-Png (New-Icon 180 $true) 'apple-touch-icon.png'
 
 # og-image.png (1200x630): white mark + app name and the tagline on the dark navy background.
-$appName = 'ApplyCraft'
+$appName = 'Rezumo'
 # Two lines, broken after 'interviews'.
 $tagline = "Land more interviews`nwith an AI-powered CV"
 $og = New-Object System.Drawing.Bitmap 1200, 630

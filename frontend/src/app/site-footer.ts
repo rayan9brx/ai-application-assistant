@@ -31,7 +31,7 @@ import { CHECK_HREF, TOOLS_HREF } from './menu-config';
           <a href="/imprint">Imprint</a><span aria-hidden="true">·</span><a href="/privacy">Privacy</a
           ><span aria-hidden="true">·</span><a href="/terms">Terms</a>
         </nav>
-        <p class="note">© {{ year }} ApplyCraft</p>
+        <p class="note">© {{ year }} Rezumo</p>
       </div>
     </footer>
   `,

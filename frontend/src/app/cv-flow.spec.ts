@@ -128,7 +128,7 @@ describe('CvFlow', () => {
     flow.score.set(SCORE);
     flow.setText(CV + '\nEdited');
     TestBed.tick();
-    expect(JSON.parse(localStorage.getItem('applycraft.cv-check.v1')!).cvText).toContain('Edited');
+    expect(JSON.parse(localStorage.getItem('rezumo.cv-check.v1')!).cvText).toContain('Edited');
 
     // A fresh app instance is what a page refresh gives us.
     TestBed.resetTestingModule();
@@ -145,12 +145,12 @@ describe('CvFlow', () => {
     reloaded.jobDescription.set('Old job');
     reloaded.reset();
     TestBed.tick();
-    expect(localStorage.getItem('applycraft.cv-check.v1')).toBeNull();
+    expect(localStorage.getItem('rezumo.cv-check.v1')).toBeNull();
     expect(reloaded.jobDescription()).toBe(''); // a new check never reuses an old job description
   });
 
   it('ignores corrupt saved data', () => {
-    localStorage.setItem('applycraft.cv-check.v1', '{"cvText": 5');
+    localStorage.setItem('rezumo.cv-check.v1', '{"cvText": 5');
     TestBed.resetTestingModule();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],

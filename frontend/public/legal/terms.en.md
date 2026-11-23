@@ -5,10 +5,10 @@
 > In case of discrepancies, the German version prevails.
 
 ## 1. Scope
-These terms apply to the use of the web application ApplyCraft ("Service"), operated by Rayan Brigui, [Street, Postcode City, Germany] ("we", "us"). By creating an account you accept these terms.
+These terms apply to the use of the web application Rezumo ("Service"), operated by Rayan Brigui, [Street, Postcode City, Germany] ("we", "us"). By creating an account you accept these terms.
 
 ## 2. Service
-ApplyCraft helps you analyse, improve and tailor your CV with the help of artificial intelligence. Features include CV scores, keyword analysis, AI improvement suggestions and saving CVs in your account.
+Rezumo helps you analyse, improve and tailor your CV with the help of artificial intelligence. Features include CV scores, keyword analysis, AI improvement suggestions and saving CVs in your account.
 The Service is currently in development and is provided **free of charge**. Features may change, be extended or be removed. If paid plans are introduced, they will be governed by separate terms that you must accept explicitly.
 
 ## 3. Account

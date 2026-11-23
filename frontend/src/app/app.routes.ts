@@ -5,27 +5,27 @@ import { authGuard, guestGuard } from './auth.guard';
 import { TEMPLATES_HREF, templateById } from './cv-templates';
 import { itemBySlug } from './menu-config';
 
-export const SITE_TITLE = 'ApplyCraft — Your application workspace';
+export const SITE_TITLE = 'Rezumo — Your application workspace';
 
 const comingSoonTitle: ResolveFn<string> = (route) =>
-  `${itemBySlug(route.paramMap.get('slug') ?? '')?.title ?? 'Coming soon'} — ApplyCraft`;
+  `${itemBySlug(route.paramMap.get('slug') ?? '')?.title ?? 'Coming soon'} — Rezumo`;
 
 export const routes: Routes = [
   { path: '', title: SITE_TITLE, loadComponent: () => import('./home-page').then((m) => m.HomePage) },
   {
     path: 'check',
-    title: 'CV Checker — ApplyCraft',
+    title: 'CV Checker — Rezumo',
     canActivate: [authGuard],
     loadComponent: () => import('./cv-check-page').then((m) => m.CvCheckPage),
   },
   {
     path: 'pricing',
-    title: 'Pricing — ApplyCraft',
+    title: 'Pricing — Rezumo',
     loadComponent: () => import('./pricing-page').then((m) => m.PricingPage),
   },
   {
     path: 'templates',
-    title: 'ATS-friendly CV templates — ApplyCraft',
+    title: 'ATS-friendly CV templates — Rezumo',
     loadComponent: () => import('./templates-page').then((m) => m.TemplatesPage),
   },
   // The old detail pages: /templates/modern → /templates#modern (unknown names → /templates).
@@ -38,18 +38,18 @@ export const routes: Routes = [
   },
   {
     path: 'examples',
-    title: 'CV examples — ApplyCraft',
+    title: 'CV examples — Rezumo',
     loadComponent: () => import('./examples-page').then((m) => m.ExamplesPage),
   },
   {
     path: 'examples/cover-letters',
-    title: 'Cover Letter Examples — ApplyCraft',
+    title: 'Cover Letter Examples — Rezumo',
     data: { soonTitle: 'Cover Letter Examples', soonDescription: 'Effective cover letter samples' },
     loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
   },
   {
     path: 'tools',
-    title: 'All tools — ApplyCraft',
+    title: 'All tools — Rezumo',
     loadComponent: () => import('./tools-page').then((m) => m.ToolsPage),
   },
   {
@@ -59,25 +59,25 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    title: 'Log in — ApplyCraft',
+    title: 'Log in — Rezumo',
     canActivate: [guestGuard],
     loadComponent: () => import('./login-page').then((m) => m.LoginPage),
   },
   {
     path: 'signup',
-    title: 'Create your account — ApplyCraft',
+    title: 'Create your account — Rezumo',
     canActivate: [guestGuard],
     loadComponent: () => import('./signup-page').then((m) => m.SignupPage),
   },
   {
     path: 'reset-password',
-    title: 'Reset your password — ApplyCraft',
+    title: 'Reset your password — Rezumo',
     loadComponent: () => import('./reset-password-page').then((m) => m.ResetPasswordPage),
   },
   // Legal pages, in English and German (?lang=de); the texts live in public/legal/*.{en,de}.md.
   {
     path: 'imprint',
-    title: 'Imprint (Impressum) — ApplyCraft',
+    title: 'Imprint (Impressum) — Rezumo',
     data: { legalDoc: 'imprint', title: 'Imprint (Impressum)' },
     loadComponent: () => import('./legal-page').then((m) => m.LegalPage),
   },
@@ -102,13 +102,13 @@ export const routes: Routes = [
    */
   {
     path: 'privacy',
-    title: 'Privacy Policy (Datenschutzerklärung) — ApplyCraft',
+    title: 'Privacy Policy (Datenschutzerklärung) — Rezumo',
     data: { legalDoc: 'privacy', title: 'Privacy Policy (Datenschutzerklärung)' },
     loadComponent: () => import('./legal-page').then((m) => m.LegalPage),
   },
   {
     path: 'terms',
-    title: 'Terms of Service (AGB) — ApplyCraft',
+    title: 'Terms of Service (AGB) — Rezumo',
     data: { legalDoc: 'terms', title: 'Terms of Service (AGB)' },
     loadComponent: () => import('./legal-page').then((m) => m.LegalPage),
   },
@@ -118,27 +118,27 @@ export const routes: Routes = [
   { path: 'agb', redirectTo: '/terms?lang=de' },
   {
     path: 'dashboard',
-    title: 'Dashboard — ApplyCraft',
+    title: 'Dashboard — Rezumo',
     canActivate: [authGuard],
     loadComponent: () => import('./dashboard-page').then((m) => m.DashboardPage),
   },
   {
     // The top bar's "Cover letters" tab; the tool isn't built yet.
     path: 'cover-letters',
-    title: 'Cover letters — ApplyCraft',
+    title: 'Cover letters — Rezumo',
     canActivate: [authGuard],
     data: { slug: 'cover-letter-generator' },
     loadComponent: () => import('./coming-soon').then((m) => m.ComingSoon),
   },
   {
     path: 'settings',
-    title: 'Settings — ApplyCraft',
+    title: 'Settings — Rezumo',
     canActivate: [authGuard],
     loadComponent: () => import('./settings-page').then((m) => m.SettingsPage),
   },
   {
     path: 'admin',
-    title: 'Admin — ApplyCraft',
+    title: 'Admin — Rezumo',
     canActivate: [adminGuard],
     loadComponent: () => import('./admin-page').then((m) => m.AdminPage),
   },

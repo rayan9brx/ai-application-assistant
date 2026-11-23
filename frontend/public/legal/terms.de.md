@@ -3,10 +3,10 @@
 *Stand: 22. November 2026*
 
 ## 1. Geltungsbereich
-Diese AGB gelten für die Nutzung der Webanwendung ApplyCraft („Dienst“), betrieben von Rayan Brigui, [Straße, PLZ Ort, Deutschland] („wir“, „uns“). Mit der Erstellung eines Kontos akzeptierst du diese AGB.
+Diese AGB gelten für die Nutzung der Webanwendung Rezumo („Dienst“), betrieben von Rayan Brigui, [Straße, PLZ Ort, Deutschland] („wir“, „uns“). Mit der Erstellung eines Kontos akzeptierst du diese AGB.
 
 ## 2. Leistungen
-ApplyCraft unterstützt dich dabei, deinen Lebenslauf mithilfe künstlicher Intelligenz zu analysieren, zu verbessern und an Stellenanzeigen anzupassen. Zu den Funktionen gehören Lebenslauf-Scores, Keyword-Analysen, KI-Verbesserungsvorschläge und das Speichern von Lebensläufen in deinem Konto.
+Rezumo unterstützt dich dabei, deinen Lebenslauf mithilfe künstlicher Intelligenz zu analysieren, zu verbessern und an Stellenanzeigen anzupassen. Zu den Funktionen gehören Lebenslauf-Scores, Keyword-Analysen, KI-Verbesserungsvorschläge und das Speichern von Lebensläufen in deinem Konto.
 Der Dienst befindet sich derzeit in der Entwicklung und wird **kostenlos** angeboten. Funktionen können sich ändern, erweitert oder entfernt werden. Werden kostenpflichtige Tarife eingeführt, gelten dafür gesonderte Bedingungen, denen du ausdrücklich zustimmen musst.
 
 ## 3. Konto

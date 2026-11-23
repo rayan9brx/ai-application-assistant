@@ -6,18 +6,18 @@
 Verantwortlich für die Datenverarbeitung auf dieser Website ist:
 
 Rayan Brigui
-Magdeburg 39124, Deutschland
-E-Mail: brx.rayen@gmail.com
+[Straße und Hausnummer], [PLZ] [Ort], Deutschland
+E-Mail: [deine E-Mail-Adresse]
 
 ## 2. Überblick
-ApplyCraft ist eine Webanwendung, die Lebensläufe mit KI analysiert, Verbesserungsvorschläge macht und hilft, Lebensläufe an Stellenanzeigen anzupassen. Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung dieses Dienstes oder zu seiner Sicherheit erforderlich ist oder du eingewilligt hast.
+Rezumo ist eine Webanwendung, die Lebensläufe mit KI analysiert, Verbesserungsvorschläge macht und hilft, Lebensläufe an Stellenanzeigen anzupassen. Wir verarbeiten personenbezogene Daten nur, soweit dies zur Bereitstellung dieses Dienstes oder zu seiner Sicherheit erforderlich ist oder du eingewilligt hast.
 
 ## 3. Hosting und Server-Logfiles
 Unsere Website wird bei [Hosting-Anbieter, z. B. Vercel Inc. / Render Services Inc., Anschrift] gehostet. Beim Aufruf der Website verarbeitet der Hosting-Anbieter automatisch technische Daten wie IP-Adresse, Datum und Uhrzeit des Zugriffs, Browsertyp und Betriebssystem in Server-Logfiles. Dies ist erforderlich, um die Website sicher auszuliefern und Angriffe zu erkennen.
 **Rechtsgrundlage:** Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem sicheren und stabilen Betrieb). [Speicherdauer und Auftragsverarbeitungsvertrag des Anbieters ergänzen, sobald bekannt.]
 
 ## 4. Benutzerkonto
-Zur Nutzung von ApplyCraft benötigst du ein Konto. Wir verarbeiten deine E-Mail-Adresse, dein Passwort (nur verschlüsselt/gehasht gespeichert), deinen Namen, sofern angegeben, sowie die Zeitpunkte von Registrierung und Anmeldung.
+Zur Nutzung von Rezumo benötigst du ein Konto. Wir verarbeiten deine E-Mail-Adresse, dein Passwort (nur verschlüsselt/gehasht gespeichert), deinen Namen, sofern angegeben, sowie die Zeitpunkte von Registrierung und Anmeldung.
 Registrierung, Anmeldung, E-Mail-Bestätigung und Passwort-Zurücksetzung erfolgen über **Supabase Inc.** (970 Toa Payoh North #07-04, Singapur 318992). Deine Daten werden auf Servern in der EU (Irland) gespeichert. Mit Supabase haben wir einen Auftragsverarbeitungsvertrag geschlossen.
 **Rechtsgrundlage:** Art. 6 Abs. 1 lit. b DSGVO (Erfüllung des Nutzungsvertrags).
 **Speicherdauer:** bis zur Löschung deines Kontos.
