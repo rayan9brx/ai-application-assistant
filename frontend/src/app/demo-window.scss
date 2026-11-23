@@ -7,10 +7,6 @@
   margin-block: 0 96px;
 }
 
-.intro { display: grid; justify-items: center; gap: 14px; margin-bottom: 40px; text-align: center; }
-.badge { display: inline-flex; padding: 6px 14px; border: 1px solid color-mix(in srgb, var(--primary-700) 15%, transparent); border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: var(--text-sm); font-weight: 600; }
-h2 { max-width: 20ch; font-size: clamp(2rem, 4.4vw, 3.25rem); line-height: 1.05; letter-spacing: -.04em; font-weight: 700; text-wrap: balance; }
-.sub { max-width: 46ch; color: var(--text-secondary); font-size: var(--text-lg); text-wrap: balance; }
 .after-cta { display: flex; justify-content: center; margin-top: 40px; }
 .after-cta .cta { gap: 10px; box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary-700) 45%, transparent); }
 
