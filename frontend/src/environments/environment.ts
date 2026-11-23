@@ -5,6 +5,8 @@
  */
 export const environment = {
   production: true,
+  /** The Spring Boot API on Render; every /api/... request goes there. */
+  apiBaseUrl: 'https://rezumo-api.onrender.com',
   supabaseUrl: 'https://dxfkjkozfngvcabvrrah.supabase.co',
   supabasePublishableKey: 'sb_publishable_HZ9qQSYUERg_ILRB_eliEg_KTv0-kzw',
 };

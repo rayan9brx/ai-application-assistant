@@ -20,6 +20,9 @@ import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * Every API endpoint except the health check needs a Supabase access token (Bearer JWT),
@@ -50,6 +53,8 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AdminAccess admins) throws Exception {
         http.csrf(csrf -> csrf.disable())
+            // Uses the corsConfigurationSource bean below; answers preflights before authentication.
+            .cors(Customizer.withDefaults())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .httpBasic(basic -> basic.disable())
             .formLogin(form -> form.disable())
@@ -68,6 +73,25 @@ public class SecurityConfig {
                 .authenticationEntryPoint(SecurityConfig::unauthorized)
                 .jwt(Customizer.withDefaults()));
         return http.build();
+    }
+
+    /**
+     * The frontend runs on another origin (rezumo.eu) than the API, so the browser needs CORS.
+     * Origins come from CORS_ALLOWED_ORIGINS (comma-separated). Tokens travel in the Authorization
+     * header, not cookies, so credentials stay off.
+     */
+    @Bean
+    CorsConfigurationSource corsConfigurationSource(
+            @Value("${CORS_ALLOWED_ORIGINS:https://rezumo.eu,https://www.rezumo.eu,http://localhost:4200}") List<String> origins) {
+        var config = new CorsConfiguration();
+        config.setAllowedOrigins(origins.stream().map(String::strip).filter(o -> !o.isEmpty()).toList());
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setExposedHeaders(List.of("Content-Disposition"));
+        config.setMaxAge(3600L);
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
     }
 
     /** Public paths ignore tokens, so a stale token can never break the health check. */
