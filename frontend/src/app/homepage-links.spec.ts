@@ -84,7 +84,7 @@ describe('Homepage links', () => {
         .filter((a) => text(a).startsWith(label))
         .map((a) => a.getAttribute('href'));
     expect(hrefOf('Try it free')).toEqual(['/check']);
-    expect(hrefOf('Build my CV for free')).toEqual(['/check']);
+    expect(hrefOf('Sign up, it')).toEqual(['/dashboard']);
     expect(hrefOf('Check my CV for free')).toEqual(['/check', '/check']);
     expect(hrefOf('Score my CV')).toEqual(['/check']);
     expect(hrefOf('Start for free')).toEqual(['/check']);

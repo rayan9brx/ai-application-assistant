@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { AuthService } from './auth.service';
 
 @Component({
@@ -7,5 +7,7 @@ import { AuthService } from './auth.service';
   styleUrl: './hero.scss',
 })
 export class Hero {
-  readonly startHref = inject(AuthService).startHref;
+  private readonly auth = inject(AuthService);
+  /** Guests sign up; signed-in users go straight to their dashboard. */
+  readonly ctaHref = computed(() => (this.auth.signedIn() ? '/dashboard' : '/signup'));
 }
