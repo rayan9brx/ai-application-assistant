@@ -1,0 +1,185 @@
+<header class="intro">
+  <div>
+    <p class="pill-badge">CV Templates</p>
+    <h1 id="templates-title">Discover the best ATS CV templates</h1>
+  </div>
+  <p class="lede">
+    Every template is built to pass applicant tracking systems: one column of real text with
+    standard headings. Pick a style, make it yours and start in minutes.
+  </p>
+</header>
+
+<nav class="type-cards" aria-label="Template types">
+  <ul role="list">
+    @for (section of sections; track section.template) {
+      <li>
+        <a class="type-card" [href]="'/templates#' + section.template">
+          <app-cv-sheet
+            class="type-thumb"
+            [text]="sample"
+            [template]="section.template"
+            crop="16 / 10"
+            [decorative]="true"
+          />
+          <span class="type-foot">
+            <app-template-icon [template]="section.template" />
+            <span>
+              <span class="type-name">{{ section.name }}</span>
+              <span class="type-pill">{{ section.pill }}</span>
+            </span>
+          </span>
+        </a>
+      </li>
+    }
+  </ul>
+</nav>
+
+<div class="customize" role="group" aria-label="Customize all previews">
+  <div class="customize-inner">
+    <span class="customize-label">Customize</span>
+    <div class="dots" role="radiogroup" aria-label="Accent color">
+      @for (c of colors; track c.id) {
+        <button
+          type="button"
+          class="dot"
+          role="radio"
+          [attr.aria-checked]="color() === c.id"
+          [attr.aria-label]="c.label"
+          [title]="c.label"
+          [style.--dot]="c.value"
+          (click)="color.set(c.id)"
+        ></button>
+      }
+    </div>
+    <label class="font">
+      <span class="sr-only">Font</span>
+      <select [value]="fontId()" (change)="setFont($event)">
+        @for (f of fonts; track f.id) {
+          <option [value]="f.id" [selected]="fontId() === f.id">{{ f.label }}</option>
+        }
+      </select>
+    </label>
+    <button type="button" class="toggle" [attr.aria-pressed]="dividers()" (click)="dividers.set(!dividers())">
+      <span class="switch" aria-hidden="true"></span> Dividers
+    </button>
+    <button type="button" class="toggle" [attr.aria-pressed]="indent()" (click)="indent.set(!indent())">
+      <span class="switch" aria-hidden="true"></span> Indent
+    </button>
+  </div>
+</div>
+
+@if (error()) {
+  <p class="error" role="alert">{{ error() }}</p>
+}
+
+@for (section of sections; track section.template) {
+  @let active = section.variants[activeIndex(section.template)];
+  <section class="type" [id]="section.template" [attr.aria-labelledby]="section.template + '-title'">
+    <div class="type-head">
+      <div>
+        <p class="pill-badge">{{ section.pill }}</p>
+        <h2 [id]="section.template + '-title'">{{ section.headline }}</h2>
+        <p class="type-text">{{ section.text }}</p>
+      </div>
+      <div class="arrows">
+        <button
+          type="button"
+          class="arrow"
+          [attr.aria-label]="'Previous ' + section.name + ' variant'"
+          [disabled]="activeIndex(section.template) === 0"
+          (click)="move(track, -1)"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" /></svg>
+        </button>
+        <button
+          type="button"
+          class="arrow"
+          [attr.aria-label]="'Next ' + section.name + ' variant'"
+          [disabled]="activeIndex(section.template) === section.variants.length - 1"
+          (click)="move(track, 1)"
+        >
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m6 3.5 4.5 4.5L6 12.5" /></svg>
+        </button>
+      </div>
+    </div>
+
+    <ul #track class="track" role="list" (scroll)="scrolled(section.template, track)">
+      @for (variant of section.variants; track variant.id; let i = $index) {
+        <li class="slide" [class.current]="i === activeIndex(section.template)">
+          <div class="frame">
+            <app-cv-sheet
+              class="custom-sheet"
+              [attr.data-variant]="variant.id"
+              [text]="sample"
+              [template]="section.template"
+              crop="1 / 1.2"
+              [decorative]="true"
+            />
+            <div class="actions">
+              <a class="cta cta-small" [href]="customizeHref(section.template)" (click)="choose(section.template)"
+                >Customize<span class="sr-only"> {{ section.name }} – {{ variant.name }}</span></a
+              >
+              @if (auth.signedIn()) {
+                <button
+                  type="button"
+                  class="cta cta-small cta-secondary"
+                  [disabled]="!!downloading()"
+                  (click)="download(section.template, section.template + variant.id)"
+                >
+                  {{ downloading() === section.template + variant.id ? 'Creating PDF…' : 'Download PDF' }}
+                </button>
+              } @else {
+                <a class="cta cta-small cta-secondary" [href]="downloadHref(section.template)">Download PDF</a>
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+
+    <p class="variant" aria-live="polite">
+      <span class="variant-name">{{ active.name }}</span>
+      <span class="variant-description">{{ active.description }}</span>
+      <span class="variant-count">{{ activeIndex(section.template) + 1 }} / {{ section.variants.length }}</span>
+    </p>
+  </section>
+}
+
+<section class="features" aria-label="What you get">
+  <ul role="list">
+    @for (feature of features; track feature.title) {
+      <li>
+        <span class="feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 20 20">
+            @switch (feature.icon) {
+              @case ('ats') {
+                <path d="M4 10.5 8 14.5 16 6" />
+              }
+              @case ('pdf') {
+                <path d="M10 3v9m-3.5-3.5L10 12l3.5-3.5M4 16h12" />
+              }
+              @default {
+                <path d="M10 3l1.6 4.4L16 9l-4.4 1.6L10 15l-1.6-4.4L4 9l4.4-1.6Z" />
+              }
+            }
+          </svg>
+        </span>
+        <span class="feature-title">{{ feature.title }}</span>
+        <span class="feature-text">{{ feature.text }}</span>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="faq" aria-labelledby="templates-faq-title">
+  <h2 id="templates-faq-title">Questions about ATS CV templates</h2>
+  @for (item of faq; track item.q) {
+    <details>
+      <summary>
+        {{ item.q }}
+        <svg class="chevron" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" /></svg>
+      </summary>
+      <p>{{ item.a }}</p>
+    </details>
+  }
+</section>

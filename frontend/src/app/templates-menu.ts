@@ -68,7 +68,7 @@ export const EXAMPLE_MENU_ITEMS: readonly MenuItemConfig[] = [
         <ul class="cards" role="list" [attr.aria-labelledby]="panelId + '-templates'">
           @for (template of templates; track template.id) {
             <li>
-              <a class="card" [href]="templatesHref + '/' + template.id">
+              <a class="card" [href]="templatesHref + '#' + template.id">
                 @if (variant() === 'dropdown') {
                   <app-cv-sheet
                     class="thumb"

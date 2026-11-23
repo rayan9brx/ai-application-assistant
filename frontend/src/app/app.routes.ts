@@ -1,5 +1,5 @@
 import { inject } from '@angular/core';
-import { CanActivateFn, ResolveFn, Router, Routes } from '@angular/router';
+import { ResolveFn, Router, Routes } from '@angular/router';
 import { adminGuard } from './admin-role';
 import { authGuard, guestGuard } from './auth.guard';
 import { TEMPLATES_HREF, templateById } from './cv-templates';
@@ -9,13 +9,6 @@ export const SITE_TITLE = 'ApplyCraft — Your application workspace';
 
 const comingSoonTitle: ResolveFn<string> = (route) =>
   `${itemBySlug(route.paramMap.get('slug') ?? '')?.title ?? 'Coming soon'} — ApplyCraft`;
-
-const templateTitle: ResolveFn<string> = (route) =>
-  `${templateById(route.paramMap.get('name'))?.name ?? 'CV'} CV template — ApplyCraft`;
-
-/** Unknown template names go to the list of templates. */
-const knownTemplate: CanActivateFn = (route) =>
-  templateById(route.paramMap.get('name')) ? true : inject(Router).parseUrl(TEMPLATES_HREF);
 
 export const routes: Routes = [
   { path: '', title: SITE_TITLE, loadComponent: () => import('./home-page').then((m) => m.HomePage) },
@@ -35,11 +28,13 @@ export const routes: Routes = [
     title: 'ATS-friendly CV templates — ApplyCraft',
     loadComponent: () => import('./templates-page').then((m) => m.TemplatesPage),
   },
+  // The old detail pages: /templates/modern → /templates#modern (unknown names → /templates).
   {
     path: 'templates/:name',
-    title: templateTitle,
-    canActivate: [knownTemplate],
-    loadComponent: () => import('./template-detail-page').then((m) => m.TemplateDetailPage),
+    redirectTo: ({ params }) =>
+      inject(Router).createUrlTree([TEMPLATES_HREF], {
+        fragment: templateById(params['name'])?.id,
+      }),
   },
   {
     path: 'examples',

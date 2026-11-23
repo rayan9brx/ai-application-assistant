@@ -34,7 +34,7 @@ export const useExamplePath = (slug: string) => `${CHECK_HREF}?example=${slug}`;
               <p class="meta">
                 <span>{{ example.city }}</span>
                 <span aria-hidden="true">·</span>
-                <a class="template-link" [href]="templatesHref + '/' + example.template">
+                <a class="template-link" [href]="templatesHref + '#' + example.template">
                   <app-template-icon [template]="example.template" /> {{ template.name }} template
                 </a>
               </p>
@@ -51,7 +51,7 @@ export const useExamplePath = (slug: string) => `${CHECK_HREF}?example=${slug}`;
       </ol>
     </section>
   `,
-  styleUrls: ['./templates-page.scss', './examples-page.scss'],
+  styleUrl: './examples-page.scss',
 })
 export class ExamplesPage {
   readonly examples = CV_EXAMPLES;
