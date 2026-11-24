@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { CvScore } from './cv-flow';
 import { CvTemplateId } from './cv-templates';
 import { OnboardingAnswers } from './onboarding-options';
@@ -73,6 +73,8 @@ export interface CvInput {
 @Injectable({ providedIn: 'root' })
 export class CvApi {
   private readonly http = inject(HttpClient);
+  /** Fires after a CV was created, duplicated or deleted. */
+  readonly cvsChanged = new Subject<void>();
 
   me(): Promise<Profile> {
     return firstValueFrom(this.http.get<Profile>('/api/me'));
@@ -101,16 +103,24 @@ export class CvApi {
     return firstValueFrom(this.http.get<SavedCv>(`/api/cvs/${id}`));
   }
   create(cv: CvInput): Promise<SavedCv> {
-    return firstValueFrom(this.http.post<SavedCv>('/api/cvs', cv));
+    return this.changing(firstValueFrom(this.http.post<SavedCv>('/api/cvs', cv)));
   }
   update(id: string, cv: CvInput): Promise<SavedCv> {
     return firstValueFrom(this.http.put<SavedCv>(`/api/cvs/${id}`, cv));
   }
   duplicate(id: string): Promise<SavedCv> {
-    return firstValueFrom(this.http.post<SavedCv>(`/api/cvs/${id}/duplicate`, null));
+    return this.changing(firstValueFrom(this.http.post<SavedCv>(`/api/cvs/${id}/duplicate`, null)));
   }
   remove(id: string): Promise<void> {
-    return firstValueFrom(this.http.delete<void>(`/api/cvs/${id}`));
+    return this.changing(firstValueFrom(this.http.delete<void>(`/api/cvs/${id}`)));
+  }
+
+  /** Tells listeners (the sidebar's usage card) once a CV was created or deleted. */
+  private changing<T>(request: Promise<T>): Promise<T> {
+    return request.then((result) => {
+      this.cvsChanged.next();
+      return result;
+    });
   }
   history(id: string): Promise<SavedAnalysis[]> {
     return firstValueFrom(this.http.get<SavedAnalysis[]>(`/api/cvs/${id}/analyses`));

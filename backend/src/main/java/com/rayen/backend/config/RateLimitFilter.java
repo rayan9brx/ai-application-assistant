@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import com.rayen.backend.admin.AdminAccess;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,12 +31,22 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final int dataLimit;
     private final Map<String, long[]> windows = new ConcurrentHashMap<>();
 
+    /** Null in unit tests: then nobody is treated as an admin. */
+    private final AdminAccess admins;
+
+    @Autowired
     public RateLimitFilter(@Value("${app.rate-limit.ai-per-10-min:20}") int aiLimit,
                            @Value("${app.rate-limit.files-per-10-min:60}") int fileLimit,
-                           @Value("${app.rate-limit.data-per-10-min:300}") int dataLimit) {
+                           @Value("${app.rate-limit.data-per-10-min:300}") int dataLimit,
+                           AdminAccess admins) {
         this.aiLimit = aiLimit;
         this.fileLimit = fileLimit;
         this.dataLimit = dataLimit;
+        this.admins = admins;
+    }
+
+    public RateLimitFilter(int aiLimit, int fileLimit, int dataLimit) {
+        this(aiLimit, fileLimit, dataLimit, null);
     }
 
     @Override
@@ -45,6 +57,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        // Admins have no rate limits; the role is checked in the database for the verified JWT user.
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (admins != null && auth instanceof JwtAuthenticationToken && admins.isAdmin(auth)) {
+            chain.doFilter(request, response);
+            return;
+        }
         String bucket = bucket(request);
         int limit = "ai".equals(bucket) ? aiLimit : "files".equals(bucket) ? fileLimit : dataLimit;
         long now = System.currentTimeMillis();

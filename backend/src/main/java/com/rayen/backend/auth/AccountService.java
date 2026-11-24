@@ -1,5 +1,6 @@
 package com.rayen.backend.auth;
 
+import com.rayen.backend.admin.AdminAccess;
 import com.rayen.backend.analysis.Analysis;
 import com.rayen.backend.analysis.AnalysisRepository;
 import com.rayen.backend.cv.Cv;
@@ -34,15 +35,17 @@ public class AccountService {
     private final AnalysisRepository analyses;
     private final SupabaseAdminClient admin;
     private final OnboardingRepository onboarding;
+    private final AdminAccess admins;
     private final JsonMapper json = JsonMapper.builder().build();
 
     public AccountService(ProfileRepository profiles, CvRepository cvs, AnalysisRepository analyses,
-                          SupabaseAdminClient admin, OnboardingRepository onboarding) {
+                          SupabaseAdminClient admin, OnboardingRepository onboarding, AdminAccess admins) {
         this.profiles = profiles;
         this.cvs = cvs;
         this.analyses = analyses;
         this.admin = admin;
         this.onboarding = onboarding;
+        this.admins = admins;
     }
 
     /**
@@ -103,7 +106,8 @@ public class AccountService {
     /** A null template means the default, 'simple'. */
     public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription, String template) {
         profile(userId, null);
-        if (cvs.countByUserId(userId) >= MAX_CVS) {
+        // Admins have no limits; the role comes from the database, never from the request.
+        if (cvs.countByUserId(userId) >= MAX_CVS && !admins.isAdmin(userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "You have reached the limit of saved CVs.");
         }
         var cv = new Cv(userId, title.strip(), checkedJson(content), blankToNull(jobDescription));

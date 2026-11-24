@@ -18,6 +18,17 @@ export class UsageStore {
   readonly plan = signal<Profile['plan'] | null>(null);
   readonly usage = signal<Usage | null>(null);
   private pending: Promise<void> | null = null;
+  /** Set when a CV changes while a refresh is running, so the newer count is fetched too. */
+  private stale = false;
+
+  constructor() {
+    // Creating, duplicating or deleting a CV updates the CV count right away.
+    this.api.cvsChanged.subscribe(() => {
+      if (!this.usage()) return;
+      if (this.pending) this.stale = true;
+      else void this.refresh();
+    });
+  }
 
   readonly meters = computed<UsageMeter[]>(() => {
     const usage = this.usage();
@@ -44,7 +55,13 @@ export class UsageStore {
         this.usage.set(usage);
       })
       .catch(() => undefined)
-      .finally(() => (this.pending = null));
+      .finally(() => {
+        this.pending = null;
+        if (this.stale) {
+          this.stale = false;
+          void this.refresh();
+        }
+      });
     return this.pending;
   }
 

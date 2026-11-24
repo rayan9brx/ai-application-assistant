@@ -32,7 +32,8 @@
     </nav>
 
     <div class="sidebar-bottom">
-      @if (usage.meters().length) {
+      <!-- Admins have no limits, so no usage card or upgrade prompt. -->
+      @if (!role.isAdmin() && usage.meters().length) {
         <section class="usage" aria-label="Your usage">
           @for (m of usage.meters(); track m.label) {
             <div class="meter">
@@ -74,7 +75,9 @@
       </nav>
 
       <div class="actions">
-        @if (usage.plan() === 'free') {
+        @if (role.isAdmin()) {
+          <span class="admin-badge">Admin</span>
+        } @else if (usage.plan() === 'free') {
           <a class="upgrade small" href="/pricing">Upgrade</a>
         }
 
