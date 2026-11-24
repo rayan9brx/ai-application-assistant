@@ -50,6 +50,20 @@ export class CvCheckPage {
   readonly templateName = computed(() => templateById(this.flow.template())?.name ?? '');
   readonly templatesHref = TEMPLATES_HREF;
   private readonly router = inject(Router);
+  readonly openingBuilder = signal(false);
+
+  /** Saves the checked CV and opens it in the CV Builder, which builds the sections from its text. */
+  async openBuilder(): Promise<void> {
+    if (this.openingBuilder()) return;
+    this.openingBuilder.set(true);
+    try {
+      const saved = this.flow.stale() || !this.flow.savedCvId() ? await this.library.save() : true;
+      const id = this.flow.savedCvId();
+      if (saved && id) await this.router.navigateByUrl(`/builder/${id}`);
+    } finally {
+      this.openingBuilder.set(false);
+    }
+  }
   readonly mode = signal<'file' | 'paste'>('file');
   readonly file = signal<File | null>(null);
   readonly pasted = signal('');

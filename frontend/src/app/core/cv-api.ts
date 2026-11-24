@@ -26,6 +26,8 @@ export interface OnboardingState {
 }
 export interface CvContent {
   text: string;
+  /** The CV Builder's structured content (see cv-builder.ts); absent for CVs made in the checker. */
+  builder?: unknown;
 }
 export interface CvSummary {
   id: string;

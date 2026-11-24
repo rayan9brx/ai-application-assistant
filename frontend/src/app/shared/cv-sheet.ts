@@ -9,6 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { ACCENTS, BuilderDesign, FONTS, SIZES, SPACINGS } from '../core/cv-builder';
 import { CvTemplateId, DEFAULT_TEMPLATE, parseCv } from '../core/cv-templates';
 
 /** An A4 page is 595 × 842 points; the sheet is laid out at 1 CSS px per PDF point, then scaled. */
@@ -22,7 +23,18 @@ const PAGE_WIDTH = 595;
   selector: 'app-cv-sheet',
   template: `
     @let cv = parsed();
-    <div #page class="page" [attr.data-template]="template()">
+    <div
+      #page
+      class="page"
+      [attr.data-template]="template()"
+      [class.no-dividers]="design()?.dividers === false"
+      [class.indent]="!!design()?.indent"
+      [class.custom-accent]="!!designStyle().accent"
+      [style.--cv-accent]="designStyle().accent"
+      [style.--cv-font]="designStyle().font"
+      [style.--fs]="designStyle().fs"
+      [style.--sp]="designStyle().sp"
+    >
       @if (cv.name || cv.contact.length) {
         <div class="head">
           @if (cv.name) {
@@ -78,7 +90,20 @@ export class CvSheet {
   /** Thumbnails next to a visible name are hidden from screen readers. */
   readonly decorative = input(false);
 
+  /** The builder's design settings (accent, font, size, spacing…); omitted: the template as is. */
+  readonly design = input<BuilderDesign | null>(null);
+
   readonly parsed = computed(() => parseCv(this.text()));
+  readonly designStyle = computed(() => {
+    const design = this.design();
+    if (!design) return { accent: null, font: null, fs: null, sp: null };
+    return {
+      accent: ACCENTS.find((a) => a.id === design.accent)?.token || null,
+      font: FONTS.find((f) => f.id === design.font)?.stack,
+      fs: SIZES[design.fontSize],
+      sp: SPACINGS[design.spacing],
+    };
+  });
   readonly scale = signal(0);
   readonly height = signal<number | null>(null);
   private readonly page = viewChild.required<ElementRef<HTMLElement>>('page');

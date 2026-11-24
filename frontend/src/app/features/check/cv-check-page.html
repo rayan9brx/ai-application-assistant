@@ -35,6 +35,14 @@
               {{ library.state() === 'saving' ? 'Saving…' : 'Save changes' }}
             </button>
           }
+          <button
+            class="cta cta-small cta-secondary"
+            type="button"
+            [disabled]="!!flow.busy() || openingBuilder() || library.state() === 'saving'"
+            (click)="openBuilder()"
+          >
+            {{ openingBuilder() ? 'Opening…' : 'Edit in CV Builder' }}
+          </button>
           <button class="link-button" type="button" (click)="startOver()">Start over</button>
         </div>
       </header>

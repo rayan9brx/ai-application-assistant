@@ -1,0 +1,35 @@
+.contact-head { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.contact-line { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--text-secondary); font-size: var(--text-sm); }
+.contact-line strong { color: var(--text); }
+#sec-contact .grid { margin-top: 12px; }
+
+.chevron { flex: 1; justify-content: flex-start; gap: 8px; min-width: 0; min-height: 36px; padding: 4px 6px 4px 0; border: 0; background: none; color: var(--text); }
+.chevron svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--text-secondary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }
+.chevron svg.turned { transform: rotate(90deg); }
+.count { min-width: 20px; padding: 1px 6px; border-radius: 999px; background: var(--surface-raised); color: var(--text-secondary); font-size: 11px; }
+.tag { padding: 1px 8px; border-radius: 999px; background: var(--surface-raised); color: var(--text-muted); font-size: 11px; font-weight: 600; }
+.hidden-section h3 { color: var(--text-muted); }
+.section-menu { position: relative; }
+
+.entry { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--surface-raised); border-radius: 10px; background: var(--surface-muted); }
+.entry-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+.entry-head strong { overflow: hidden; font-size: var(--text-sm); text-overflow: ellipsis; white-space: nowrap; }
+.entry-actions { display: flex; gap: 2px; }
+.dates { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 8px; }
+.present { display: flex; align-items: center; gap: 6px; min-height: 38px; }
+.present input { width: 16px; height: 16px; accent-color: var(--accent); }
+.present span { color: var(--text-secondary); font-size: 12px; font-weight: 600; }
+
+.bullets { display: grid; gap: 6px; }
+.bullet { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: start; gap: 6px; }
+.dot { padding-top: 8px; color: var(--text-muted); }
+.bullet textarea { min-height: 38px; }
+.ai-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding-left: 18px; }
+.card-body > .ai-row, .card-body > .proposal { padding-left: 0; }
+.proposal { display: grid; gap: 8px; margin-left: 18px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); border-radius: 10px; background: var(--accent-soft); }
+.card-body > .proposal { margin-left: 0; }
+.proposal-text { color: var(--text); font-size: var(--text-sm); line-height: 1.5; }
+.proposal-actions { display: flex; gap: 8px; }
+.note { color: var(--text-secondary); font-size: 12px; }
+.empty { justify-content: flex-start; min-height: 40px; border: 1px dashed var(--border-strong); background: transparent; color: var(--text-secondary); }
+.empty:hover { border-color: var(--accent); color: var(--text); }

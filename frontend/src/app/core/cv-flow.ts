@@ -184,11 +184,62 @@ export class CvFlow {
 
   /** Asks the AI to fix one issue; the caller shows the proposal and applies it on Accept. */
   fix(issue: CvIssue): Promise<CvFix> {
+    return this.fixText(this.cvText(), this.jobDescription(), issue);
+  }
+
+  /* The AI and export endpoints for any CV text (the checker's or the builder's). */
+
+  scoreText(cvText: string, jobDescription: string): Promise<CvScore> {
+    return this.post<CvScore>('/api/cv/score', {
+      cvText,
+      jobDescription: jobDescription.trim() || null,
+    });
+  }
+
+  fixText(
+    cvText: string,
+    jobDescription: string,
+    issue: Pick<CvIssue, 'section' | 'problem' | 'suggestion'>,
+  ): Promise<CvFix> {
     return this.post<CvFix>('/api/cv/fix', {
-      cvText: this.cvText(),
-      jobDescription: this.jobDescription() || null,
+      cvText,
+      jobDescription: jobDescription.trim() || null,
       issue: { section: issue.section, problem: issue.problem, suggestion: issue.suggestion },
     });
+  }
+
+  tailorText(cvText: string, jobDescription: string): Promise<CvTailoring> {
+    return this.post<CvTailoring>('/api/cv/tailor', { cvText, jobDescription });
+  }
+
+  /** Downloads the text as a PDF in the template; throws an Error with a readable message. */
+  async exportPdf(text: string, template: CvTemplateId): Promise<void> {
+    try {
+      const blob = await firstValueFrom(
+        this.http.post(
+          '/api/documents/export',
+          { documentType: 'cv', text, template },
+          { responseType: 'blob' },
+        ),
+      );
+      const url = URL.createObjectURL(blob);
+      const link = Object.assign(document.createElement('a'), { href: url, download: 'cv.pdf' });
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      // Errors come back as a JSON blob from the export endpoint.
+      let message = 'The PDF couldn’t be created. Please try again.';
+      if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
+        try {
+          message = JSON.parse(await error.error.text()).message ?? message;
+        } catch {
+          /* keep the default */
+        }
+      }
+      throw new Error(message);
+    }
   }
 
   async tailor(): Promise<void> {
@@ -196,12 +247,7 @@ export class CvFlow {
     this.busy.set('tailor');
     this.error.set('');
     try {
-      this.tailoring.set(
-        await this.post<CvTailoring>('/api/cv/tailor', {
-          cvText: this.cvText(),
-          jobDescription: this.jobDescription(),
-        }),
-      );
+      this.tailoring.set(await this.tailorText(this.cvText(), this.jobDescription()));
     } catch (error) {
       this.error.set(CvFlow.message(error, 'Tailoring failed. Please try again.'));
     } finally {
@@ -228,30 +274,9 @@ export class CvFlow {
     this.busy.set('download');
     this.error.set('');
     try {
-      const blob = await firstValueFrom(
-        this.http.post(
-          '/api/documents/export',
-          { documentType: 'cv', text: this.cvText(), template: this.template() },
-          { responseType: 'blob' },
-        ),
-      );
-      const url = URL.createObjectURL(blob);
-      const link = Object.assign(document.createElement('a'), { href: url, download: 'cv.pdf' });
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      await this.exportPdf(this.cvText(), this.template());
     } catch (error) {
-      // Errors come back as a JSON blob from the export endpoint.
-      let message = 'The PDF couldn’t be created. Please try again.';
-      if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
-        try {
-          message = JSON.parse(await error.error.text()).message ?? message;
-        } catch {
-          /* keep the default */
-        }
-      }
-      this.error.set(message);
+      this.error.set((error as Error).message);
     } finally {
       this.busy.set(null);
     }
@@ -297,10 +322,7 @@ export class CvFlow {
     else this.busy.set('rescore');
     const previous = mode === 'rescore' ? (this.score()?.overall ?? null) : null;
     try {
-      const score = await this.post<CvScore>('/api/cv/score', {
-        cvText: this.cvText(),
-        jobDescription: this.jobDescription() || null,
-      });
+      const score = await this.scoreText(this.cvText(), this.jobDescription());
       // Only compare once the new score is in, so "since your last score" never shows early.
       this.previousOverall.set(previous);
       this.score.set(score);

@@ -131,3 +131,4 @@ tbody tr:hover { background: color-mix(in srgb, var(--text) 2%, transparent); }
 @media (prefers-reduced-motion: reduce) {
   .feature:hover, .cv-card:hover { transform: none; }
 }
+.new-cv { min-height: 38px; }

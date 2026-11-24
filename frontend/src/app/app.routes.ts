@@ -123,6 +123,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
   },
   {
+    path: 'builder/:cvId',
+    title: 'CV Builder — Rezumo',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/builder/builder-page').then((m) => m.BuilderPage),
+  },
+  {
     // The top bar's "Cover letters" tab; the tool isn't built yet.
     path: 'cover-letters',
     title: 'Cover letters — Rezumo',

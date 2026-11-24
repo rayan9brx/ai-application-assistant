@@ -87,11 +87,6 @@ export class AppShell {
     return isActive(item, this.path(), this.navigation.search());
   }
 
-  /** "+ New CV": an empty checker, even when a report is open. */
-  startNewCv(): void {
-    if (this.flow.phase() === 'results') this.flow.reset();
-  }
-
   openDrawer(): void {
     this.drawerOpen.set(true);
     setTimeout(() => this.host.nativeElement.querySelector<HTMLElement>('.sidebar .new-cv')?.focus());

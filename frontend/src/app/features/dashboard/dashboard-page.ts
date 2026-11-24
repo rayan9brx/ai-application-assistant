@@ -149,23 +149,10 @@ export class DashboardPage {
     this.menuFor.update((id) => (id === cv.id ? null : cv.id));
   }
 
-  /** Loads the CV and its latest score into the checker. */
+  /** Opens the CV in the CV Builder. */
   async open(cv: CvSummary): Promise<void> {
     this.menuFor.set(null);
-    await this.act(cv.id, async () => {
-      const [saved, runs] = await Promise.all([this.api.get(cv.id), this.api.history(cv.id)]);
-      this.flow.loadSaved(
-        saved.id,
-        saved.content.text ?? '',
-        saved.jobDescription ?? '',
-        runs[0]?.result ?? null,
-        runs[1]?.overallScore ?? null,
-        saved.template,
-      );
-      await this.navigation.go('/check');
-      // A CV saved without a score has nothing to show yet: score it now (saved to its history).
-      if (!runs[0]) void this.flow.startWithText(saved.content.text ?? '');
-    }, 'This CV couldn’t be opened.');
+    await this.navigation.go(`/builder/${cv.id}`);
   }
 
   async duplicate(cv: CvSummary): Promise<void> {

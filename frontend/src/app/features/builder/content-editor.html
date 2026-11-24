@@ -1,0 +1,202 @@
+@let content = store.content();
+
+<!-- Contact information: fixed at the top of the CV. -->
+<section class="card" id="sec-contact" aria-labelledby="contact-title">
+  <header class="card-head">
+    <div class="contact-head">
+      <h3 id="contact-title">Contact Information</h3>
+      @if (!editingContact()) {
+        <p class="contact-line">
+          <strong>{{ content.contact.name || 'Your name' }}</strong>
+          @if (contactSummary(content.contact)) {
+            <span>{{ contactSummary(content.contact) }}</span>
+          }
+        </p>
+      }
+    </div>
+    <button type="button" class="icon" [attr.aria-label]="editingContact() ? 'Done editing contact information' : 'Edit contact information'"
+      [attr.aria-expanded]="editingContact()" (click)="editingContact.set(!editingContact())">
+      @if (editingContact()) {
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12l5 5L20 7" /></svg>
+      } @else {
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4" /></svg>
+      }
+    </button>
+  </header>
+  @if (editingContact()) {
+    <div class="grid">
+      @for (field of contactFields; track field.key) {
+        <label [class.wide]="field.key === 'links'">
+          <span>{{ field.label }}</span>
+          <input [type]="field.type" [placeholder]="field.placeholder" [value]="content.contact[field.key]"
+            (input)="setContact(field.key, value($event))" />
+        </label>
+      }
+    </div>
+  }
+</section>
+
+@for (section of content.sections; track section.kind; let first = $first, last = $last) {
+  @let meta = info(section.kind);
+  @let isOpen = open().has(section.kind);
+  <section class="card" [id]="'sec-' + section.kind" [class.hidden-section]="section.hidden"
+    [attr.aria-labelledby]="'title-' + section.kind">
+    <header class="card-head">
+      <button type="button" class="chevron" [attr.aria-expanded]="isOpen" [attr.aria-controls]="'body-' + section.kind"
+        (click)="toggle(section.kind)">
+        <svg viewBox="0 0 24 24" aria-hidden="true" [class.turned]="isOpen"><path d="M9 6l6 6-6 6" /></svg>
+        <h3 [id]="'title-' + section.kind">{{ meta.label }}</h3>
+        @if (section.hidden) {
+          <span class="tag">Hidden</span>
+        } @else if (meta.type === 'entries' && section.entries.length) {
+          <span class="count">{{ section.entries.length }}</span>
+        }
+      </button>
+      <button type="button" class="icon" [attr.aria-label]="'Add to ' + meta.label" (click)="add(section)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+      </button>
+      <div class="section-menu">
+        <button type="button" class="icon" aria-haspopup="menu" [attr.aria-expanded]="menuFor() === section.kind"
+          [attr.aria-label]="meta.label + ' options'" (click)="menuFor.set(menuFor() === section.kind ? null : section.kind)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h.01M12 12h.01M18 12h.01" /></svg>
+        </button>
+        @if (menuFor() === section.kind) {
+          <div class="menu" role="menu">
+            <button type="button" role="menuitem" [disabled]="first" (click)="move(section.kind, -1)">Move up</button>
+            <button type="button" role="menuitem" [disabled]="last" (click)="move(section.kind, 1)">Move down</button>
+            <button type="button" role="menuitem" (click)="setHidden(section.kind, !section.hidden)">
+              {{ section.hidden ? 'Show section' : 'Hide section' }}
+            </button>
+            <button type="button" role="menuitem" class="danger-item" (click)="clear(section.kind)">Delete</button>
+          </div>
+        }
+      </div>
+    </header>
+
+    @if (isOpen) {
+      <div class="card-body" [id]="'body-' + section.kind">
+        @if (meta.type === 'text') {
+          @if (section.kind === 'target') {
+            <label>
+              <span class="sr-only">{{ meta.label }}</span>
+              <input type="text" maxlength="120" [placeholder]="meta.placeholder ?? ''" [value]="section.text"
+                (input)="setText(section.kind, value($event))" />
+            </label>
+          } @else {
+            <label>
+              <span class="sr-only">{{ meta.label }}</span>
+              <textarea [rows]="section.kind === 'summary' ? 4 : 3" [placeholder]="meta.placeholder ?? ''"
+                [value]="section.text" (input)="setText(section.kind, value($event))"></textarea>
+            </label>
+            @if (section.kind === 'summary') {
+              <ng-container
+                *ngTemplateOutlet="ai; context: { key: 'summary', label: meta.label, line: section.text, kind: section.kind, id: '', index: 0 }" />
+            }
+          }
+        } @else {
+          @for (entry of section.entries; track entry.id; let i = $index, firstEntry = $first, lastEntry = $last) {
+            <div class="entry" [id]="'entry-' + entry.id">
+              <div class="entry-head">
+                <strong>{{ entry.title || meta.entryLabels?.title }}</strong>
+                <div class="entry-actions">
+                  <button type="button" class="icon small" aria-label="Move entry up" [disabled]="firstEntry"
+                    (click)="moveEntry(section.kind, entry.id, -1)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6" /></svg>
+                  </button>
+                  <button type="button" class="icon small" aria-label="Move entry down" [disabled]="lastEntry"
+                    (click)="moveEntry(section.kind, entry.id, 1)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  <button type="button" class="icon small" aria-label="Remove entry" (click)="removeEntry(section.kind, entry.id)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="grid">
+                <label>
+                  <span>{{ meta.entryLabels?.title }}</span>
+                  <input type="text" [value]="entry.title" (input)="setEntry(section.kind, entry.id, 'title', value($event))" />
+                </label>
+                <label>
+                  <span>{{ meta.entryLabels?.org }}</span>
+                  <input type="text" [value]="entry.org" (input)="setEntry(section.kind, entry.id, 'org', value($event))" />
+                </label>
+                <label>
+                  <span>Location</span>
+                  <input type="text" [value]="entry.location" (input)="setEntry(section.kind, entry.id, 'location', value($event))" />
+                </label>
+                <div class="dates">
+                  <label>
+                    <span>Start</span>
+                    <input type="text" placeholder="2022" [value]="entry.start"
+                      (input)="setEntry(section.kind, entry.id, 'start', value($event))" />
+                  </label>
+                  <label>
+                    <span>End</span>
+                    <input type="text" placeholder="2024" [value]="entry.present ? 'Present' : entry.end" [disabled]="entry.present"
+                      (input)="setEntry(section.kind, entry.id, 'end', value($event))" />
+                  </label>
+                  <label class="present">
+                    <input type="checkbox" [checked]="entry.present" (change)="setPresent(section.kind, entry.id, checked($event))" />
+                    <span>Present</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="bullets">
+                <span class="field-label">Bullet points</span>
+                @for (bullet of entry.bullets; track $index; let b = $index) {
+                  @let key = entry.id + ':' + b;
+                  <div class="bullet">
+                    <span class="dot" aria-hidden="true">•</span>
+                    <textarea rows="1" [id]="'bullet-' + entry.id + '-' + b" [attr.aria-label]="'Bullet ' + (b + 1)"
+                      placeholder="What did you do, and what was the result?" [value]="bullet"
+                      (input)="setBullet(section.kind, entry.id, b, value($event))"
+                      (keydown)="bulletKey($event, section.kind, entry.id)"></textarea>
+                    <button type="button" class="icon small" [attr.aria-label]="'Remove bullet ' + (b + 1)"
+                      (click)="removeBullet(section.kind, entry.id, b)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </button>
+                  </div>
+                  <ng-container
+                    *ngTemplateOutlet="ai; context: { key, label: meta.label, line: bullet, kind: section.kind, id: entry.id, index: b }" />
+                }
+                <button type="button" class="link" (click)="addBullet(section.kind, entry.id)">+ Add bullet</button>
+              </div>
+            </div>
+          } @empty {
+            <button type="button" class="empty" (click)="add(section)">+ Add {{ meta.entryLabels?.title?.toLowerCase() }}</button>
+          }
+        }
+      </div>
+    }
+  </section>
+}
+
+<!-- The "✨ Improve with AI" button and its proposal, under the summary and each bullet. -->
+<ng-template #ai let-key="key" let-label="label" let-line="line" let-kind="kind" let-id="id" let-index="index">
+  @let proposal = this.proposals()[key];
+  @if (proposal?.text) {
+    <div class="proposal" role="status">
+      <p class="proposal-text">{{ proposal!.text }}</p>
+      @if (proposal!.fix?.needsUserInput) {
+        <p class="note">Replace the [bracketed] part with a real value before you send the CV.</p>
+      } @else if (proposal!.fix?.explanation) {
+        <p class="note">{{ proposal!.fix!.explanation }}</p>
+      }
+      <div class="proposal-actions">
+        <button type="button" class="accept" (click)="accept(key, kind, id, index)">Accept</button>
+        <button type="button" class="plain" (click)="dropProposal(key)">Discard</button>
+      </div>
+    </div>
+  } @else {
+    <div class="ai-row">
+      <button type="button" class="ai" [disabled]="!line?.trim() || proposal?.busy" (click)="improve(key, label, line)">
+        {{ proposal?.busy ? 'Improving…' : '✨ Improve with AI' }}
+      </button>
+      @if (proposal?.error) {
+        <span class="note">{{ proposal!.error }}</span>
+      }
+    </div>
+  }
+</ng-template>

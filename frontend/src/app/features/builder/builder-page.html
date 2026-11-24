@@ -1,0 +1,91 @@
+<section class="builder" aria-label="CV Builder">
+  <header class="bar">
+    <a class="back" href="/dashboard" aria-label="Back to dashboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+    </a>
+    <label class="sr-only" for="cv-title">CV title</label>
+    <input #titleInput id="cv-title" class="title" type="text" maxlength="200" [placeholder]="untitled"
+      [value]="store.title()" (input)="store.setTitle(value($event))" />
+    <span class="save" role="status" [attr.data-state]="store.saveState()">{{ saveLabel() }}</span>
+
+    <div class="bar-actions">
+      <button type="button" class="cta cta-small" [disabled]="!store.loaded() || !!busy()" (click)="exportPdf()">
+        {{ busy() === 'export' ? 'Exporting…' : 'Export PDF' }}
+      </button>
+      <div class="menu-wrap">
+        <button type="button" class="menu-button" aria-haspopup="menu" [attr.aria-expanded]="menuOpen()"
+          [disabled]="!store.loaded()" (click)="menuOpen.set(!menuOpen())">Menu</button>
+        @if (menuOpen()) {
+          <div class="menu" role="menu">
+            <button type="button" role="menuitem" (click)="rename()">Rename</button>
+            <button type="button" role="menuitem" (click)="duplicate()">Duplicate</button>
+            <button type="button" role="menuitem" class="danger-item" (click)="askDelete()">Delete</button>
+          </div>
+        }
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Builder tools">
+    @for (tab of tabs; track tab.id) {
+      <button type="button" role="tab" [id]="'tab-' + tab.id" [attr.aria-selected]="store.tab() === tab.id"
+        aria-controls="builder-panel" [disabled]="tab.id === 'cover'" (click)="store.tab.set(tab.id)">
+        {{ tab.label }}
+        @switch (tab.id) {
+          @case ('analyze') {
+            @if (issueCount()) {
+              <span class="badge danger" [attr.aria-label]="issueCount() + ' open issues'">{{ issueCount() }}</span>
+            }
+          }
+          @case ('match') {
+            @if (!store.jobDescription().trim()) {
+              <span class="badge warn" aria-label="No job description yet">!</span>
+            }
+          }
+          @case ('cover') {
+            <span class="soon">Soon</span>
+          }
+        }
+      </button>
+    }
+  </nav>
+
+  @if (store.error()) {
+    <p class="error" role="alert">{{ store.error() }}</p>
+  }
+
+  @if (store.loadError()) {
+    <div class="state">
+      <p>{{ store.loadError() }}</p>
+      <a class="cta cta-small" href="/dashboard">Back to dashboard</a>
+    </div>
+  } @else if (!store.loaded()) {
+    <p class="state muted" role="status">Loading your CV…</p>
+  } @else {
+    <div class="columns">
+      <div class="panel" id="builder-panel" role="tabpanel" [attr.aria-labelledby]="'tab-' + store.tab()">
+        @switch (store.tab()) {
+          @case ('content') { <app-content-editor /> }
+          @case ('design') { <app-designer-panel /> }
+          @case ('analyze') { <app-analyzer-panel /> }
+          @case ('match') { <app-job-matcher-panel /> }
+        }
+      </div>
+      <aside class="preview" aria-label="Live preview">
+        <app-cv-sheet class="sheet" [text]="store.text()" [template]="store.design().template"
+          [design]="store.design()" />
+      </aside>
+    </div>
+  }
+</section>
+
+<dialog #deleteDialog class="dialog" aria-labelledby="delete-title">
+  <h2 id="delete-title">Delete this CV?</h2>
+  <p class="muted">“{{ store.title() || untitled }}” and its score history will be deleted. This can’t be undone.</p>
+  <div class="dialog-actions">
+    <button type="button" class="plain" (click)="closeDialog(deleteDialog)">Cancel</button>
+    <button type="button" class="danger" [disabled]="!!busy()" (click)="remove()">
+      {{ busy() === 'delete' ? 'Deleting…' : 'Delete' }}
+    </button>
+  </div>
+</dialog>
