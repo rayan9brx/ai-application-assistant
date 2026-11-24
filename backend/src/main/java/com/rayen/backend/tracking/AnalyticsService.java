@@ -84,10 +84,37 @@ public class AnalyticsService {
         }
     }
 
+    /**
+     * Deletes the views of the visitor with this IP and user agent. Only today's and yesterday's
+     * hashes can be rebuilt (older salts are deleted by design), so older test visits need a date range.
+     */
+    public int deleteVisitor(String ip, String userAgent) {
+        if (userAgent == null || userAgent.isBlank()) return 0;
+        todaysSalt();
+        List<byte[]> salts = jdbc.queryForList(
+            "select salt from public.visitor_salts where day >= ?", byte[].class, LocalDate.now(zone).minusDays(1));
+        int deleted = 0;
+        for (byte[] daySalt : salts) {
+            deleted += jdbc.update("delete from public.page_views where visitor_hash = ?", hash(daySalt, ip, userAgent));
+        }
+        return deleted;
+    }
+
+    /** Deletes every view from `from` to `to`, both inclusive, as days in the admin time zone. */
+    public int deleteBetween(LocalDate from, LocalDate to) {
+        return jdbc.update("delete from public.page_views where created_at >= ? and created_at < ?",
+            java.sql.Timestamp.from(from.atStartOfDay(zone).toInstant()),
+            java.sql.Timestamp.from(to.plusDays(1).atStartOfDay(zone).toInstant()));
+    }
+
     private String visitorHash(String ip, String userAgent) {
+        return hash(todaysSalt(), ip, userAgent);
+    }
+
+    private static String hash(byte[] daySalt, String ip, String userAgent) {
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-256");
-            sha.update(todaysSalt());
+            sha.update(daySalt);
             sha.update((ip + "\n" + userAgent).getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(sha.digest());
         } catch (NoSuchAlgorithmException exception) {

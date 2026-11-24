@@ -243,6 +243,12 @@ public class AdminService {
         return found.get(0);
     }
 
+    /** Audit-log row for an admin action that isn't about one CV (e.g. deleting page views). */
+    public void logAction(UUID adminId, String reason) {
+        db.update("insert into public.admin_audit_log (admin_id, reason) values (:admin, :reason)",
+            new MapSqlParameterSource("admin", adminId).addValue("reason", reason));
+    }
+
     public Page<AuditRow> audit(int page) {
         var p = paging(page);
         long total = count("select count(*) from public.admin_audit_log", p);

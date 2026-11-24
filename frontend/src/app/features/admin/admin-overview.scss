@@ -32,6 +32,12 @@ table td { padding: 8px 4px; }
 .step-bar span { display: block; min-width: 2px; height: 100%; background: linear-gradient(90deg, var(--accent), var(--primary-400)); }
 .step-value { font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
 .step-rate { color: var(--text-secondary); text-align: right; }
+.own-visits { display: grid; gap: var(--space-3); }
+.own-visits .toggle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--text-base); }
+.own-visits .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
+.own-visits .actions label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); }
+.own-visits input[type='date'] { min-height: 34px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
+.own-visits .error { margin-bottom: 0; }
 @media (max-width: 760px) {
   .grid { grid-template-columns: 1fr; }
   .funnel li { grid-template-columns: 7rem minmax(0, 1fr) 3.5rem; }

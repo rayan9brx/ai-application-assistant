@@ -110,6 +110,16 @@ export class AdminApi {
       this.http.post<AdminCvContent>(`/api/admin/cvs/${encodeURIComponent(id)}/view`, { reason }),
     );
   }
+  /** This browser's visits from today and yesterday (older hashes can't be matched). */
+  deleteMyPageViews(): Promise<{ deleted: number }> {
+    return firstValueFrom(this.http.delete<{ deleted: number }>('/api/admin/page-views/mine'));
+  }
+  /** Every page view between the two yyyy-mm-dd dates, inclusive. */
+  deletePageViews(from: string, to: string): Promise<{ deleted: number }> {
+    return firstValueFrom(
+      this.http.delete<{ deleted: number }>('/api/admin/page-views', { params: new HttpParams({ fromObject: { from, to } }) }),
+    );
+  }
   audit(page: number): Promise<AdminPage<AuditEntry>> {
     return this.get('/api/admin/audit', { page });
   }

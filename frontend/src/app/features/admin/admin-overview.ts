@@ -2,6 +2,13 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { AdminApi, AdminRange, AdminStats, KeyCount, countryName, flag } from './admin-api';
 import { AdminLineChart } from './admin-line-chart';
 import { CvFlow } from '../../core/cv-flow';
+import { browserExcluded, setBrowserExcluded } from '../../core/page-view-tracker';
+
+/** Today as yyyy-mm-dd in the browser's time zone. */
+function localDay(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 const RANGES: { id: AdminRange; label: string }[] = [
   { id: 'today', label: 'Today' },
@@ -110,6 +117,26 @@ const RANGES: { id: AdminRange; label: string }[] = [
         </section>
       </div>
     }
+
+    <section class="panel own-visits" aria-labelledby="own-title">
+      <h2 id="own-title">Your own visits</h2>
+      <label class="toggle">
+        <input type="checkbox" [checked]="excluded()" (change)="toggleExcluded($any($event.target).checked)" />
+        Exclude this browser from stats
+        <span class="muted">Stays on after you log out (saved in this browser only).</span>
+      </label>
+      <div class="actions">
+        <button type="button" class="small-button" [disabled]="deleting()" (click)="deleteMine()">Delete my past visits</button>
+        <span class="muted">This browser, today and yesterday; older visits can't be matched to you.</span>
+      </div>
+      <form class="actions" (submit)="$event.preventDefault(); deleteRange(from.value, to.value)">
+        <label>From <input #from type="date" required [max]="today" /></label>
+        <label>To <input #to type="date" required [max]="today" /></label>
+        <button type="submit" class="small-button" [disabled]="deleting()">Delete visits in range</button>
+      </form>
+      @if (deleteResult()) { <p class="muted" role="status">{{ deleteResult() }}</p> }
+      @if (deleteError()) { <p class="error" role="alert">{{ deleteError() }}</p> }
+    </section>
   `,
   styleUrls: ['./admin.scss', './admin-overview.scss'],
 })
@@ -122,6 +149,11 @@ export class AdminOverview {
   readonly error = signal('');
   readonly flag = flag;
   readonly country = (code: string) => countryName(code || null);
+  readonly excluded = signal(browserExcluded());
+  readonly deleting = signal(false);
+  readonly deleteResult = signal('');
+  readonly deleteError = signal('');
+  readonly today = localDay();
   private request = 0;
 
   readonly funnel = computed(() => {
@@ -161,6 +193,37 @@ export class AdminOverview {
       if (id === this.request) this.error.set(CvFlow.message(error, 'The statistics couldn’t be loaded.'));
     } finally {
       if (id === this.request) this.loading.set(false);
+    }
+  }
+
+  toggleExcluded(excluded: boolean): void {
+    setBrowserExcluded(excluded);
+    this.excluded.set(browserExcluded());
+  }
+
+  deleteMine(): Promise<void> {
+    if (!confirm('Delete this browser’s page views from today and yesterday?')) return Promise.resolve();
+    return this.runDelete(() => this.api.deleteMyPageViews());
+  }
+
+  deleteRange(from: string, to: string): Promise<void> {
+    if (!from || !to) return Promise.resolve();
+    if (!confirm(`Delete ALL page views from ${from} to ${to}? This can’t be undone.`)) return Promise.resolve();
+    return this.runDelete(() => this.api.deletePageViews(from, to));
+  }
+
+  private async runDelete(call: () => Promise<{ deleted: number }>): Promise<void> {
+    this.deleting.set(true);
+    this.deleteResult.set('');
+    this.deleteError.set('');
+    try {
+      const { deleted } = await call();
+      this.deleteResult.set(`Deleted ${this.n(deleted)} page view${deleted === 1 ? '' : 's'}.`);
+      void this.load(this.range());
+    } catch (error) {
+      this.deleteError.set(CvFlow.message(error, 'The page views couldn’t be deleted.'));
+    } finally {
+      this.deleting.set(false);
     }
   }
 
