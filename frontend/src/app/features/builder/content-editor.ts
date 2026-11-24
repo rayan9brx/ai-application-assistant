@@ -5,10 +5,15 @@ import {
   BuilderContent,
   BuilderEntry,
   BuilderSection,
+  JOINS_LINES,
+  MAX_EXTRA_LINKS,
   SectionKind,
   emptyEntry,
+  joinLineBreaks,
   sectionInfo,
 } from '../../core/cv-builder';
+
+type ContactField = Exclude<keyof BuilderContact, 'extraLinks'>;
 import { CvFix, CvFlow } from '../../core/cv-flow';
 import { BuilderStore } from './builder-store';
 
@@ -35,7 +40,8 @@ export class ContentEditor {
   readonly editingContact = signal(false);
   readonly menuFor = signal<SectionKind | null>(null);
   readonly proposals = signal<Record<string, Proposal>>({});
-  readonly contactFields: { key: keyof BuilderContact; label: string; type: string; placeholder: string }[] = [
+  readonly maxExtraLinks = MAX_EXTRA_LINKS;
+  readonly contactFields: { key: ContactField; label: string; type: string; placeholder: string }[] = [
     { key: 'name', label: 'Full name', type: 'text', placeholder: 'Jonas Weber' },
     { key: 'email', label: 'Email', type: 'email', placeholder: 'you@example.com' },
     { key: 'phone', label: 'Phone', type: 'tel', placeholder: '+49 40 5550 1234' },
@@ -85,8 +91,55 @@ export class ContentEditor {
     return [contact.email, contact.phone, contact.location].filter((v) => v.trim()).join(' · ');
   }
 
-  setContact(key: keyof BuilderContact, value: string): void {
+  setContact(key: ContactField, value: string): void {
     this.store.update((content) => (content.contact[key] = value));
+  }
+
+  addExtraLink(): void {
+    let index = -1;
+    this.store.update((content) => {
+      if (content.contact.extraLinks.length < MAX_EXTRA_LINKS) index = content.contact.extraLinks.push({ label: '', url: '' }) - 1;
+    });
+    if (index >= 0) this.focusLater(`#extra-link-${index}`);
+  }
+
+  setExtraLink(index: number, key: 'label' | 'url', value: string): void {
+    this.store.update((content) => {
+      const link = content.contact.extraLinks[index];
+      if (link) link[key] = value;
+    });
+  }
+
+  removeExtraLink(index: number): void {
+    this.store.update((content) => content.contact.extraLinks.splice(index, 1));
+  }
+
+  // Line breaks: pasted text (often from a PDF) is joined into flowing text right away; typed
+  // text is joined when the field loses focus. An empty line stays a paragraph break.
+
+  /** `kind` null: a bullet, which is always one line. */
+  pasteJoined(event: ClipboardEvent, kind: SectionKind | null): void {
+    const pasted = event.clipboardData?.getData('text/plain');
+    if (pasted == null || !/[\r\n]/.test(pasted)) return;
+    if (kind && !JOINS_LINES.has(kind)) return;
+    event.preventDefault();
+    const field = event.target as HTMLTextAreaElement;
+    const joined = joinLineBreaks(pasted);
+    field.setRangeText(kind ? joined : joined.replace(/\n+/g, ' '), field.selectionStart, field.selectionEnd, 'end');
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  joinText(kind: SectionKind): void {
+    if (!JOINS_LINES.has(kind)) return;
+    const section = this.store.content().sections.find((s) => s.kind === kind);
+    if (section && joinLineBreaks(section.text) !== section.text.trim()) this.setText(kind, joinLineBreaks(section.text));
+  }
+
+  joinBullet(kind: SectionKind, id: string, index: number): void {
+    const bullet = this.store.content().sections.find((s) => s.kind === kind)?.entries.find((e) => e.id === id)?.bullets[index];
+    if (bullet == null) return;
+    const joined = joinLineBreaks(bullet).replace(/\n+/g, ' ');
+    if (joined !== bullet.trim()) this.setBullet(kind, id, index, joined);
   }
 
   toggle(kind: SectionKind): void {

@@ -32,6 +32,26 @@
             (input)="setContact(field.key, value($event))" />
         </label>
       }
+      <!-- Extra links (portfolio, website, Xing…): label + URL, shown with a link icon. -->
+      <div class="wide extra-links">
+        <span class="field-label">More links</span>
+        @for (link of content.contact.extraLinks; track $index; let l = $index) {
+          <div class="extra-link">
+            <input type="text" placeholder="Portfolio" [attr.aria-label]="'Link ' + (l + 1) + ' label'" [value]="link.label"
+              (input)="setExtraLink(l, 'label', value($event))" />
+            <input type="url" placeholder="https://…" [id]="'extra-link-' + l" [attr.aria-label]="'Link ' + (l + 1) + ' URL'"
+              [value]="link.url" (input)="setExtraLink(l, 'url', value($event))" />
+            <button type="button" class="icon small" [attr.aria-label]="'Remove link ' + (l + 1)" (click)="removeExtraLink(l)">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+        }
+        @if (content.contact.extraLinks.length < maxExtraLinks) {
+          <button type="button" class="link" (click)="addExtraLink()">+ Add link</button>
+        } @else {
+          <span class="field-hint">Up to {{ maxExtraLinks }} extra links.</span>
+        }
+      </div>
     </div>
   }
 </section>
@@ -86,7 +106,8 @@
             <label>
               <span class="sr-only">{{ meta.label }}</span>
               <textarea [rows]="section.kind === 'summary' ? 4 : 3" [placeholder]="meta.placeholder ?? ''"
-                [value]="section.text" (input)="setText(section.kind, value($event))"></textarea>
+                [value]="section.text" (input)="setText(section.kind, value($event))"
+                (paste)="pasteJoined($event, section.kind)" (blur)="joinText(section.kind)"></textarea>
             </label>
             @if (section.kind === 'summary') {
               <ng-container
@@ -152,6 +173,7 @@
                     <textarea rows="1" [id]="'bullet-' + entry.id + '-' + b" [attr.aria-label]="'Bullet ' + (b + 1)"
                       placeholder="What did you do, and what was the result?" [value]="bullet"
                       (input)="setBullet(section.kind, entry.id, b, value($event))"
+                      (paste)="pasteJoined($event, null)" (blur)="joinBullet(section.kind, entry.id, b)"
                       (keydown)="bulletKey($event, section.kind, entry.id)"></textarea>
                     <button type="button" class="icon small" [attr.aria-label]="'Remove bullet ' + (b + 1)"
                       (click)="removeBullet(section.kind, entry.id, b)">

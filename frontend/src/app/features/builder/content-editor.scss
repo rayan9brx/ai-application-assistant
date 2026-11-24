@@ -2,6 +2,9 @@
 .contact-line { display: flex; flex-wrap: wrap; gap: 4px 10px; color: var(--text-secondary); font-size: var(--text-sm); }
 .contact-line strong { color: var(--text); }
 #sec-contact .grid { margin-top: 12px; }
+.extra-links { display: grid; gap: 6px; justify-items: start; }
+.extra-link { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto; gap: 6px; align-items: center; width: 100%; }
+.field-hint { color: var(--text-muted); font-size: 12px; }
 
 .chevron { flex: 1; justify-content: flex-start; gap: 8px; min-width: 0; min-height: 36px; padding: 4px 6px 4px 0; border: 0; background: none; color: var(--text); }
 .chevron svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--text-secondary); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }

@@ -24,15 +24,16 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
  * underlined links, one column of real text. The frontend's classic-cv.ts parses the same way
  * and CvSheet draws the same layout for the preview.
  *
- * <p>Layout: name (20pt bold), target title (14pt bold), one contact line (11pt) with small
- * vector icons, the summary justified right below, then sections with a 14pt bold heading over a
+ * <p>Layout: A4 with 1.5 cm side and 1.2 cm top/bottom margins; name (20pt bold), target title
+ * (14pt bold), one contact line (11pt) with small
+ * vector icons and a thin rule below it, the summary justified right below, then sections with a 14pt bold heading over a
  * thin full-width rule. Entries put the bold title left and the dates right; certificates are
  * one plain line each; skills lines are "Label: items" with the label in bold.
  */
 final class ClassicCvRenderer {
     private static final float CM = 72 / 2.54f;
-    private static final float MARGIN_X = 2.3f * CM;
-    private static final float MARGIN_Y = 1.5f * CM;
+    private static final float MARGIN_X = 1.5f * CM;
+    private static final float MARGIN_Y = 1.2f * CM;
     private static final float NAME = 20;
     private static final float TITLE = 14;
     private static final float BODY = 11;
@@ -86,10 +87,26 @@ final class ClassicCvRenderer {
         return Contact.LOCATION;
     }
 
+    /** "Portfolio: rayen.dev" from the builder's extra links: the label shows, the URL is the target. */
+    private static final Pattern LABELED_LINK = Pattern.compile("^([^:]{1,30}):\\s+(\\S+\\.\\S+)$");
+
+    record ContactItem(Contact kind, String text, String href) {}
+
+    static ContactItem contactItem(String item) {
+        Matcher labeled = LABELED_LINK.matcher(item);
+        if (labeled.matches() && !labeled.group(1).matches("(?i)https?|www.*")) {
+            Contact kind = contactKind(labeled.group(2));
+            if (kind == Contact.LOCATION || kind == Contact.PHONE) kind = Contact.LINK;
+            return new ContactItem(kind, labeled.group(1).strip(), href(labeled.group(2)));
+        }
+        Contact kind = contactKind(item);
+        return new ContactItem(kind, item, kind == Contact.LOCATION || kind == Contact.PHONE ? null : href(item));
+    }
+
     /** A header line counts as contact details when one of its items is an email, phone or link. */
     private static boolean isContactLine(String line) {
         for (String item : SEPARATOR.split(line)) {
-            if (contactKind(item.strip()) != Contact.LOCATION) return true;
+            if (contactItem(item.strip()).kind() != Contact.LOCATION) return true;
         }
         return false;
     }
@@ -165,6 +182,7 @@ final class ClassicCvRenderer {
         if (!name.isEmpty()) paragraph(List.of(new Run(name, true, null)), NAME, 0, 0, false);
         if (title != null) { gap(1); paragraph(List.of(new Run(title, true, null)), TITLE, 0, 0, false); }
         if (!contactItems.isEmpty()) { gap(3); contactLine(contactItems); }
+        if (!name.isEmpty() || title != null || !contactItems.isEmpty()) headerRule();
 
         // A summary as the first section goes right below the header, justified, without a heading.
         while (i < lines.length && lines[i].isBlank()) i++;
@@ -248,15 +266,17 @@ final class ClassicCvRenderer {
     }
 
     /** Contact items in one line with a small icon before each; wraps only if they don't fit. */
-    private void contactLine(List<String> items) throws IOException {
-        items.sort(Comparator.comparingInt(item -> contactKind(item).ordinal()));
+    private void contactLine(List<String> texts) throws IOException {
+        List<ContactItem> items = new ArrayList<>(texts.stream().map(ClassicCvRenderer::contactItem).toList());
+        items.sort(Comparator.comparingInt(item -> item.kind().ordinal()));
         float icon = BODY * 0.8f;
         float x = MARGIN_X;
         float lineHeight = BODY * LINE;
         ensure(lineHeight);
-        for (String item : items) {
-            Contact kind = contactKind(item);
-            boolean link = kind == Contact.EMAIL || kind == Contact.LINKEDIN || kind == Contact.GITHUB || kind == Contact.LINK;
+        for (ContactItem contact : items) {
+            Contact kind = contact.kind();
+            String item = contact.text();
+            boolean link = contact.href() != null;
             float textWidth = width(regular, item, BODY);
             float itemWidth = icon + 3 + textWidth;
             if (x > MARGIN_X && x + itemWidth > MARGIN_X + width) {
@@ -268,10 +288,21 @@ final class ClassicCvRenderer {
             icon(kind, x, baseline - 0.5f, icon);
             float textX = x + icon + 3;
             draw(item, regular, BODY, textX, baseline, link ? LINK : INK);
-            if (link) underlineAndLink(textX, baseline, textWidth, BODY, href(item));
+            if (link) underlineAndLink(textX, baseline, textWidth, BODY, contact.href());
             x += itemWidth + 11;
         }
         y -= lineHeight;
+    }
+
+    /** A thin black full-width line that closes the header, above the summary. */
+    private void headerRule() throws IOException {
+        gap(3);
+        content.setStrokingColor(INK);
+        content.setLineWidth(0.6f);
+        content.moveTo(MARGIN_X, y);
+        content.lineTo(MARGIN_X + width, y);
+        content.stroke();
+        gap(1);
     }
 
     /** Wrapped rich text; `justify` spreads every line but the last to the full width. */

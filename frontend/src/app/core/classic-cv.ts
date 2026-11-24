@@ -63,7 +63,21 @@ export function contactKind(item: string): ContactKind {
   return 'location';
 }
 
-const isContactLine = (line: string) => line.split(SEPARATOR).some((item) => contactKind(item.trim()) !== 'location');
+/** "Portfolio: rayen.dev" from the builder's extra links: the label shows, the URL is the target. */
+const LABELED_LINK = /^([^:]{1,30}):\s+(\S+\.\S+)$/;
+
+export function contactItem(item: string): ContactItem {
+  const labeled = LABELED_LINK.exec(item);
+  if (labeled && !/^(https?|www.*)$/i.test(labeled[1])) {
+    let kind = contactKind(labeled[2]);
+    if (kind === 'location' || kind === 'phone') kind = 'link';
+    return { kind, text: labeled[1].trim(), href: href(labeled[2]) };
+  }
+  const kind = contactKind(item);
+  return { kind, text: item, href: kind === 'location' || kind === 'phone' ? undefined : href(item) };
+}
+
+const isContactLine = (line: string) => line.split(SEPARATOR).some((item) => contactItem(item.trim()).kind !== 'location');
 
 export function href(link: string): string {
   const value = link.replace(/[.,;:)]+$/, '');
@@ -99,10 +113,7 @@ export function parseClassic(text: string): ClassicCv {
     else items.push(...line.split(SEPARATOR).map((item) => item.trim()).filter(Boolean));
   }
   const contact = items
-    .map((item) => {
-      const kind = contactKind(item);
-      return { kind, text: item, href: kind === 'location' || kind === 'phone' ? undefined : href(item) };
-    })
+    .map(contactItem)
     .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
 
   // A summary as the first section goes right below the header, without a heading.

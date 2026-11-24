@@ -36,12 +36,21 @@ export interface BuilderSection {
   entries: BuilderEntry[];
 }
 
+export interface ExtraLink {
+  label: string;
+  url: string;
+}
+
+export const MAX_EXTRA_LINKS = 5;
+
 export interface BuilderContact {
   name: string;
   email: string;
   phone: string;
   location: string;
   links: string;
+  /** Extra links (portfolio, website, Xing…), at most MAX_EXTRA_LINKS. */
+  extraLinks: ExtraLink[];
 }
 
 export type AccentId = 'default' | 'indigo' | 'navy' | 'teal' | 'charcoal' | 'burgundy' | 'amber';
@@ -148,7 +157,7 @@ export const emptyEntry = (): BuilderEntry => ({
 export function emptyContent(template: CvTemplateId = DEFAULT_TEMPLATE): BuilderContent {
   return {
     version: 1,
-    contact: { name: '', email: '', phone: '', location: '', links: '' },
+    contact: { name: '', email: '', phone: '', location: '', links: '', extraLinks: [] },
     sections: SECTIONS.map((s) => ({ kind: s.kind, hidden: false, text: '', entries: [] })),
     design: { ...DEFAULT_DESIGN, template },
   };
@@ -167,6 +176,9 @@ export function normalizeContent(raw: unknown, template: CvTemplateId): BuilderC
     phone: str(contact.phone),
     location: str(contact.location),
     links: str(contact.links),
+    extraLinks: (Array.isArray(contact.extraLinks) ? contact.extraLinks : [])
+      .map((link) => ({ label: str(link?.label), url: str(link?.url) }))
+      .slice(0, MAX_EXTRA_LINKS),
   };
   const saved = Array.isArray(value.sections) ? value.sections : [];
   const known = saved.filter((s) => SECTIONS.some((info) => info.kind === s?.kind));
@@ -210,6 +222,28 @@ export function normalizeContent(raw: unknown, template: CvTemplateId): BuilderC
 
 const clean = (value: string) => value.replace(/\s+/g, ' ').trim();
 
+/**
+ * Joins single line breaks (e.g. from text pasted out of a PDF) into spaces and keeps a paragraph
+ * break only where there is an empty line. Hyphens stay: "AI-\npowered" becomes "AI-powered".
+ */
+export function joinLineBreaks(text: string): string {
+  return text
+    .replace(/\r\n?/g, '\n')
+    .split(/\n[ \t]*\n\s*/)
+    .map((paragraph) =>
+      paragraph
+        .replace(/(\p{L})-[ \t]*\n[ \t]*(?=\p{L})/gu, '$1-')
+        .replace(/[ \t]*\n[ \t]*/g, ' ')
+        .replace(/[ \t]{2,}/g, ' ')
+        .trim(),
+    )
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+/** Multi-line fields whose single line breaks are joined; skills keep one line per group. */
+export const JOINS_LINES: ReadonlySet<SectionKind> = new Set(['summary']);
+
 export function dateRange(entry: BuilderEntry): string {
   const end = entry.present ? 'Present' : clean(entry.end);
   const start = clean(entry.start);
@@ -223,7 +257,14 @@ export function toCvText(content: BuilderContent): string {
   const target = visible.find((s) => s.kind === 'target');
   lines.push(clean(contact.name) || 'Your Name');
   if (target && clean(target.text)) lines.push(clean(target.text));
-  const contactLine = [contact.email, contact.phone, contact.location, ...contact.links.split(/[,\n]/)]
+  // Extra links go in as "Label: url"; the Classic template shows the label as the link.
+  const extra = contact.extraLinks
+    .filter((link) => clean(link.url))
+    .map((link) => {
+      const label = clean(link.label).replace(/:/g, '');
+      return label ? `${label}: ${clean(link.url)}` : clean(link.url);
+    });
+  const contactLine = [contact.email, contact.phone, contact.location, ...contact.links.split(/[,\n]/), ...extra]
     .map(clean)
     .filter(Boolean)
     .join(' · ');
@@ -234,7 +275,8 @@ export function toCvText(content: BuilderContent): string {
     if (section.kind === 'target') continue;
     const body: string[] = [];
     if (info.type === 'text') {
-      body.push(...section.text.split('\n').map((line) => line.trimEnd()).filter((line) => line.trim()));
+      const text = JOINS_LINES.has(section.kind) ? joinLineBreaks(section.text) : section.text;
+      body.push(...text.split('\n').map((line) => line.trimEnd()).filter((line) => line.trim()));
     } else {
       section.entries.forEach((entry, i) => {
         const head = [clean(entry.title), clean(entry.org), clean(entry.location)].filter(Boolean).join(', ');
@@ -242,7 +284,7 @@ export function toCvText(content: BuilderContent): string {
         // Two or more spaces before the dates make parseCv draw them right-aligned.
         if (head && dates && /\d/.test(dates)) body.push(`${head}   ${dates}`);
         else if (head || dates) body.push([head, dates].filter(Boolean).join(', '));
-        body.push(...entry.bullets.map(clean).filter(Boolean).map((b) => `- ${b}`));
+        body.push(...entry.bullets.map((b) => clean(joinLineBreaks(b))).filter(Boolean).map((b) => `- ${b}`));
         if (i < section.entries.length - 1) body.push('');
       });
     }

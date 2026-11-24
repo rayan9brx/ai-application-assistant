@@ -17,6 +17,11 @@ import { CvTemplateId, DEFAULT_TEMPLATE, parseCv } from '../core/cv-templates';
 
 /** An A4 page is 595 × 842 points; the sheet is laid out at 1 CSS px per PDF point, then scaled. */
 const PAGE_WIDTH = 595;
+/**
+ * Below this scale, real-size fonts would fall under the browser's minimum font size, so small
+ * Classic thumbnails are scaled with a transform like the other templates.
+ */
+const SHARP_MIN_SCALE = 0.6;
 
 /**
  * A CV text drawn in one of the templates, like the PDF export draws it, scaled to the width
@@ -31,7 +36,7 @@ const PAGE_WIDTH = 595;
     @if (template() === 'classic') {
       @let c = classic();
       <!-- Classic: fixed font and black text; the builder's accent and font options don't apply. -->
-      <div #page class="page classic" data-template="classic" [style.--fs]="designStyle().fs" [style.--sp]="designStyle().sp">
+      <div #page class="page classic" data-template="classic" [class.sharp]="sharp()" [style.--fs]="designStyle().fs" [style.--sp]="designStyle().sp">
         @if (c.name) { <p class="c-name">{{ c.name }}</p> }
         @if (c.title) { <p class="c-title">{{ c.title }}</p> }
         @if (c.contact.length) {
@@ -53,6 +58,7 @@ const PAGE_WIDTH = 595;
             }
           </p>
         }
+        @if (c.name || c.title || c.contact.length) { <span class="c-rule" aria-hidden="true"></span> }
         @for (paragraph of c.summary; track $index) {
           <p class="c-summary"><ng-container *ngTemplateOutlet="rich; context: { $implicit: paragraph }" /></p>
         }
@@ -158,21 +164,28 @@ export class CvSheet {
   });
   readonly scale = signal(0);
   readonly height = signal<number | null>(null);
-  private readonly page = viewChild.required<ElementRef<HTMLElement>>('page');
+  /** Classic previews shown large enough are laid out at their final size (sharp text). */
+  readonly sharp = computed(() => this.scale() >= SHARP_MIN_SCALE);
+  /** Optional: the effect below runs before the first render, when there is no page yet. */
+  private readonly page = viewChild<ElementRef<HTMLElement>>('page');
 
   constructor() {
     const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     let observer: ResizeObserver | undefined;
     let observed: HTMLElement | undefined;
     const measure = () => {
+      const page = this.page()?.nativeElement;
+      if (!page) return;
       const scale = host.clientWidth / PAGE_WIDTH;
       this.scale.set(scale);
-      this.height.set(Math.ceil(this.page().nativeElement.offsetHeight * scale));
+      // Classic is laid out at its final size (sharp text); the others are scaled with a transform.
+      const sharp = page.classList.contains('classic') && scale >= SHARP_MIN_SCALE;
+      this.height.set(Math.ceil(sharp ? page.offsetHeight : page.offsetHeight * scale));
     };
     // Classic has its own page element, so switching templates swaps the observed page.
     const watch = () => {
-      const page = this.page().nativeElement;
-      if (!observer || page === observed) return;
+      const page = this.page()?.nativeElement;
+      if (!observer || !page || page === observed) return;
       if (observed) observer.unobserve(observed);
       observer.observe(page);
       observed = page;
