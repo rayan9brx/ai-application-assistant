@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { CvApi } from './cv-api';
+import { excludeBrowser } from './page-view-tracker';
 
 /**
  * Whether the signed-in user is an admin, from /api/me. This only decides what the UI shows:
@@ -35,7 +36,11 @@ export class AdminRole {
         () => false,
       );
       this.loaded = { userId, result };
-      void result.then((admin) => this.loaded?.userId === userId && this.isAdmin.set(admin));
+      void result.then((admin) => {
+        // An admin's browser stays out of the visitor stats from now on, even after logout.
+        if (admin) excludeBrowser();
+        if (this.loaded?.userId === userId) this.isAdmin.set(admin);
+      });
     }
     return this.loaded.result;
   }

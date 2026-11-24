@@ -2,7 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { AdminApi, AdminRange, AdminStats, KeyCount, countryName, flag } from './admin-api';
 import { AdminLineChart } from './admin-line-chart';
 import { CvFlow } from '../../core/cv-flow';
-import { browserExcluded, setBrowserExcluded } from '../../core/page-view-tracker';
 
 /** Today as yyyy-mm-dd in the browser's time zone. */
 function localDay(): string {
@@ -118,17 +117,9 @@ const RANGES: { id: AdminRange; label: string }[] = [
       </div>
     }
 
-    <section class="panel own-visits" aria-labelledby="own-title">
-      <h2 id="own-title">Your own visits</h2>
-      <label class="toggle">
-        <input type="checkbox" [checked]="excluded()" (change)="toggleExcluded($any($event.target).checked)" />
-        Exclude this browser from stats
-        <span class="muted">Stays on after you log out (saved in this browser only).</span>
-      </label>
-      <div class="actions">
-        <button type="button" class="small-button" [disabled]="deleting()" (click)="deleteMine()">Delete my past visits</button>
-        <span class="muted">This browser, today and yesterday; older visits can't be matched to you.</span>
-      </div>
+    <details class="panel own-visits">
+      <summary>Clean up test data</summary>
+      <p class="muted">Visits from browsers where you've logged in as admin are excluded automatically.</p>
       <form class="actions" (submit)="$event.preventDefault(); deleteRange(from.value, to.value)">
         <label>From <input #from type="date" required [max]="today" /></label>
         <label>To <input #to type="date" required [max]="today" /></label>
@@ -136,7 +127,7 @@ const RANGES: { id: AdminRange; label: string }[] = [
       </form>
       @if (deleteResult()) { <p class="muted" role="status">{{ deleteResult() }}</p> }
       @if (deleteError()) { <p class="error" role="alert">{{ deleteError() }}</p> }
-    </section>
+    </details>
   `,
   styleUrls: ['./admin.scss', './admin-overview.scss'],
 })
@@ -149,7 +140,6 @@ export class AdminOverview {
   readonly error = signal('');
   readonly flag = flag;
   readonly country = (code: string) => countryName(code || null);
-  readonly excluded = signal(browserExcluded());
   readonly deleting = signal(false);
   readonly deleteResult = signal('');
   readonly deleteError = signal('');
@@ -194,16 +184,6 @@ export class AdminOverview {
     } finally {
       if (id === this.request) this.loading.set(false);
     }
-  }
-
-  toggleExcluded(excluded: boolean): void {
-    setBrowserExcluded(excluded);
-    this.excluded.set(browserExcluded());
-  }
-
-  deleteMine(): Promise<void> {
-    if (!confirm('Delete this browser’s page views from today and yesterday?')) return Promise.resolve();
-    return this.runDelete(() => this.api.deleteMyPageViews());
   }
 
   deleteRange(from: string, to: string): Promise<void> {

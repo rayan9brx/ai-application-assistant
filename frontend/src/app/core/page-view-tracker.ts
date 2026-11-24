@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { AdminRole } from './admin-role';
 import { AuthService } from './auth.service';
 
-/** Set by the admin dashboard's "Exclude this browser from stats" toggle. */
+/** Set automatically once an admin logs in on this browser; kept after logout. */
 const EXCLUDE_KEY = 'rezumo.excludeFromStats';
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]', '::1'];
 
@@ -17,10 +17,10 @@ export function browserExcluded(): boolean {
   }
 }
 
-export function setBrowserExcluded(excluded: boolean): void {
+/** Excludes this browser from stats for good, even after the admin logs out. */
+export function excludeBrowser(): void {
   try {
-    if (excluded) localStorage.setItem(EXCLUDE_KEY, '1');
-    else localStorage.removeItem(EXCLUDE_KEY);
+    localStorage.setItem(EXCLUDE_KEY, '1');
   } catch {
     // Storage blocked: nothing to remember.
   }

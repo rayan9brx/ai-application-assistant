@@ -33,7 +33,9 @@ table td { padding: 8px 4px; }
 .step-value { font-weight: 650; text-align: right; font-variant-numeric: tabular-nums; }
 .step-rate { color: var(--text-secondary); text-align: right; }
 .own-visits { display: grid; gap: var(--space-3); }
-.own-visits .toggle { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: var(--text-base); }
+.own-visits:not([open]) { gap: 0; }
+.own-visits summary { cursor: pointer; font-size: var(--text-sm); font-weight: 600; color: var(--text-muted); }
+.own-visits p { margin: 0; font-size: var(--text-sm); }
 .own-visits .actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .own-visits .actions label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--text-sm); }
 .own-visits input[type='date'] { min-height: 34px; padding: 4px 8px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text); }
