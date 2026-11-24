@@ -76,15 +76,21 @@ public class SecurityConfig {
     }
 
     /**
-     * The frontend runs on another origin (rezumo.eu) than the API, so the browser needs CORS.
-     * Origins come from CORS_ALLOWED_ORIGINS (comma-separated). Tokens travel in the Authorization
-     * header, not cookies, so credentials stay off.
+     * The frontend runs on another origin than the API, so the browser needs CORS. Only the
+     * FRONTEND_URL origin (comma-separated if there are several, e.g. with and without www) and
+     * the local dev server are allowed. Tokens travel in the Authorization header, not cookies,
+     * so credentials stay off.
      */
     @Bean
-    CorsConfigurationSource corsConfigurationSource(
-            @Value("${CORS_ALLOWED_ORIGINS:https://rezumo.eu,https://www.rezumo.eu,http://localhost:4200}") List<String> origins) {
+    CorsConfigurationSource corsConfigurationSource(@Value("${FRONTEND_URL:}") String frontendUrl) {
+        var origins = new java.util.ArrayList<String>();
+        for (String origin : frontendUrl.split(",")) {
+            String trimmed = origin.strip().replaceAll("/+$", "");
+            if (!trimmed.isEmpty()) origins.add(trimmed);
+        }
+        origins.add("http://localhost:4200");
         var config = new CorsConfiguration();
-        config.setAllowedOrigins(origins.stream().map(String::strip).filter(o -> !o.isEmpty()).toList());
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setExposedHeaders(List.of("Content-Disposition"));
