@@ -20,13 +20,15 @@ import java.util.Locale;
  * @param topBar       the name and contact lines sit in a coloured bar across the top
  */
 public enum CvTemplate {
+    /** Drawn by ClassicCvRenderer (Carlito, black text, own margins); these values are unused. */
+    CLASSIC(65, 20, 11, 14, -0.15f, 9, false, false, true, false),
     SIMPLE(50, 20, 10.5f, 11.5f, 0.15f, 10, false, false, true, false),
     MODERN(50, 24, 10.5f, 11f, 0.18f, 12, true, true, true, false),
     COMPACT(36, 17, 9.5f, 10f, 0.05f, 6, false, false, true, false),
     CREATIVE(50, 24, 10.5f, 11f, 0.18f, 12, false, true, false, true);
 
     /** For @Pattern validation of request fields. */
-    public static final String IDS = "simple|modern|compact|creative";
+    public static final String IDS = "classic|simple|modern|compact|creative";
 
     final float margin;
     final float nameSize;
@@ -57,13 +59,13 @@ public enum CvTemplate {
         return name().toLowerCase(Locale.ROOT);
     }
 
-    /** Null or unknown ids fall back to SIMPLE (request fields are validated before this). */
+    /** Null or unknown ids fall back to CLASSIC, the default (request fields are validated before this). */
     public static CvTemplate of(String id) {
-        if (id == null) return SIMPLE;
+        if (id == null) return CLASSIC;
         try {
             return valueOf(id.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
-            return SIMPLE;
+            return CLASSIC;
         }
     }
 }

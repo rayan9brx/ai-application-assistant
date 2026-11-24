@@ -65,7 +65,7 @@ export interface CvInput {
   title: string;
   content: CvContent;
   jobDescription: string | null;
-  /** Omitted: "simple" for a new CV, unchanged on update. */
+  /** Omitted: "classic" for a new CV, unchanged on update. */
   template?: CvTemplateId;
 }
 

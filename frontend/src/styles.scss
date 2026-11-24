@@ -1,3 +1,7 @@
+/* Carlito (SIL OFL 1.1, see public/fonts/Carlito-OFL.txt), for the Classic CV template. */
+@font-face { font-family: Carlito; src: url('/fonts/Carlito-Regular.ttf') format('truetype'); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: Carlito; src: url('/fonts/Carlito-Bold.ttf') format('truetype'); font-weight: 700; font-style: normal; font-display: swap; }
+
 /*
  * Design tokens: the app's only colour definitions. Components use these variables and never
  * hardcode colours (see "Design tokens" in the README).
@@ -19,6 +23,10 @@
   --primary-gradient: linear-gradient(135deg, #6D5DF5, #4338CA);
   --white: #FFFFFF;
   --black: #000000;
+  /* The Classic CV template's link colour (the usual hyperlink blue, as in the PDF). */
+  --cv-link: #0563C1;
+  /* The Classic CV template's font: self-hosted Carlito, metric-compatible with Calibri. */
+  --font-cv-classic: Carlito, Calibri, Arial, sans-serif;
 
   --danger: #E5484D;
   --warning: #E8A13A;

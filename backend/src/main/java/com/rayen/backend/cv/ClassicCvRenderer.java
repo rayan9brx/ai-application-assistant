@@ -1,0 +1,563 @@
+package com.rayen.backend.cv;
+
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDBorderStyleDictionary;
+
+/**
+ * The "Classic" CV template: A4, Carlito (metric-compatible with Calibri), black text, blue
+ * underlined links, one column of real text. The frontend's classic-cv.ts parses the same way
+ * and CvSheet draws the same layout for the preview.
+ *
+ * <p>Layout: name (20pt bold), target title (14pt bold), one contact line (11pt) with small
+ * vector icons, the summary justified right below, then sections with a 14pt bold heading over a
+ * thin full-width rule. Entries put the bold title left and the dates right; certificates are
+ * one plain line each; skills lines are "Label: items" with the label in bold.
+ */
+final class ClassicCvRenderer {
+    private static final float CM = 72 / 2.54f;
+    private static final float MARGIN_X = 2.3f * CM;
+    private static final float MARGIN_Y = 1.5f * CM;
+    private static final float NAME = 20;
+    private static final float TITLE = 14;
+    private static final float BODY = 11;
+    private static final float HEADING = 14;
+    private static final float LINE = 1.15f;
+    private static final float BULLET_INDENT = 14;
+    private static final Color INK = Color.BLACK;
+    /** The usual hyperlink blue (the frontend's --cv-link token). */
+    private static final Color LINK = new Color(0x0563C1);
+
+    // ---- Parsing (mirrors classic-cv.ts) --------------------------------------------------------
+
+    enum Contact { LOCATION, EMAIL, PHONE, LINKEDIN, GITHUB, LINK }
+
+    record Run(String text, boolean bold, String href) {}
+
+    private static final Pattern SECTION = Pattern.compile(
+        "(?i)(professional |work |career )?(summary|profile|about me|experience|employment|employment history|work history|"
+            + "education|skills|technical skills|key skills|skills & interests|projects|certifications|certificates|languages|"
+            + "interests|awards|awards & scholarships|volunteering|volunteering & leadership|publications|references|"
+            + "zusammenfassung|profil|kurzprofil|berufserfahrung|erfahrung|praxiserfahrung|ausbildung|bildung|kenntnisse|"
+            + "fähigkeiten|kompetenzen|projekte|sprachen|zertifikate|interessen)\\s*:?");
+    private static final Pattern SUMMARY = Pattern.compile(
+        "(?i)(professional |career )?(summary|profile|about me|zusammenfassung|profil|kurzprofil)");
+    private static final Pattern SKILLS = Pattern.compile("(?i).*(skill|kenntnisse|fähigkeit|kompetenz|languages|sprachen|interest|interessen).*");
+    private static final Pattern CERTIFICATES = Pattern.compile("(?i).*(certif|zertifikat).*");
+    private static final Pattern BULLET = Pattern.compile("^\\s*[-•*–▪●]\\s+");
+    private static final Pattern ENTRY = Pattern.compile("^(.*\\S)\\s{2,}(\\S.{0,34})$");
+    private static final Pattern LABEL = Pattern.compile("^([^:]{1,40}):\\s+(\\S.*)$");
+    private static final Pattern SEPARATOR = Pattern.compile("\\s+[·|•]\\s+");
+    private static final Pattern EMAIL = Pattern.compile("[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+");
+    private static final Pattern PHONE = Pattern.compile("^\\+?[\\d\\s()/.-]{6,}$");
+    private static final Pattern URL = Pattern.compile(
+        "(?i)(https?://\\S+|www\\.\\S+|(linkedin\\.com|github\\.com|gitlab\\.com|xing\\.com)/\\S*|[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+)");
+
+    static boolean isHeading(String line) {
+        if (line.length() > 40 || line.endsWith(".")) return false;
+        if (SECTION.matcher(line).matches()) return true;
+        boolean hasLetters = line.codePoints().anyMatch(Character::isLetter);
+        return hasLetters && line.length() >= 4 && line.equals(line.toUpperCase(Locale.ROOT));
+    }
+
+    static Contact contactKind(String item) {
+        String lower = item.toLowerCase(Locale.ROOT);
+        if (EMAIL.matcher(item).matches()) return Contact.EMAIL;
+        if (lower.contains("linkedin.")) return Contact.LINKEDIN;
+        if (lower.contains("github.")) return Contact.GITHUB;
+        if (lower.startsWith("http") || lower.startsWith("www.") || lower.matches("[\\w-]+(\\.[\\w-]+)+/\\S*"))
+            return Contact.LINK;
+        if (PHONE.matcher(item).matches() && item.chars().filter(Character::isDigit).count() >= 6) return Contact.PHONE;
+        return Contact.LOCATION;
+    }
+
+    /** A header line counts as contact details when one of its items is an email, phone or link. */
+    private static boolean isContactLine(String line) {
+        for (String item : SEPARATOR.split(line)) {
+            if (contactKind(item.strip()) != Contact.LOCATION) return true;
+        }
+        return false;
+    }
+
+    static String href(String link) {
+        String value = link.replaceAll("[.,;:)]+$", "");
+        if (EMAIL.matcher(value).matches()) return "mailto:" + value;
+        return value.matches("(?i)https?://.*") ? value : "https://" + value;
+    }
+
+    /** Splits text into runs, with links (URLs and emails) as their own runs. */
+    static List<Run> runs(String text, boolean bold) {
+        List<Run> runs = new ArrayList<>();
+        Matcher m = URL.matcher(text);
+        int at = 0;
+        while (m.find()) {
+            String link = m.group().replaceAll("[.,;:)]+$", "");
+            if (m.start() > at) runs.add(new Run(text.substring(at, m.start()), bold, null));
+            runs.add(new Run(link, bold, href(link)));
+            at = m.start() + link.length();
+        }
+        if (at < text.length()) runs.add(new Run(text.substring(at), bold, null));
+        return runs;
+    }
+
+    // ---- Rendering --------------------------------------------------------------------------------
+
+    private final PDDocument document;
+    private final PDType0Font regular;
+    private final PDType0Font bold;
+    private final float width = PDRectangle.A4.getWidth() - 2 * MARGIN_X;
+    private PDPage page;
+    private PDPageContentStream content;
+    private float y;
+
+    private ClassicCvRenderer(PDDocument document, PDType0Font regular, PDType0Font bold) {
+        this.document = document;
+        this.regular = regular;
+        this.bold = bold;
+    }
+
+    static byte[] render(String text) throws IOException {
+        try (var document = new PDDocument();
+             InputStream regularStream = ClassicCvRenderer.class.getResourceAsStream("/fonts/Carlito-Regular.ttf");
+             InputStream boldStream = ClassicCvRenderer.class.getResourceAsStream("/fonts/Carlito-Bold.ttf");
+             var output = new ByteArrayOutputStream()) {
+            if (regularStream == null || boldStream == null) throw new IOException("Export font unavailable");
+            var renderer = new ClassicCvRenderer(document,
+                PDType0Font.load(document, regularStream, true), PDType0Font.load(document, boldStream, true));
+            String name = renderer.write(text);
+            document.getDocumentInformation().setTitle(name.isEmpty() ? "CV" : name);
+            renderer.content.close();
+            document.save(output);
+            return output.toByteArray();
+        }
+    }
+
+    /** Lays out the whole CV; returns the name for the document title. */
+    private String write(String text) throws IOException {
+        newPage();
+        String[] lines = text.replace("\t", "    ").split("\\R", -1);
+        int i = 0;
+        while (i < lines.length && lines[i].isBlank()) i++;
+        String name = i < lines.length ? lines[i++].strip() : "";
+        String title = null;
+        List<String> contactItems = new ArrayList<>();
+        for (int n = 0; n < 3 && i < lines.length && !lines[i].isBlank() && !isHeading(lines[i].strip()); n++, i++) {
+            String line = lines[i].strip();
+            if (title == null && contactItems.isEmpty() && !isContactLine(line)) title = line;
+            else for (String item : SEPARATOR.split(line)) if (!item.isBlank()) contactItems.add(item.strip());
+        }
+
+        if (!name.isEmpty()) paragraph(List.of(new Run(name, true, null)), NAME, 0, 0, false);
+        if (title != null) { gap(1); paragraph(List.of(new Run(title, true, null)), TITLE, 0, 0, false); }
+        if (!contactItems.isEmpty()) { gap(3); contactLine(contactItems); }
+
+        // A summary as the first section goes right below the header, justified, without a heading.
+        while (i < lines.length && lines[i].isBlank()) i++;
+        if (i < lines.length && SUMMARY.matcher(lines[i].strip().replaceAll(":$", "")).matches()) {
+            i++;
+            gap(5);
+            for (; i < lines.length && !isHeading(lines[i].strip()); i++) {
+                String line = lines[i].strip();
+                if (line.isEmpty()) continue;
+                paragraph(runs(BULLET.matcher(line).replaceFirst(""), false), BODY, 0, 0, true);
+            }
+        }
+
+        String section = "";
+        boolean afterHeading = false;
+        for (; i < lines.length; i++) {
+            String raw = lines[i];
+            String line = raw.strip();
+            if (line.isEmpty()) { gap(3); continue; }
+            if (isHeading(line)) {
+                section = line.replaceAll(":$", "");
+                heading(section);
+                afterHeading = true;
+                continue;
+            }
+            boolean certificates = CERTIFICATES.matcher(section).matches();
+            Matcher bullet = BULLET.matcher(raw);
+            Matcher entry = ENTRY.matcher(line);
+            Matcher label = LABEL.matcher(line);
+            if (bullet.find()) {
+                bulletLine(runs(raw.substring(bullet.end()).strip(), false));
+            } else if (entry.matches() && entry.group(2).chars().anyMatch(Character::isDigit)) {
+                if (!afterHeading && !certificates) gap(2);
+                entry(entry.group(1), entry.group(2), !certificates);
+            } else if (SKILLS.matcher(section).matches() && label.matches()) {
+                List<Run> runs = new ArrayList<>();
+                runs.add(new Run(label.group(1) + ":", true, null));
+                runs.add(new Run(" ", false, null));
+                runs.addAll(runs(label.group(2), false));
+                paragraph(runs, BODY, 0, 0, false);
+            } else {
+                paragraph(runs(line, false), BODY, 0, 0, false);
+            }
+            afterHeading = false;
+        }
+        return name;
+    }
+
+    private void heading(String text) throws IOException {
+        gap(9);
+        // Keep the heading with the first lines below it.
+        ensure(HEADING * LINE + 3 + 2 * BODY * LINE);
+        paragraph(List.of(new Run(text, true, null)), HEADING, 0, 0, false);
+        content.setStrokingColor(INK);
+        content.setLineWidth(0.6f);
+        content.moveTo(MARGIN_X, y + 1.5f);
+        content.lineTo(MARGIN_X + width, y + 1.5f);
+        content.stroke();
+        gap(4);
+    }
+
+    private void bulletLine(List<Run> runs) throws IOException {
+        ensure(BODY * LINE);
+        draw("•", regular, BODY, MARGIN_X + 4, y - BODY * 0.85f, INK);
+        paragraph(runs, BODY, BULLET_INDENT, BULLET_INDENT, false);
+        gap(0.5f);
+    }
+
+    /** Title left, dates right on the same line; the title wraps before the dates if needed. */
+    private void entry(String title, String dates, boolean boldTitle) throws IOException {
+        float datesWidth = width(regular, dates, BODY);
+        float lineHeight = BODY * LINE;
+        List<List<Word>> lines = wrap(runs(title, boldTitle), BODY, width - datesWidth - 12);
+        for (int i = 0; i < lines.size(); i++) {
+            ensure(lineHeight);
+            float baseline = y - BODY * 0.85f;
+            drawLine(lines.get(i), MARGIN_X, baseline, BODY, 0);
+            if (i == 0) draw(dates, regular, BODY, MARGIN_X + width - datesWidth, baseline, INK);
+            y -= lineHeight;
+        }
+    }
+
+    /** Contact items in one line with a small icon before each; wraps only if they don't fit. */
+    private void contactLine(List<String> items) throws IOException {
+        items.sort(Comparator.comparingInt(item -> contactKind(item).ordinal()));
+        float icon = BODY * 0.8f;
+        float x = MARGIN_X;
+        float lineHeight = BODY * LINE;
+        ensure(lineHeight);
+        for (String item : items) {
+            Contact kind = contactKind(item);
+            boolean link = kind == Contact.EMAIL || kind == Contact.LINKEDIN || kind == Contact.GITHUB || kind == Contact.LINK;
+            float textWidth = width(regular, item, BODY);
+            float itemWidth = icon + 3 + textWidth;
+            if (x > MARGIN_X && x + itemWidth > MARGIN_X + width) {
+                y -= lineHeight;
+                ensure(lineHeight);
+                x = MARGIN_X;
+            }
+            float baseline = y - BODY * 0.85f;
+            icon(kind, x, baseline - 0.5f, icon);
+            float textX = x + icon + 3;
+            draw(item, regular, BODY, textX, baseline, link ? LINK : INK);
+            if (link) underlineAndLink(textX, baseline, textWidth, BODY, href(item));
+            x += itemWidth + 11;
+        }
+        y -= lineHeight;
+    }
+
+    /** Wrapped rich text; `justify` spreads every line but the last to the full width. */
+    private void paragraph(List<Run> runs, float size, float indent, float hanging, boolean justify) throws IOException {
+        float lineHeight = size * (size >= HEADING ? 1.2f : LINE);
+        List<List<Word>> lines = wrap(runs, size, width - Math.max(indent, hanging));
+        for (int i = 0; i < lines.size(); i++) {
+            ensure(lineHeight);
+            float x = MARGIN_X + (i == 0 ? indent : hanging);
+            float available = width - (i == 0 ? indent : hanging);
+            List<Word> line = lines.get(i);
+            float extra = 0;
+            if (justify && i < lines.size() - 1 && line.size() > 1) {
+                float used = 0;
+                for (Word word : line) used += word.width + word.spaceAfter;
+                used -= line.get(line.size() - 1).spaceAfter;
+                extra = (available - used) / (line.size() - 1);
+            }
+            drawLine(line, x, y - size * 0.85f, size, extra);
+            y -= lineHeight;
+        }
+    }
+
+    // ---- Words and lines ----
+
+    private record Word(String text, PDType0Font font, String href, float width, float spaceAfter) {}
+
+    private List<List<Word>> wrap(List<Run> runs, float size, float maxWidth) throws IOException {
+        List<Word> words = new ArrayList<>();
+        for (Run run : runs) {
+            PDType0Font font = run.bold() ? bold : regular;
+            float space = width(font, " ", size);
+            String[] parts = run.text().split(" ", -1);
+            for (int p = 0; p < parts.length; p++) {
+                String part = parts[p];
+                boolean spaceFollows = p < parts.length - 1;
+                if (part.isEmpty()) {
+                    // A space at a run border belongs to the word before it.
+                    if (spaceFollows && !words.isEmpty()) {
+                        Word last = words.remove(words.size() - 1);
+                        words.add(new Word(last.text, last.font, last.href, last.width, last.spaceAfter + space));
+                    }
+                    continue;
+                }
+                words.add(new Word(part, font, run.href(), width(font, part, size), spaceFollows ? space : 0));
+            }
+        }
+        List<List<Word>> lines = new ArrayList<>();
+        List<Word> line = new ArrayList<>();
+        float used = 0;
+        for (Word word : words) {
+            for (Word piece : split(word, size, maxWidth)) {
+                float spaceBefore = line.isEmpty() ? 0 : line.get(line.size() - 1).spaceAfter;
+                if (!line.isEmpty() && used + spaceBefore + piece.width > maxWidth) {
+                    lines.add(line);
+                    line = new ArrayList<>();
+                    used = 0;
+                    spaceBefore = 0;
+                }
+                line.add(piece);
+                used += spaceBefore + piece.width;
+            }
+        }
+        if (!line.isEmpty()) lines.add(line);
+        if (lines.isEmpty()) lines.add(List.of());
+        return lines;
+    }
+
+    /** Splits a word wider than the line at code-point boundaries. */
+    private List<Word> split(Word word, float size, float maxWidth) throws IOException {
+        if (word.width <= maxWidth) return List.of(word);
+        List<Word> pieces = new ArrayList<>();
+        String text = word.text;
+        int start = 0;
+        while (start < text.length()) {
+            int end = start;
+            float used = 0;
+            while (end < text.length()) {
+                int cp = text.codePointAt(end);
+                float w = width(word.font, new String(Character.toChars(cp)), size);
+                if (used + w > maxWidth && end > start) break;
+                used += w;
+                end += Character.charCount(cp);
+            }
+            boolean last = end >= text.length();
+            pieces.add(new Word(text.substring(start, end), word.font, word.href, used, last ? word.spaceAfter : 0));
+            start = end;
+        }
+        return pieces;
+    }
+
+    /** Draws a line, joining neighbouring words of the same style into one text run. */
+    private void drawLine(List<Word> line, float x, float baseline, float size, float extra) throws IOException {
+        int i = 0;
+        while (i < line.size()) {
+            Word first = line.get(i);
+            StringBuilder text = new StringBuilder(first.text);
+            float runWidth = first.width;
+            int j = i + 1;
+            // Justified lines are drawn word by word so every gap can grow.
+            while (extra == 0 && j < line.size() && line.get(j).font == first.font
+                    && java.util.Objects.equals(line.get(j).href, first.href)) {
+                Word previous = line.get(j - 1);
+                text.append(" ".repeat(Math.max(1, Math.round(previous.spaceAfter / width(previous.font, " ", size)))));
+                text.append(line.get(j).text);
+                runWidth += previous.spaceAfter + line.get(j).width;
+                j++;
+            }
+            draw(text.toString(), first.font, size, x, baseline, first.href != null ? LINK : INK);
+            if (first.href != null) underlineAndLink(x, baseline, runWidth, size, first.href);
+            Word last = line.get(j - 1);
+            x += runWidth + last.spaceAfter + extra;
+            i = j;
+        }
+    }
+
+    private void underlineAndLink(float x, float baseline, float textWidth, float size, String href) throws IOException {
+        content.setStrokingColor(LINK);
+        content.setLineWidth(0.5f);
+        content.moveTo(x, baseline - 1.4f);
+        content.lineTo(x + textWidth, baseline - 1.4f);
+        content.stroke();
+        var annotation = new PDAnnotationLink();
+        var border = new PDBorderStyleDictionary();
+        border.setWidth(0);
+        annotation.setBorderStyle(border);
+        annotation.setRectangle(new PDRectangle(x, baseline - size * 0.25f, textWidth, size * 1.1f));
+        var action = new PDActionURI();
+        action.setURI(href);
+        annotation.setAction(action);
+        page.getAnnotations().add(annotation);
+    }
+
+    // ---- Icons: small vector shapes, so they never end up in the extracted text ----
+
+    private void icon(Contact kind, float x, float baseline, float s) throws IOException {
+        float top = baseline + s * 0.82f;
+        float bottom = baseline - s * 0.08f;
+        float h = top - bottom;
+        float cx = x + s / 2;
+        content.setStrokingColor(INK);
+        content.setNonStrokingColor(INK);
+        content.setLineWidth(0.8f);
+        switch (kind) {
+            case LOCATION -> {
+                // A map pin: a circle head that narrows to a point, with a hole.
+                float r = s * 0.36f;
+                float cy = top - r;
+                float k = 0.5523f * r;
+                content.moveTo(cx, bottom);
+                content.curveTo(cx - r * 0.6f, cy - r * 0.9f, cx - r, cy - k, cx - r, cy);
+                content.curveTo(cx - r, cy + k, cx - k, cy + r, cx, cy + r);
+                content.curveTo(cx + k, cy + r, cx + r, cy + k, cx + r, cy);
+                content.curveTo(cx + r, cy - k, cx + r * 0.6f, cy - r * 0.9f, cx, bottom);
+                content.fill();
+                content.setNonStrokingColor(Color.WHITE);
+                circle(cx, cy, r * 0.4f);
+                content.fill();
+            }
+            case EMAIL -> {
+                float ey = bottom + h * 0.12f;
+                float eh = h * 0.72f;
+                content.addRect(x + 0.4f, ey, s - 0.8f, eh);
+                content.stroke();
+                content.moveTo(x + 0.4f, ey + eh);
+                content.lineTo(cx, ey + eh * 0.4f);
+                content.lineTo(x + s - 0.4f, ey + eh);
+                content.stroke();
+            }
+            case PHONE -> {
+                float pw = s * 0.56f;
+                float px = cx - pw / 2;
+                roundRect(px, bottom, pw, h, s * 0.1f);
+                content.stroke();
+                content.moveTo(cx - pw * 0.18f, bottom + h * 0.14f);
+                content.lineTo(cx + pw * 0.18f, bottom + h * 0.14f);
+                content.stroke();
+            }
+            case LINKEDIN -> {
+                // A filled rounded square with a white "i" and "n" drawn as shapes.
+                roundRect(x, bottom, s, h, s * 0.15f);
+                content.fill();
+                content.setNonStrokingColor(Color.WHITE);
+                float bar = s * 0.15f;
+                content.addRect(x + s * 0.2f, bottom + h * 0.18f, bar, h * 0.42f);
+                circle(x + s * 0.2f + bar / 2, bottom + h * 0.75f, bar * 0.65f);
+                content.addRect(x + s * 0.45f, bottom + h * 0.18f, bar, h * 0.42f);
+                content.addRect(x + s * 0.68f, bottom + h * 0.18f, bar, h * 0.3f);
+                content.addRect(x + s * 0.45f, bottom + h * 0.48f, s * 0.38f, bar * 0.8f);
+                content.fill();
+            }
+            case GITHUB -> {
+                // A filled circle with white code brackets.
+                float r = Math.min(s, h) / 2;
+                float cy = bottom + h / 2;
+                circle(cx, cy, r);
+                content.fill();
+                content.setStrokingColor(Color.WHITE);
+                content.setLineWidth(0.7f);
+                content.moveTo(cx - r * 0.2f, cy + r * 0.38f);
+                content.lineTo(cx - r * 0.55f, cy);
+                content.lineTo(cx - r * 0.2f, cy - r * 0.38f);
+                content.moveTo(cx + r * 0.2f, cy + r * 0.38f);
+                content.lineTo(cx + r * 0.55f, cy);
+                content.lineTo(cx + r * 0.2f, cy - r * 0.38f);
+                content.stroke();
+            }
+            case LINK -> {
+                // A globe.
+                float r = Math.min(s, h) / 2 - 0.3f;
+                float cy = bottom + h / 2;
+                circle(cx, cy, r);
+                content.moveTo(cx - r, cy);
+                content.lineTo(cx + r, cy);
+                content.stroke();
+                float k = 0.5523f;
+                float rx = r * 0.45f;
+                content.moveTo(cx, cy + r);
+                content.curveTo(cx + rx * k * 1.8f, cy + r, cx + rx, cy + r * k, cx + rx, cy);
+                content.curveTo(cx + rx, cy - r * k, cx + rx * k * 1.8f, cy - r, cx, cy - r);
+                content.curveTo(cx - rx * k * 1.8f, cy - r, cx - rx, cy - r * k, cx - rx, cy);
+                content.curveTo(cx - rx, cy + r * k, cx - rx * k * 1.8f, cy + r, cx, cy + r);
+                content.stroke();
+            }
+        }
+        content.setNonStrokingColor(INK);
+        content.setStrokingColor(INK);
+    }
+
+    private void circle(float cx, float cy, float r) throws IOException {
+        float k = 0.5523f * r;
+        content.moveTo(cx + r, cy);
+        content.curveTo(cx + r, cy + k, cx + k, cy + r, cx, cy + r);
+        content.curveTo(cx - k, cy + r, cx - r, cy + k, cx - r, cy);
+        content.curveTo(cx - r, cy - k, cx - k, cy - r, cx, cy - r);
+        content.curveTo(cx + k, cy - r, cx + r, cy - k, cx + r, cy);
+        content.closePath();
+    }
+
+    private void roundRect(float x, float y0, float w, float h, float r) throws IOException {
+        float k = 0.5523f * r;
+        content.moveTo(x + r, y0);
+        content.lineTo(x + w - r, y0);
+        content.curveTo(x + w - r + k, y0, x + w, y0 + r - k, x + w, y0 + r);
+        content.lineTo(x + w, y0 + h - r);
+        content.curveTo(x + w, y0 + h - r + k, x + w - r + k, y0 + h, x + w - r, y0 + h);
+        content.lineTo(x + r, y0 + h);
+        content.curveTo(x + r - k, y0 + h, x, y0 + h - r + k, x, y0 + h - r);
+        content.lineTo(x, y0 + r);
+        content.curveTo(x, y0 + r - k, x + r - k, y0, x + r, y0);
+        content.closePath();
+    }
+
+    // ---- Low level ----
+
+    private void draw(String text, PDType0Font font, float size, float x, float baseline, Color color) throws IOException {
+        if (text.isEmpty()) return;
+        content.setNonStrokingColor(color);
+        content.beginText();
+        content.setFont(font, size);
+        content.newLineAtOffset(x, baseline);
+        content.showText(text);
+        content.endText();
+    }
+
+    private static float width(PDType0Font font, String text, float size) throws IOException {
+        try {
+            return font.getStringWidth(text) / 1000 * size;
+        } catch (IllegalArgumentException exception) {
+            throw new PdfExportService.UnsupportedCharacterException();
+        }
+    }
+
+    private void gap(float points) {
+        y -= points;
+    }
+
+    private void ensure(float height) throws IOException {
+        if (y - height < MARGIN_Y) newPage();
+    }
+
+    private void newPage() throws IOException {
+        if (content != null) content.close();
+        page = new PDPage(PDRectangle.A4);
+        document.addPage(page);
+        content = new PDPageContentStream(document, page);
+        y = page.getMediaBox().getHeight() - MARGIN_Y;
+    }
+}

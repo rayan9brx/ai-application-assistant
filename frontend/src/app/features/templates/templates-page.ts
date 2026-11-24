@@ -29,6 +29,15 @@ interface TemplateSection {
 
 const SECTIONS: readonly TemplateSection[] = [
   {
+    template: 'classic',
+    pill: 'Our recommendation',
+    headline: 'Classic CV template',
+    text: 'The standard German-style CV in a Calibri-compatible font: black text, bold headings over a thin rule, dates on the right and small icons in the contact line. Clear for recruiters and every applicant tracking system.',
+    variants: [
+      { id: 'standard', name: 'Classic', description: 'Fixed black-and-white design; color and font options don’t change it.' },
+    ],
+  },
+  {
     template: 'simple',
     pill: 'Recruiter favorites',
     headline: 'Simple CV templates',
@@ -144,7 +153,7 @@ type FontId = (typeof FONTS)[number]['id'];
 export class TemplatesPage {
   readonly sections = SECTIONS.map((section) => ({
     ...section,
-    name: CV_TEMPLATES.find((t) => t.id === section.template)!.name,
+    name: (({ label, name }) => label ?? name)(CV_TEMPLATES.find((t) => t.id === section.template)!),
   }));
   readonly colors = COLORS;
   readonly fonts = FONTS;

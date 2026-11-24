@@ -74,13 +74,13 @@ class PdfExportControllerTests {
         }
     }
 
-    // The CV template keeps every word as real, selectable text in reading order.
+    // The Simple CV template keeps every word as real, selectable text in reading order.
     @Test
     void cvTemplateKeepsHeadingsAndBulletsAsPlainText() throws Exception {
         String text = "Taylor Brooks\ntaylor@example.com · Hamburg\n\nSummary\nFrontend developer.\n\n"
             + "EXPERIENCE\nFrontend Developer, Northwind Labs  2022 – Present\n- Built a dashboard used by 40 teams\n"
             + "• Cut load time by [add result, e.g. 20%]\n\nSkills:\nReact, TypeScript";
-        byte[] bytes = mvc.perform(post("/api/documents/export").contentType(MediaType.APPLICATION_JSON).content(payload("cv", text)))
+        byte[] bytes = mvc.perform(post("/api/documents/export").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("documentType", "cv", "text", text, "template", "simple"))))
             .andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
         try (var document = Loader.loadPDF(bytes)) {
             String extracted = new PDFTextStripper().getText(document).replace("\r\n", "\n");

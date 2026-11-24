@@ -30,9 +30,9 @@ public class Cv {
     @Column(name = "job_description", length = 15000)
     private String jobDescription;
 
-    /** The PDF layout: simple, modern, compact or creative (see CvTemplate). */
+    /** The PDF layout: classic (default), simple, modern, compact or creative (see CvTemplate). */
     @Column(nullable = false, length = 20)
-    private String template = "simple";
+    private String template = "classic";
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

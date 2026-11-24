@@ -22,14 +22,14 @@ let nextId = 0;
             (change)="valueChange.emit(template.id)"
           />
           <app-cv-sheet class="thumb" [text]="text()" [template]="template.id" crop="1 / 1" [decorative]="true" />
-          <span class="option-name">{{ template.name }}</span>
+          <span class="option-name">{{ template.label ?? template.name }}</span>
         </label>
       }
     </fieldset>
   `,
   styles: `
     :host { display: block; }
-    fieldset { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
+    fieldset { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 10px; margin: 0; padding: 0; border: 0; }
     .option { display: grid; gap: 6px; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
     .option:hover { border-color: var(--primary-200); }
     .option.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }

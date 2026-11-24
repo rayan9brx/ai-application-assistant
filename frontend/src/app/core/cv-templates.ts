@@ -3,11 +3,13 @@
  * backend's CvTemplate enum and the check constraint on cvs.template (V5 migration); the
  * layouts are drawn by CvSheet here and by PdfExportService in the PDF.
  */
-export type CvTemplateId = 'simple' | 'modern' | 'compact' | 'creative';
+export type CvTemplateId = 'classic' | 'simple' | 'modern' | 'compact' | 'creative';
 
 export interface CvTemplate {
   id: CvTemplateId;
   name: string;
+  /** Shown in the template picker and on /templates; defaults to the name. */
+  label?: string;
   /** One line, for the mega menu and the picker. */
   tagline: string;
   description: string;
@@ -15,6 +17,15 @@ export interface CvTemplate {
 }
 
 export const CV_TEMPLATES: readonly CvTemplate[] = [
+  {
+    id: 'classic',
+    name: 'Classic',
+    label: 'Classic (recommended)',
+    tagline: 'Calibri-style, black and white, one column',
+    description:
+      'The standard German-style CV: Carlito (Calibri) font, black text, bold headings over a thin rule and dates on the right. Built for applicant tracking systems.',
+    tags: ['ATS-friendly', '1 page', 'Recommended'],
+  },
   {
     id: 'simple',
     name: 'Simple',
@@ -49,7 +60,7 @@ export const CV_TEMPLATES: readonly CvTemplate[] = [
   },
 ];
 
-export const DEFAULT_TEMPLATE: CvTemplateId = 'simple';
+export const DEFAULT_TEMPLATE: CvTemplateId = 'classic';
 export const TEMPLATES_HREF = '/templates';
 export const EXAMPLES_HREF = '/examples';
 export const COVER_LETTER_EXAMPLES_HREF = '/examples/cover-letters';
@@ -226,6 +237,8 @@ export type CvBlock =
 
 export interface ParsedCv {
   name: string;
+  /** Shown in the template picker and on /templates; defaults to the name. */
+  label?: string;
   contact: string[];
   blocks: CvBlock[];
 }

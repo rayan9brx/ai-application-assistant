@@ -103,7 +103,7 @@ public class AccountService {
     }
 
     /** Not @Transactional on purpose: profile() may insert and must not share a transaction. */
-    /** A null template means the default, 'simple'. */
+    /** A null template means the default, 'classic'. */
     public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription, String template) {
         profile(userId, null);
         // Admins have no limits; the role comes from the database, never from the request.

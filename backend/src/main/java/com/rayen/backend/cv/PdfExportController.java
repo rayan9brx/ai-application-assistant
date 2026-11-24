@@ -19,7 +19,7 @@ public class PdfExportController {
     public record ExportRequest(
         @NotBlank @Pattern(regexp = "cv|motivationLetter") String documentType,
         @NotBlank @Size(max = 60000) String text,
-        // CV only; optional, defaults to "simple".
+        // CV only; optional, defaults to "classic".
         @Pattern(regexp = CvTemplate.IDS) String template
     ) {}
 

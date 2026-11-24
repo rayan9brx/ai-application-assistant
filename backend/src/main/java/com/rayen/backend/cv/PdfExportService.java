@@ -60,7 +60,7 @@ public class PdfExportService {
      * ATS-friendly CV layout in the default template (see {@link #generateCv(String, CvTemplate)}).
      */
     public byte[] generateCv(String text) throws IOException {
-        return generateCv(text, CvTemplate.SIMPLE);
+        return generateCv(text, CvTemplate.CLASSIC);
     }
 
     /**
@@ -70,6 +70,7 @@ public class PdfExportService {
      * changes sizes, spacing and colours; the frontend's CvSheet renders the same layout.
      */
     public byte[] generateCv(String text, CvTemplate template) throws IOException {
+        if (template == CvTemplate.CLASSIC) return ClassicCvRenderer.render(text);
         try (var document = new PDDocument();
              var fontStream = getClass().getResourceAsStream("/fonts/NotoSans-Regular.ttf");
              var output = new ByteArrayOutputStream()) {

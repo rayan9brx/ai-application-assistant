@@ -39,7 +39,7 @@ public class AccountController {
 
     public record CvRequest(@NotBlank @Size(max = 200) String title, @NotNull JsonNode content,
                             @Size(max = 15000) String jobDescription,
-                            // Optional: null creates the CV with "simple" and keeps the current one on update.
+                            // Optional: null creates the CV with "classic" and keeps the current one on update.
                             @Pattern(regexp = CvTemplate.IDS) String template) {}
 
     /** preview: the start of the CV text, for the dashboard's mini page. */
