@@ -22,9 +22,6 @@
               [attr.aria-current]="active(item) ? 'page' : null">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
               <span class="nav-label">{{ item.label }}</span>
-              @if (item.soon) {
-                <span class="soon">Soon</span>
-              }
             </a>
           </li>
         }
@@ -68,11 +65,6 @@
         aria-controls="app-sidebar" [attr.aria-expanded]="drawerOpen()" (click)="openDrawer()">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
       </button>
-
-      <nav class="tabs" aria-label="Documents">
-        <a href="/dashboard" [class.active]="!coverLetters()" [attr.aria-current]="!coverLetters() && path() === '/dashboard' ? 'page' : null">CVs</a>
-        <a href="/cover-letters" [class.active]="coverLetters()" [attr.aria-current]="coverLetters() ? 'page' : null">Cover letters</a>
-      </nav>
 
       <div class="actions">
         @if (role.isAdmin()) {

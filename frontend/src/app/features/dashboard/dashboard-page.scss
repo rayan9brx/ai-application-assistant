@@ -10,7 +10,7 @@
 .greeting p { margin-top: 6px; font-size: .95rem; }
 
 // Feature cards
-.features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
 .feature {
   display: grid; gap: 6px; height: 100%; padding: 20px; border: 1px solid var(--border); border-radius: 16px;
   background: radial-gradient(ellipse 80% 70% at 100% 0%, color-mix(in srgb, var(--primary-400) 12%, transparent), transparent 70%), var(--surface);
@@ -20,7 +20,6 @@
 .feature-icon { display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: 6px; border-radius: 10px; background: color-mix(in srgb, var(--text) 5%, transparent); font-size: 1.2rem; }
 .feature strong { display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 1rem; }
 .feature > span:last-child { color: var(--text-secondary); font-size: var(--text-sm); }
-.soon { padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-secondary); font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
 
 // Panel
 .panel { display: grid; gap: 18px; padding: 22px; border: 1px solid var(--border); border-radius: 18px; background: var(--bg); }

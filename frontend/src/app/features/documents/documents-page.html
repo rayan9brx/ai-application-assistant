@@ -1,0 +1,117 @@
+<section class="documents" aria-labelledby="documents-title">
+  <header class="page-head">
+    <h1 id="documents-title">My Documents</h1>
+    <div class="controls">
+      <label class="sr-only" for="doc-search">Search documents</label>
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4 4" /></svg>
+        <input id="doc-search" type="search" placeholder="Search documents" autocomplete="off"
+          [value]="query()" (input)="query.set(value($event))" />
+      </div>
+      <label class="sr-only" for="doc-sort">Sort by</label>
+      <select id="doc-sort" [value]="sort()" (change)="setSort(value($event))">
+        <option value="edited">Last edited</option>
+        <option value="name">Name</option>
+      </select>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <section class="panel" aria-labelledby="cvs-title">
+    <header class="panel-head">
+      <h2 id="cvs-title">CVs</h2>
+    </header>
+
+    @let list = filtered();
+    @if (cvs() === null) {
+      <p class="muted" role="status">Loading your CVs…</p>
+    } @else {
+      <ul class="grid" role="list">
+        <li>
+          <a class="create new-card" href="/builder/new">
+            <span class="create-button">
+              <span class="plus" aria-hidden="true">+</span>
+              <strong>New CV</strong>
+              <span>Start from an empty CV</span>
+            </span>
+          </a>
+        </li>
+        @for (cv of list; track cv.id) {
+          <li class="cv-card" [class.busy]="busyId() === cv.id">
+            <button type="button" class="cv-open" [disabled]="!!busyId()" (click)="open(cv)"
+              [attr.aria-label]="'Open ' + cv.title">
+              <span class="paper" aria-hidden="true"><span class="paper-text">{{ cv.preview || 'No text yet' }}</span></span>
+            </button>
+            <div class="cv-info">
+              <div class="cv-text">
+                <h3 [title]="cv.title">{{ cv.title }}</h3>
+                <p class="muted small">edited {{ ago(cv.updatedAt) }}</p>
+              </div>
+              @if (cv.lastScore !== null) {
+                <app-score-ring class="ring" [value]="cv.lastScore" [attr.aria-label]="'Last score ' + cv.lastScore" role="img" />
+              } @else {
+                <span class="unscored">Not scored</span>
+              }
+              <div class="cv-menu">
+                <button type="button" class="dots" [attr.aria-label]="'Actions for ' + cv.title" aria-haspopup="menu"
+                  [attr.aria-expanded]="menuFor() === cv.id" [disabled]="!!busyId()" (click)="toggleMenu(cv, $event)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="12" cy="19" r="1.6" /></svg>
+                </button>
+                @if (menuFor() === cv.id) {
+                  <div class="menu" role="menu">
+                    <button type="button" role="menuitem" (click)="open(cv)">Open</button>
+                    <button type="button" role="menuitem" (click)="askRename(cv)">Rename</button>
+                    <button type="button" role="menuitem" (click)="duplicate(cv)">Duplicate</button>
+                    <button type="button" role="menuitem" (click)="download(cv)">Download PDF</button>
+                    <button type="button" role="menuitem" class="danger-item" (click)="askDelete(cv)">Delete</button>
+                  </div>
+                }
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+      @if (query().trim() && list.length === 0) {
+        <p class="first-line" role="status">No CVs match “{{ query().trim() }}”.</p>
+      }
+    }
+  </section>
+
+  <section class="panel" aria-labelledby="letters-title">
+    <header class="panel-head">
+      <h2 id="letters-title">Cover letters</h2>
+    </header>
+    <div class="empty">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v12H4zM4 7l8 6 8-6" /></svg>
+      <p>No cover letters yet</p>
+    </div>
+  </section>
+</section>
+
+<dialog #renameDialog class="dialog" aria-labelledby="rename-title">
+  <form (submit)="rename($event)">
+    <h2 id="rename-title">Rename CV</h2>
+    <label class="sr-only" for="rename-input">New name</label>
+    <input id="rename-input" maxlength="200" autocomplete="off" [value]="newTitle()" (input)="newTitle.set(value($event))" />
+    <div class="dialog-actions">
+      <button type="button" class="plain" (click)="closeDialog(renameDialog)">Cancel</button>
+      <button type="submit" class="cta cta-small" [disabled]="!newTitle().trim() || !!busyId()">
+        {{ busyId() ? 'Saving…' : 'Save' }}
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<dialog #deleteDialog class="dialog" aria-labelledby="delete-title">
+  <h2 id="delete-title">Delete “{{ target()?.title }}”?</h2>
+  <p class="muted">This deletes the CV and its score history. It can’t be undone.</p>
+  <div class="dialog-actions">
+    <button type="button" class="plain" (click)="closeDialog(deleteDialog)">Cancel</button>
+    <button type="button" class="danger" [disabled]="!!busyId()" (click)="remove()">
+      {{ busyId() ? 'Deleting…' : 'Delete' }}
+    </button>
+  </div>
+</dialog>

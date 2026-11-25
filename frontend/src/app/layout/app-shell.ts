@@ -49,7 +49,6 @@ export class AppShell {
   readonly mobile = signal(matchMedia(MOBILE).matches);
   /** On small screens the closed drawer is off-screen, so keep it out of the tab order. */
   readonly drawerHidden = computed(() => this.mobile() && !this.drawerOpen());
-  readonly coverLetters = computed(() => this.path() === '/cover-letters');
   readonly initial = computed(() => (this.auth.displayName().trim()[0] ?? '?').toUpperCase());
 
   constructor() {

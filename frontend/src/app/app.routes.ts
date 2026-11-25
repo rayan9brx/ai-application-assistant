@@ -123,6 +123,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard-page').then((m) => m.DashboardPage),
   },
   {
+    path: 'documents',
+    title: 'My Documents — Rezumo',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/documents/documents-page').then((m) => m.DocumentsPage),
+  },
+  {
     path: 'builder/:cvId',
     title: 'CV Builder — Rezumo',
     canActivate: [authGuard],

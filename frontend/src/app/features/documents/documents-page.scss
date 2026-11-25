@@ -1,0 +1,23 @@
+// /documents: reuses the dashboard's cards, panels and dialogs (dashboard-page.scss).
+.documents { display: grid; gap: 24px; max-width: 1200px; margin-inline: auto; }
+.page-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.page-head h1 { color: var(--text); font-size: clamp(1.5rem, 2.6vw, 1.9rem); letter-spacing: -.6px; }
+.controls { flex-wrap: wrap; }
+
+.search { position: relative; display: flex; align-items: center; }
+.search svg { position: absolute; left: 11px; width: 16px; height: 16px; fill: none; stroke: var(--text-muted); stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.search input { width: min(280px, 100%); min-height: 38px; padding: 6px 12px 6px 34px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: var(--text-sm); }
+.search input::placeholder { color: var(--text-muted); }
+.search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+// The dashed "New CV" card is a link here (no upload).
+.new-card { display: block; color: var(--text); text-decoration: none; }
+.new-card:hover { color: var(--text); }
+
+.empty { display: grid; justify-items: center; gap: 10px; padding: 36px 16px; border: 1.5px dashed var(--border); border-radius: 14px; color: var(--text-secondary); font-size: var(--text-sm); text-align: center; }
+.empty svg { width: 32px; height: 32px; fill: none; stroke: var(--text-muted); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (max-width: 600px) {
+  .controls, .search, .search input { width: 100%; }
+  .controls select { flex: 1; }
+}
