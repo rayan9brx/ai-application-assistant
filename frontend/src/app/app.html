@@ -5,6 +5,14 @@
       <router-outlet />
     </main>
   </div>
+} @else if (builder()) {
+  <div class="app-shell theme-dark builder-shell">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <main id="main" tabindex="-1">
+      <router-outlet />
+    </main>
+  </div>
+  <app-onboarding-dialog />
 } @else if (appLayout()) {
   <!-- Logged-in pages: sidebar + top bar. -->
   <app-shell>

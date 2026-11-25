@@ -244,6 +244,28 @@ export function joinLineBreaks(text: string): string {
 /** Multi-line fields whose single line breaks are joined; skills keep one line per group. */
 export const JOINS_LINES: ReadonlySet<SectionKind> = new Set(['summary']);
 
+/**
+ * The same line-break cleanup as on paste, for content already saved: summaries and bullets get
+ * their single line breaks joined (hyphens kept). Returns the content unchanged when there is none.
+ */
+export function cleanLineBreaks(content: BuilderContent): BuilderContent {
+  let changed = false;
+  const sections = content.sections.map((section) => {
+    let text = section.text;
+    if (JOINS_LINES.has(section.kind) && text.includes('\n') && joinLineBreaks(text) !== text.trim()) {
+      text = joinLineBreaks(text);
+      changed = true;
+    }
+    const entries = section.entries.map((entry) => {
+      if (!entry.bullets.some((b) => b.includes('\n'))) return entry;
+      changed = true;
+      return { ...entry, bullets: entry.bullets.map((b) => joinLineBreaks(b).replace(/\n+/g, ' ')) };
+    });
+    return { ...section, text, entries };
+  });
+  return changed ? { ...content, sections } : content;
+}
+
 export function dateRange(entry: BuilderEntry): string {
   const end = entry.present ? 'Present' : clean(entry.end);
   const start = clean(entry.start);

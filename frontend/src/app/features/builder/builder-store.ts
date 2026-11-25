@@ -4,6 +4,7 @@ import {
   BuilderContent,
   BuilderDesign,
   SectionKind,
+  cleanLineBreaks,
   emptyContent,
   fromCvText,
   normalizeContent,
@@ -86,16 +87,18 @@ export class BuilderStore {
       const [saved, history] = await Promise.all([this.api.get(id), this.api.history(id).catch(() => [])]);
       const raw = saved.content.builder;
       // A CV saved by the checker (or uploaded) has only text: build the sections from it.
-      const content =
+      const loaded =
         normalizeContent(raw, saved.template) ??
         (saved.content.text?.trim() ? fromCvText(saved.content.text, saved.template) : emptyContent(saved.template));
+      // Text saved before line breaks were joined on paste gets the same cleanup now.
+      const content = cleanLineBreaks(loaded);
       this.title.set(saved.title || UNTITLED);
       this.content.set(content);
       this.jobDescription.set(saved.jobDescription ?? '');
       this.analysis.set(history[0]?.result ?? null);
       this.loaded.set(true);
       // Store the structure right away, so the next visit doesn't parse the text again.
-      if (!raw) this.markDirty();
+      if (!raw || content !== loaded) this.markDirty();
     } catch (error) {
       this.loadError.set(
         error instanceof HttpErrorResponse && error.status === 404

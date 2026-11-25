@@ -21,6 +21,24 @@ import { ContentEditor } from './content-editor';
 import { DesignerPanel } from './designer-panel';
 import { JobMatcherPanel } from './job-matcher-panel';
 
+/** An A4 page at real size: 595 pt at 96 px per inch. */
+const REAL_WIDTH = (595 * 96) / 72;
+const ZOOM_STEPS = [50, 67, 75, 90, 100, 110, 125, 150, 175, 200];
+const ZOOM_KEY = 'rezumo.builder.zoom';
+/** 'fit' fills the preview's width; a number is a percent of the real size. */
+type Zoom = 'fit' | number;
+
+function storedZoom(): Zoom {
+  try {
+    const value = localStorage.getItem(ZOOM_KEY);
+    const percent = Number(value);
+    if (value && ZOOM_STEPS.includes(percent)) return percent;
+  } catch {
+    // No storage (private window): use the default.
+  }
+  return 'fit';
+}
+
 /**
  * /builder/:cvId — edit a CV section by section, with the design, the ATS analysis and the job
  * matcher next to a live A4 preview. Changes are saved 1 s after typing stops.
@@ -40,6 +58,21 @@ export class BuilderPage {
   private readonly router = inject(Router);
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
   private readonly deleteDialog = viewChild<ElementRef<HTMLDialogElement>>('deleteDialog');
+  private readonly pages = viewChild<ElementRef<HTMLElement>>('pages');
+
+  readonly minZoom = ZOOM_STEPS[0];
+  readonly maxZoom = ZOOM_STEPS[ZOOM_STEPS.length - 1];
+  readonly zoom = signal<Zoom>(storedZoom());
+  /** The preview's inner width (without its padding), for Fit width. */
+  private readonly fitWidth = signal(0);
+  readonly sheetWidth = computed(() => {
+    const zoom = this.zoom();
+    return zoom === 'fit' ? this.fitWidth() || null : Math.round((REAL_WIDTH * zoom) / 100);
+  });
+  readonly zoomPercent = computed(() => {
+    const zoom = this.zoom();
+    return zoom === 'fit' ? Math.round((this.fitWidth() / REAL_WIDTH) * 100) : zoom;
+  });
 
   readonly menuOpen = signal(false);
   readonly busy = signal<'export' | 'duplicate' | 'delete' | null>(null);
@@ -81,6 +114,20 @@ export class BuilderPage {
         if (created) await this.router.navigateByUrl(`/builder/${created}`, { replaceUrl: true });
       })();
     });
+    // Fit width follows the preview's size.
+    effect((onCleanup) => {
+      const pages = this.pages()?.nativeElement;
+      if (!pages) return;
+      const measure = () => {
+        const style = getComputedStyle(pages);
+        const padding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+        this.fitWidth.set(Math.max(0, Math.floor(pages.clientWidth - padding)));
+      };
+      const observer = new ResizeObserver(measure);
+      observer.observe(pages);
+      measure();
+      onCleanup(() => observer.disconnect());
+    });
     effect(() => {
       const title = this.store.title().trim() || UNTITLED;
       untracked(() => (document.title = `${title} — CV Builder — Rezumo`));
@@ -103,6 +150,25 @@ export class BuilderPage {
   @HostListener('document:click', ['$event'])
   closeMenu(event: MouseEvent): void {
     if (!(event.target as Element).closest?.('.menu-wrap')) this.menuOpen.set(false);
+  }
+
+  setZoom(zoom: Zoom): void {
+    this.zoom.set(zoom);
+    try {
+      localStorage.setItem(ZOOM_KEY, String(zoom));
+    } catch {
+      // No storage: the choice lasts until the page closes.
+    }
+  }
+
+  /** One step smaller (-1) or bigger (1) than the current size, from Fit width too. */
+  zoomBy(direction: 1 | -1): void {
+    const current = this.zoomPercent();
+    const next =
+      direction > 0
+        ? ZOOM_STEPS.find((step) => step > current)
+        : [...ZOOM_STEPS].reverse().find((step) => step < current);
+    if (next) this.setZoom(next);
   }
 
   value(event: Event): string {

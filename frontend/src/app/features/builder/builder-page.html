@@ -72,8 +72,19 @@
         }
       </div>
       <aside class="preview" aria-label="Live preview">
-        <app-cv-sheet class="sheet" [text]="store.text()" [template]="store.design().template"
-          [design]="store.design()" />
+        <div class="zoom" role="toolbar" aria-label="Preview zoom">
+          <button type="button" class="step" aria-label="Zoom out" [disabled]="zoomPercent() <= minZoom"
+            (click)="zoomBy(-1)">−</button>
+          <span class="zoom-level" aria-live="polite">{{ zoomPercent() }}%</span>
+          <button type="button" class="step" aria-label="Zoom in" [disabled]="zoomPercent() >= maxZoom"
+            (click)="zoomBy(1)">+</button>
+          <button type="button" [attr.aria-pressed]="zoom() === 'fit'" (click)="setZoom('fit')">Fit width</button>
+          <button type="button" [attr.aria-pressed]="zoom() === 100" (click)="setZoom(100)">100%</button>
+        </div>
+        <div #pages class="pages">
+          <app-cv-sheet class="sheet" paged [style.width.px]="sheetWidth()" [text]="store.text()"
+            [template]="store.design().template" [design]="store.design()" />
+        </div>
       </aside>
     </div>
   }

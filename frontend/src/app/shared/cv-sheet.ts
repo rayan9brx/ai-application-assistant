@@ -3,6 +3,7 @@ import {
   DestroyRef,
   ElementRef,
   afterNextRender,
+  booleanAttribute,
   computed,
   effect,
   inject,
@@ -22,6 +23,54 @@ const PAGE_WIDTH = 595;
  * Classic thumbnails are scaled with a transform like the other templates.
  */
 const SHARP_MIN_SCALE = 0.6;
+const PAGE_HEIGHT = 842;
+
+/** One A4 sheet of a paged preview, in PDF points of the laid-out CV. */
+interface SheetPage {
+  start: number;
+  /** Where this sheet's content ends (the rest is covered); null on the last sheet. */
+  mask: number | null;
+}
+
+/**
+ * Splits the laid-out CV into A4 pages between lines, never through one: a page ends before the
+ * first line that would cross its bottom margin, a heading moves along with the line after it, and
+ * the next page starts with a top margin. `px` is the layout's px per point (scale for sharp pages).
+ */
+function paginate(page: HTMLElement, scale: number, px: number): SheetPage[] {
+  const origin = page.getBoundingClientRect().top;
+  const blocks = [...page.querySelectorAll<HTMLElement>('p, .gap, .c-gap, .c-rule')].map((el) => {
+    const rect = el.getBoundingClientRect();
+    return {
+      top: (rect.top - origin) / scale,
+      bottom: (rect.bottom - origin) / scale,
+      heading: el.matches('.heading, .c-heading'),
+      gap: el.matches('.gap, .c-gap'),
+    };
+  });
+  const style = getComputedStyle(page);
+  const bottomMargin = parseFloat(style.paddingBottom) / px;
+  const topMargin = bottomMargin || parseFloat(style.paddingTop) / px;
+  const pages: SheetPage[] = [];
+  let start = 0;
+  let i = 0;
+  while (pages.length < 50) {
+    const limit = start + PAGE_HEIGHT - bottomMargin + 0.5;
+    let k = i;
+    while (k < blocks.length && blocks[k].bottom <= limit) k++;
+    if (k >= blocks.length) break;
+    if (k === i) k = i + 1; // A block taller than a page: cut it.
+    else if (k - 1 > i && blocks[k - 1].heading) k--;
+    if (k >= blocks.length) break;
+    pages.push({ start, mask: blocks[k].top - start });
+    i = k;
+    while (i < blocks.length && blocks[i].gap) i++;
+    if (i >= blocks.length) return pages;
+    start = blocks[i].top - topMargin;
+  }
+  pages.push({ start, mask: null });
+  return pages;
+}
 
 /**
  * A CV text drawn in one of the templates, like the PDF export draws it, scaled to the width
@@ -33,6 +82,21 @@ const SHARP_MIN_SCALE = 0.6;
   template: `
     <ng-template #rich let-runs>@for (run of runs; track $index) {@if (run.href) {<span class="c-link" [class.c-bold]="run.bold">{{ run.text }}</span>} @else if (run.bold) {<strong>{{ run.text }}</strong>} @else {<span>{{ run.text }}</span>}}</ng-template>
 
+    @if (paged()) {
+      <!-- One sheet per A4 page: each shows its slice of the same laid-out CV. -->
+      @for (p of pages(); track $index) {
+        <div class="sheet-page" [style.height.px]="pageHeight()">
+          <div class="sheet-shift" [style.top.px]="-p.start * scale()"><ng-container *ngTemplateOutlet="sheet" /></div>
+          @if (p.mask !== null) {
+            <div class="sheet-mask" [style.top.px]="p.mask * scale()"></div>
+          }
+        </div>
+      }
+    } @else {
+      <ng-container *ngTemplateOutlet="sheet" />
+    }
+
+    <ng-template #sheet>
     @if (template() === 'classic') {
       @let c = classic();
       <!-- Classic: fixed font and black text; the builder's accent and font options don't apply. -->
@@ -126,15 +190,17 @@ const SHARP_MIN_SCALE = 0.6;
       </div>
     </div>
     }
+    </ng-template>
   `,
   styleUrl: './cv-sheet.scss',
   host: {
     // A CV page stays a white sheet, also inside dark layouts.
     class: 'theme-light',
     '[class.cropped]': '!!crop()',
+    '[class.paged]': 'paged()',
     '[class.ready]': 'scale() > 0',
     '[style.aspect-ratio]': 'crop()',
-    '[style.height.px]': 'crop() ? null : height()',
+    '[style.height.px]': 'crop() || paged() ? null : height()',
     '[style.--scale]': 'scale()',
     '[attr.aria-hidden]': 'decorative() || null',
   },
@@ -149,6 +215,11 @@ export class CvSheet {
 
   /** The builder's design settings (accent, font, size, spacing…); omitted: the template as is. */
   readonly design = input<BuilderDesign | null>(null);
+  /** Show every A4 page as its own sheet (the builder's preview); otherwise one long page. */
+  readonly paged = input(false, { transform: booleanAttribute });
+  /** Where each sheet starts in the laid-out CV, and where its content ends (null: last page). */
+  readonly pages = signal<SheetPage[]>([{ start: 0, mask: null }]);
+  readonly pageHeight = computed(() => PAGE_HEIGHT * this.scale());
 
   readonly parsed = computed(() => parseCv(this.text()));
   readonly classic = computed(() => parseClassic(this.text()));
@@ -181,6 +252,10 @@ export class CvSheet {
       // Classic is laid out at its final size (sharp text); the others are scaled with a transform.
       const sharp = page.classList.contains('classic') && scale >= SHARP_MIN_SCALE;
       this.height.set(Math.ceil(sharp ? page.offsetHeight : page.offsetHeight * scale));
+      if (this.paged() && scale > 0) {
+        const pages = paginate(page, scale, sharp ? scale : 1);
+        if (JSON.stringify(pages) !== JSON.stringify(this.pages())) this.pages.set(pages);
+      }
     };
     // Classic has its own page element, so switching templates swaps the observed page.
     const watch = () => {

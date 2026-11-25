@@ -33,8 +33,10 @@ export class App {
   readonly appLayout = computed(() => {
     const path = this.navigation.path();
     if (APP_PATHS.includes(path)) return this.auth.signedIn();
-    return (path.startsWith('/tools/') || path.startsWith('/builder/')) && this.auth.signedIn();
+    return path.startsWith('/tools/') && this.auth.signedIn();
   });
+  /** The CV builder is full-screen: no app sidebar or top bar, only its own bar. */
+  readonly builder = computed(() => this.navigation.path().startsWith('/builder/') && this.auth.signedIn());
   private readonly auth = inject(AuthService);
 
   constructor() {

@@ -8,6 +8,13 @@
 :host(.ready) .page { opacity: 1; }
 :host(.cropped) .page { position: absolute; inset: 0 auto auto 0; }
 
+/* Paged (builder preview): each A4 page is its own white sheet with a gap between them. */
+:host(.paged) { overflow: visible; background: transparent; }
+.sheet-page { position: relative; overflow: hidden; background: var(--surface); border-radius: 2px; box-shadow: var(--shadow-lg); }
+.sheet-page + .sheet-page { margin-top: 20px; }
+.sheet-shift { position: absolute; left: 0; width: 100%; }
+.sheet-mask { position: absolute; inset: auto 0 0 0; bottom: 0; background: var(--surface); }
+
 .page[data-template='modern'] { --name: 24px; --head: 11px; --lh: 1.48; --section: 12px; --name-color: var(--cv-accent, var(--primary-600)); --head-color: var(--cv-accent, var(--primary-600)); --bullet-color: var(--cv-accent, var(--primary-600)); --rule: .9px solid var(--cv-accent, var(--primary-600)); }
 .page[data-template='compact'] { --m: 36px; --name: 17px; --body: 9.5px; --sub: 9px; --head: 10px; --lh: 1.35; --section: 6px; --after-head: 3px; --gap: 3px; --rule: .6px solid var(--border-strong); }
 .page[data-template='creative'] { --name: 24px; --head: 11px; --lh: 1.48; --section: 12px; --head-color: var(--cv-accent, var(--primary-600)); --bullet-color: var(--cv-accent, var(--primary-600)); --rule: 0; padding-top: 0; }
