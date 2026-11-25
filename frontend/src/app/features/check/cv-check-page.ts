@@ -11,15 +11,16 @@ import {
   viewChild,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { CvFlow } from '../../core/cv-flow';
+import { CvApi, CvSummary } from '../../core/cv-api';
+import { CvFlow, MAX_FILE_BYTES } from '../../core/cv-flow';
 import { CvLibrary } from '../../core/cv-library';
+import { ScoreRing } from '../../shared/score-ring';
 import { CvSheet } from '../../shared/cv-sheet';
 import { CvTemplateId, TEMPLATES_HREF, exampleBySlug, isTemplateId, templateById } from '../../core/cv-templates';
 import { TemplatePicker } from '../../shared/template-picker';
 import { IssueCard } from './issue-card';
 import { ScoreReport } from './score-report';
 import { TailorPanel } from './tailor-panel';
-import { UploadBar } from '../../shared/upload-bar';
 
 const SCORING_STEPS = [
   'Checking ATS compatibility…',
@@ -31,7 +32,7 @@ const SCORING_STEPS = [
 /** /check: Upload → Score → Fix → Download. */
 @Component({
   selector: 'app-cv-check-page',
-  imports: [CvSheet, IssueCard, ScoreReport, TailorPanel, TemplatePicker, UploadBar],
+  imports: [CvSheet, IssueCard, ScoreReport, TailorPanel, TemplatePicker, ScoreRing],
   templateUrl: './cv-check-page.html',
   styleUrl: './cv-check-page.scss',
 })
@@ -68,7 +69,15 @@ export class CvCheckPage {
   readonly file = signal<File | null>(null);
   readonly pasted = signal('');
   readonly step = signal(0);
-  private readonly uploadBar = viewChild<UploadBar>('uploadBar');
+  readonly dragging = signal(false);
+  readonly uploadError = signal('');
+  /** The job description section; open when there already is one. */
+  readonly jobOpen = signal(!!this.flow.jobDescription().trim());
+  /** The three most recently updated saved CVs, for one-click scoring. */
+  readonly savedCvs = signal<CvSummary[]>([]);
+  readonly loadingSaved = signal<string | null>(null);
+  private readonly api = inject(CvApi);
+  private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   private readonly pasteBox = viewChild<ElementRef<HTMLTextAreaElement>>('pasteBox');
   private readonly jobBox = viewChild<ElementRef<HTMLTextAreaElement>>('jobBox');
   readonly canScore = computed(() =>
@@ -97,8 +106,8 @@ export class CvCheckPage {
         // After render and the navigation's scroll-to-top, so the target is scrolled into view.
         setTimeout(() => {
           if (focus === 'job') {
-            const field = this.jobBox()?.nativeElement ?? document.getElementById('results-job');
-            field?.focus();
+            if (this.flow.phase() === 'input') this.openJob();
+            else document.getElementById('results-job')?.focus();
           } else if (focus === 'fixes') {
             document.getElementById('issues-title')?.scrollIntoView({ block: 'start' });
           }
@@ -135,18 +144,108 @@ export class CvCheckPage {
       this.file.set(handedOff);
       this.score();
     }
+    this.api
+      .list()
+      .then((cvs) =>
+        this.savedCvs.set(
+          [...cvs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 3),
+        ),
+      )
+      .catch(() => {
+        /* The saved CV shortcuts are optional. */
+      });
+  }
+
+  browse(): void {
+    this.fileInput()?.nativeElement.click();
+  }
+
+  picked(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (file) this.select(file);
+  }
+
+  dragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragging.set(true);
+  }
+
+  dragLeave(event: DragEvent): void {
+    const zone = event.currentTarget as HTMLElement;
+    if (!zone.contains(event.relatedTarget as Node | null)) this.dragging.set(false);
+  }
+
+  drop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragging.set(false);
+    const file = event.dataTransfer?.files[0];
+    if (file) this.select(file);
+  }
+
+  private select(file: File): void {
+    if (!/\.(pdf|docx)$/i.test(file.name)) {
+      this.uploadError.set(`“${file.name}” isn’t a PDF or Word (.docx) file.`);
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      this.uploadError.set(`“${file.name}” is larger than 5 MB.`);
+      return;
+    }
+    this.uploadError.set('');
+    this.flow.error.set('');
+    this.file.set(file);
+  }
+
+  removeFile(): void {
+    this.file.set(null);
+    this.flow.error.set('');
+  }
+
+  usePaste(): void {
+    this.mode.set('paste');
+    this.uploadError.set('');
+    setTimeout(() => this.pasteBox()?.nativeElement.focus(), 50);
+  }
+
+  openJob(): void {
+    this.jobOpen.set(true);
+    // Once the section is rendered without `inert`, so the field can take focus.
+    setTimeout(() => this.jobBox()?.nativeElement.focus({ preventScroll: false }), 50);
+  }
+
+  closeJob(): void {
+    this.jobOpen.set(false);
+    this.flow.jobDescription.set('');
+  }
+
+  size(bytes: number): string {
+    return bytes < 1024 * 1024
+      ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+      : `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  /** Opens a saved CV in the checker and scores it, keeping any job description typed here. */
+  async scoreSaved(cv: CvSummary): Promise<void> {
+    if (this.loadingSaved()) return;
+    this.loadingSaved.set(cv.id);
+    const job = this.flow.jobDescription();
+    try {
+      const saved = await this.api.get(cv.id);
+      this.file.set(null);
+      this.flow.loadSaved(cv.id, saved.content.text, job, null, null, saved.template);
+      await this.flow.startWithText(saved.content.text);
+    } catch (error) {
+      this.flow.error.set(CvFlow.message(error, 'We couldn’t open this CV. Please try again.'));
+    } finally {
+      this.loadingSaved.set(null);
+    }
   }
 
   /** "Try again" after a failure: re-run with the same file or text. */
   retry(): void {
     this.score();
-  }
-
-  /** "Score my CV": scores when ready, otherwise opens the file picker (or focuses the text box). */
-  scoreOrBrowse(): void {
-    if (this.canScore()) this.score();
-    else if (this.mode() === 'file') this.uploadBar()?.browse();
-    else this.pasteBox()?.nativeElement.focus();
   }
 
   score(): void {
@@ -163,6 +262,7 @@ export class CvCheckPage {
   startOver(): void {
     this.file.set(null);
     this.pasted.set('');
+    this.jobOpen.set(false);
     this.flow.reset();
     scrollTo({ top: 0 });
   }

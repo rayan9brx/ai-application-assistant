@@ -164,26 +164,58 @@
   @case ('input') {
     <section class="intro" aria-labelledby="check-title">
       <p class="pill-badge">CV Checker</p>
-      <h1 id="check-title">Check your CV in under a minute</h1>
-      <p class="lede">
-        Get an ATS score, see what’s missing and fix it with AI. We send your CV to our AI provider
-        for the analysis. Your CVs are stored securely in the EU and can be deleted anytime in
-        Settings.
-      </p>
+      <h1 id="check-title">How strong is your CV?</h1>
+      <p class="lede">Get your ATS score and see exactly what to fix, in under a minute.</p>
     </section>
 
     <div class="input-card">
-      <div class="modes" role="group" aria-label="How to add your CV">
-        <button type="button" [attr.aria-pressed]="mode() === 'file'" (click)="mode.set('file')">
-          Upload a file
-        </button>
-        <button type="button" [attr.aria-pressed]="mode() === 'paste'" (click)="mode.set('paste')">
-          Paste text
-        </button>
-      </div>
-
       @if (mode() === 'file') {
-        <app-upload-bar #uploadBar class="upload" [showSubmit]="false" [(file)]="file" />
+        <input
+          #fileInput
+          class="sr-only"
+          type="file"
+          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          tabindex="-1"
+          aria-hidden="true"
+          (change)="picked($event)"
+        />
+        @if (file(); as picked) {
+          <div class="file-card">
+            <span class="file-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" /><path d="M14 3v5h5" /></svg>
+            </span>
+            <span class="file-meta">
+              <span class="file-name">{{ picked.name }}</span>
+              <span class="file-size">{{ size(picked.size) }}</span>
+            </span>
+            <button class="remove" type="button" aria-label="Remove file" (click)="removeFile()">×</button>
+          </div>
+        } @else {
+          <button
+            class="drop-zone"
+            type="button"
+            [class.dragging]="dragging()"
+            (click)="browse()"
+            (dragenter)="dragOver($event)"
+            (dragover)="dragOver($event)"
+            (dragleave)="dragLeave($event)"
+            (drop)="drop($event)"
+          >
+            <span class="drop-visual" aria-hidden="true">
+              <svg class="drop-ring" viewBox="0 0 120 120">
+                <circle class="track" cx="60" cy="60" r="54" />
+                <circle class="value" cx="60" cy="60" r="54" />
+              </svg>
+              <svg class="drop-doc" viewBox="0 0 24 24">
+                <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+                <path d="M14 3v5h5M9 13h6M9 17h4" />
+              </svg>
+            </span>
+            <span class="drop-title">Drop your CV here</span>
+            <span class="drop-sub">or click to upload · PDF or Word, up to 5 MB</span>
+          </button>
+        }
+        <button class="text-link" type="button" (click)="usePaste()">or paste text instead</button>
       } @else {
         <label class="field-label" for="cv-paste">Your CV</label>
         <textarea
@@ -194,20 +226,38 @@
           [value]="pasted()"
           (input)="pasted.set(value($event))"
         ></textarea>
+        @if (pasted().trim().length < 50) {
+          <p class="muted small">Paste at least a few lines of your CV.</p>
+        }
+        <button class="text-link" type="button" (click)="mode.set('file')">or upload a file instead</button>
       }
 
-      <label class="field-label" for="job"
-        >Job description <span class="optional">(optional, for a match score)</span></label
-      >
-      <textarea
-        #jobBox
-        id="job"
-        rows="5"
-        placeholder="Paste the job you're applying for"
-        [value]="flow.jobDescription()"
-        (input)="flow.jobDescription.set(value($event))"
-      ></textarea>
+      @if (!jobOpen()) {
+        <button class="cta cta-small cta-secondary add-job" type="button" (click)="openJob()">
+          + Add a job description for a match score
+        </button>
+      }
+      <div class="job-section" [class.open]="jobOpen()" [attr.inert]="jobOpen() ? null : ''">
+        <div class="job-inner">
+          <div class="job-head">
+            <label class="field-label" for="job">Job description</label>
+            <button class="text-link small-link" type="button" (click)="closeJob()">Remove</button>
+          </div>
+          <p class="muted hint-line">Paste the job ad to see matched and missing keywords.</p>
+          <textarea
+            #jobBox
+            id="job"
+            rows="5"
+            placeholder="Paste the job you're applying for"
+            [value]="flow.jobDescription()"
+            (input)="flow.jobDescription.set(value($event))"
+          ></textarea>
+        </div>
+      </div>
 
+      @if (uploadError()) {
+        <p class="error" role="alert">{{ uploadError() }}</p>
+      }
       @if (flow.error()) {
         <div class="error retry-error" role="alert">
           <p>{{ flow.error() }}</p>
@@ -218,17 +268,58 @@
           }
         </div>
       }
-      <button class="cta score-button" type="button" (click)="scoreOrBrowse()">
-        Score my CV
-      </button>
-      @if (mode() === 'paste' && pasted().trim().length < 50) {
-        <p class="muted small">Paste at least a few lines of your CV.</p>
+      @if (file() || mode() === 'paste') {
+        <button class="cta score-button" type="button" [disabled]="!canScore()" (click)="score()">
+          Score my CV ✨
+        </button>
       }
-      <p class="muted small template-note">
-        Template: <strong>{{ templateName() }}</strong>. You can change it after scoring.
-        <a [href]="templatesHref">See all templates</a>
-      </p>
     </div>
+
+    <p class="privacy">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+      Stored securely in the EU · delete anytime in Settings
+    </p>
+
+    <section class="benefits" aria-labelledby="benefits-title">
+      <h2 id="benefits-title" class="section-label">What you'll get</h2>
+      <ul>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+          ATS score
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5M9 11h4" /></svg>
+          Missing keywords
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" /></svg>
+          AI fixes
+        </li>
+      </ul>
+    </section>
+
+    @if (savedCvs().length) {
+      <section class="saved" aria-labelledby="saved-title">
+        <h2 id="saved-title" class="section-label">Or check a saved CV</h2>
+        <div class="chips">
+          @for (cv of savedCvs(); track cv.id) {
+            <button class="chip" type="button" [disabled]="!!loadingSaved()" (click)="scoreSaved(cv)">
+              <span class="chip-title">{{ loadingSaved() === cv.id ? 'Opening…' : cv.title }}</span>
+              @if (cv.lastScore !== null) {
+                <app-score-ring class="chip-ring" [value]="cv.lastScore" [attr.aria-label]="'Last score ' + cv.lastScore" role="img" />
+              } @else {
+                <span class="chip-none">Not scored</span>
+              }
+            </button>
+          }
+        </div>
+      </section>
+    }
+
+    <p class="template-note">
+      Template: <strong>{{ templateName() }}</strong>. You can change it after scoring.
+      <a [href]="templatesHref">See all templates</a>
+    </p>
   }
   @default {
     <section class="working" aria-live="polite" aria-busy="true">
