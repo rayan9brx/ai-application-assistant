@@ -79,13 +79,15 @@ describe('App', () => {
     await TestBed.inject(Router).navigateByUrl('/');
     fixture.detectChanges();
     await fixture.whenStable();
-    const home: HTMLElement = fixture.nativeElement.querySelector('main app-home-page');
+    const home: HTMLElement = fixture.nativeElement.querySelector('main app-home-page .home');
     expect(Array.from(home.children).map((el) => el.tagName.toLowerCase())).toEqual([
       'app-hero',
-      'app-upload-bar',
-      'app-showcase',
+      'section',
       'app-problem-section',
-      'app-hurdles-section',
+      'app-how-it-works',
+      'app-why-section',
+      'app-templates-section',
+      'app-faq-section',
     ]);
     expect(fixture.nativeElement.querySelector('#features')).not.toBeNull();
   });

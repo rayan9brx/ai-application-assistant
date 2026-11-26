@@ -1,19 +1,2 @@
-:host { --pad: 56px; display: block; margin-block: var(--space-6); }
-.problem { padding: 64px var(--pad) var(--pad); border-radius: 28px; background: var(--bg); color: var(--text); }
-.problem :focus-visible { outline-color: var(--focus-ring); }
-.badge { display: inline-flex; padding: 6px 14px; border-radius: 999px; background: var(--danger-bg); color: var(--danger-text); font-size: .8125rem; font-weight: 600; }
-.problem-header { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: end; gap: 24px 48px; margin-top: 20px; }
-h2 { font-size: clamp(2.25rem, 4.2vw, 3.25rem); font-weight: 700; line-height: 1.05; letter-spacing: -2px; text-wrap: balance; }
-.problem-copy { color: var(--text-secondary); font-size: 1.125rem; line-height: 1.6; }
-.problem-cta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 16px 24px; margin-top: 40px; text-align: center; }
-.problem-cta p { font-size: 1.25rem; font-weight: 600; letter-spacing: -.3px; }
-@media (max-width: 900px) {
-  :host { --pad: 24px; }
-  .problem { padding-top: 44px; border-radius: 20px; }
-  .problem-header { grid-template-columns: 1fr; }
-  .problem-copy { font-size: 1rem; }
-}
-@media (max-width: 520px) {
-  h2 { letter-spacing: -1px; }
-  .problem-cta { flex-direction: column; align-items: stretch; }
-}
+:host { display: block; }
+.panel-wrap { max-width: 920px; margin-inline: auto; }

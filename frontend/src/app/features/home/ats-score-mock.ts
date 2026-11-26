@@ -8,7 +8,7 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { SAMPLE_ATS_SCORE } from './hurdles-config';
+import { SAMPLE_ATS_SCORE } from './home-samples';
 import { ScoreRing } from '../../shared/score-ring';
 import { SkillPill } from '../../shared/skill-pill';
 

@@ -1,15 +1,14 @@
 <section class="hero" aria-labelledby="page-title">
-  <h1 id="page-title">Build your CV. <span>Get past the ATS. Land the interview.</span></h1>
+  <h1 id="page-title">Your CV, ready for every job.</h1>
   <p class="lede">
-    Create a professional, ATS-friendly CV in minutes with Rezumo. Tailor it to every job you apply
-    for, with AI that shows you exactly what to fix.
+    Rezumo checks your CV like an ATS does, shows you exactly what’s missing, and fixes it with AI,
+    in minutes.
   </p>
-  <div class="actions">
-    <a class="cta cta-hero" [href]="ctaHref()">Sign up, it's free</a>
-    <p class="note">No credit card required</p>
-  </div>
-  <!--
-    Social proof goes here once it is real and verifiable (e.g. actual user count,
-    genuine testimonials, or ratings with a source). Do not add placeholder numbers.
-  -->
+  <!-- Guests sign up first; the prompt and file wait in memory (not across a reload). -->
+  <app-smart-prompt id="get-started" class="prompt" />
+  <ul class="trust" role="list">
+    @for (item of trust; track item) {
+      <li><svg appCheckIcon></svg>{{ item }}</li>
+    }
+  </ul>
 </section>

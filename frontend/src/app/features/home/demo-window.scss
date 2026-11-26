@@ -4,11 +4,9 @@
   --tab-hover: var(--border-strong);
   --app-height: 640px;
   display: block;
-  margin-block: 0 96px;
+  margin-block: 0;
 }
 
-.after-cta { display: flex; justify-content: center; margin-top: 40px; }
-.after-cta .cta { gap: 10px; box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary-700) 45%, transparent); }
 
 /* ---------- Window frame ---------- */
 .window { max-width: 1200px; margin-inline: auto; overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--frame); box-shadow: 0 48px 96px -28px color-mix(in srgb, var(--text) 28%, transparent), 0 14px 32px -14px color-mix(in srgb, var(--text) 14%, transparent); }
@@ -74,10 +72,6 @@
 }
 @media (max-width: 760px) {
   /* Phones: keep only the side panel, the part that tells the story, at a readable size. */
-  :host { margin-bottom: 64px; }
-  .intro { margin-bottom: 28px; }
-  .sub { font-size: var(--text-base); }
-  .after-cta { margin-top: 28px; }
   .window { border-radius: 14px; }
   .titlebar { gap: 10px; padding: 8px 8px 0 12px; }
   .lights { --light-size: 10px; }

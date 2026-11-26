@@ -1,13 +1,15 @@
-import { Component, computed, inject } from '@angular/core';
-import { AuthService } from '../../core/auth.service';
+import { Component } from '@angular/core';
+import { CheckIcon } from '../../shared/check-icon';
+import { SmartPrompt } from '../../shared/smart-prompt';
+import { Reveal } from './reveal';
 
 @Component({
   selector: 'app-hero',
+  imports: [CheckIcon, SmartPrompt],
+  hostDirectives: [Reveal],
   templateUrl: './hero.html',
   styleUrl: './hero.scss',
 })
 export class Hero {
-  private readonly auth = inject(AuthService);
-  /** Guests sign up; signed-in users go straight to their dashboard. */
-  readonly ctaHref = computed(() => (this.auth.signedIn() ? '/dashboard' : '/signup'));
+  readonly trust = ['Free to start', 'No credit card', 'Data stored in the EU'];
 }

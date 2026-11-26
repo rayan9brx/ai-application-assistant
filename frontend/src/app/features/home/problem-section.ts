@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import { AtsPanel, AtsResult } from '../../shared/ats-panel';
 import { CvData } from '../../shared/cv-preview';
+import { Reveal } from './reveal';
+import { SectionHead } from './section-head';
 
 /**
  * Illustrative ATS result. There is no ATS analysis backend yet; replace this
@@ -65,7 +67,8 @@ export const SAMPLE_ATS_CV: CvData = {
 
 @Component({
   selector: 'app-problem-section',
-  imports: [AtsPanel],
+  imports: [AtsPanel, SectionHead],
+  hostDirectives: [Reveal],
   templateUrl: './problem-section.html',
   styleUrl: './problem-section.scss',
 })

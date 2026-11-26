@@ -1,243 +1,136 @@
-import { Component, DestroyRef, afterNextRender, inject, signal } from '@angular/core';
+import { Component, signal } from '@angular/core';
+import { CHECK_HREF } from '../../core/menu-config';
+import { scoreTone } from '../../core/score-tone';
 import { AtsScoreMock } from './ats-score-mock';
-import { AuthService } from '../../core/auth.service';
 import { BulletRewriteMock } from './bullet-rewrite-mock';
-import { CvSheet } from '../../shared/cv-sheet';
-import { DEFAULT_TEMPLATE, SAMPLE_CV } from '../../core/cv-templates';
-import { prefersReducedMotion } from '../../core/in-view';
-import { ONBOARDING_STEPS, OnboardingOption } from '../../core/onboarding-options';
-import { TemplatePicker } from '../../shared/template-picker';
-import { UploadBar } from '../../shared/upload-bar';
+import { SAMPLE_TAILOR } from './home-samples';
+import { Reveal } from './reveal';
+import { SectionHead } from './section-head';
 
-const ADVANCE_MS = 5000;
-
-interface HowStep {
-  tab: string;
-  title: string;
-  text: string;
-  visual: 'signup' | 'upload' | 'fix' | 'apply';
-}
-
-const STEPS: readonly HowStep[] = [
-  { tab: 'Sign up', title: 'Create your free account', text: 'Tell us your goal and get help where you need it most.', visual: 'signup' },
-  { tab: 'Upload', title: 'Upload your CV', text: 'Get your ATS score and see what’s missing in seconds.', visual: 'upload' },
-  { tab: 'Fix', title: 'Fix it with AI', text: 'Improve weak points and tailor your CV to any job.', visual: 'fix' },
-  { tab: 'Apply', title: 'Download & apply', text: 'Download an ATS-friendly PDF and apply with confidence.', visual: 'apply' },
+const STEPS = [
+  {
+    title: 'Upload your CV',
+    text: 'PDF or Word. Get your ATS score in seconds.',
+    icon: 'M12 16V4M7 9l5-5 5 5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3',
+  },
+  {
+    title: 'Fix it with AI',
+    text: 'See missing keywords and improve weak points with one click.',
+    icon: 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
+  },
+  {
+    title: 'Tailor and download',
+    text: 'Match any job ad and download an ATS-friendly PDF.',
+    icon: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  },
 ];
 
-/**
- * Four steps from sign-up to applying. All steps are stacked in one grid cell and crossfade,
- * so the card keeps the tallest step's height. Tabs auto-advance every 5s, pausing on hover/focus.
- */
+/** Three steps side by side, each with a small product mockup that plays once in view. */
 @Component({
   selector: 'app-how-it-works',
-  imports: [AtsScoreMock, BulletRewriteMock, CvSheet, TemplatePicker, UploadBar],
+  imports: [AtsScoreMock, BulletRewriteMock, Reveal, SectionHead],
   template: `
-    <section
-      class="how"
-      aria-labelledby="how-title"
-      [class.paused]="paused()"
-      [style.--advance]="advanceMs + 'ms'"
-      (mouseenter)="paused.set(true)"
-      (mouseleave)="paused.set(false)"
-      (focusin)="paused.set(true)"
-      (focusout)="paused.set(false)"
-    >
-      <header class="intro">
-        <p class="pill-badge">How it works</p>
-        <h2 class="section-title" id="how-title">From sign-up to applying in four steps</h2>
-      </header>
-
-      <div class="card" role="tabpanel" id="how-panel" [attr.aria-labelledby]="'how-tab-' + active()">
-        <div class="stage">
-          <div class="window theme-light">
-            <div class="titlebar" aria-hidden="true">
-              <span class="window-lights"><i></i><i></i><i></i></span>
-              <span class="address">app.rezumo.com</span>
+    <section id="features" aria-labelledby="how-title">
+      <app-section-head pill="How it works" title="From upload to interview-ready in three steps" headingId="how-title" />
+      <ol class="steps" role="list" appReveal (revealed)="start($event)">
+        @for (step of steps; track step.title; let i = $index) {
+          <li class="step">
+            <div class="step-head">
+              <span class="number" aria-hidden="true">{{ i + 1 }}</span>
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="step.icon" /></svg>
             </div>
-            <div class="screen">
-              @for (s of steps; track s.tab; let i = $index) {
-                <div class="layer mock" inert [class.on]="i === active()" [attr.aria-hidden]="i !== active()">
-                  @switch (s.visual) {
-                    @case ('signup') {
-                      <div class="question">
-                        <p class="q-title">{{ challenge.title }}</p>
-                        <ul role="list">
-                          @for (option of challenge.options; track option.key; let j = $index) {
-                            <li [class.selected]="j === 1">
-                              <span class="radio"></span>{{ option.label }}
-                            </li>
-                          }
-                        </ul>
-                        <span class="cta cta-small">Continue</span>
+            <h3><span class="sr-only">Step {{ i + 1 }}: </span>{{ step.title }}</h3>
+            <p>{{ step.text }}</p>
+            <div class="mock-area theme-dark">
+              @switch (i) {
+                @case (0) { <app-ats-score-mock [play]="playing()" [animate]="animate()" /> }
+                @case (1) { <app-bullet-rewrite-mock [play]="playing()" [animate]="animate()" /> }
+                @default {
+                  <figure class="tailor">
+                    <figcaption class="sr-only">
+                      Example only: the CV matches the job ad {{ tailor.match }}% and downloads as a PDF.
+                    </figcaption>
+                    <div aria-hidden="true">
+                      <p class="tailor-label">Job ad <span class="example-badge">Example</span></p>
+                      <p class="tailor-job">{{ tailor.job }}</p>
+                      <p class="tailor-meta">{{ tailor.company }}</p>
+                      <div class="tailor-match">
+                        <span class="bar"><span [attr.data-tone]="tone" [style.width.%]="playing() ? tailor.match : 0"></span></span>
+                        <b [attr.data-tone]="tone">{{ tailor.match }}% match</b>
                       </div>
-                    }
-                    @case ('upload') {
-                      <div class="stack">
-                        <app-upload-bar [showSubmit]="false" />
-                        <app-ats-score-mock [play]="i === active()" [animate]="animate" />
-                      </div>
-                    }
-                    @case ('fix') {
-                      <app-bullet-rewrite-mock [play]="i === active()" [animate]="animate" />
-                    }
-                    @case ('apply') {
-                      <div class="stack">
-                        <app-template-picker [text]="sampleCv" [value]="template" />
-                        <div class="pdf">
-                          <app-cv-sheet class="sheet" [text]="sampleCv" [template]="template" crop="1 / .5" [decorative]="true" />
-                          <span class="cta cta-small">Download PDF</span>
-                        </div>
-                      </div>
-                    }
-                  }
-                </div>
+                      <p class="pdf">
+                        <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5" /></svg>
+                        <span>{{ tailor.file }}</span>
+                        <span class="pdf-tag">ATS-friendly</span>
+                      </p>
+                    </div>
+                  </figure>
+                }
               }
             </div>
-          </div>
-        </div>
-
-        <div class="copy">
-          @for (s of steps; track s.tab; let i = $index) {
-            <div class="layer" [class.on]="i === active()" [attr.aria-hidden]="i !== active()">
-              <span class="num" aria-hidden="true">0{{ i + 1 }}</span>
-              <h3>{{ s.title }}</h3>
-              <p>{{ s.text }}</p>
-            </div>
-          }
-        </div>
-      </div>
-
-      <div class="tabs" role="tablist" aria-label="How it works steps">
-        @for (s of steps; track s.tab; let i = $index) {
-          <button
-            type="button"
-            role="tab"
-            class="tab"
-            [id]="'how-tab-' + i"
-            aria-controls="how-panel"
-            [attr.aria-selected]="i === active()"
-            [attr.tabindex]="i === active() ? 0 : -1"
-            [class.active]="i === active()"
-            [class.done]="i < active()"
-            (click)="select(i)"
-            (keydown.arrowright)="select((i + 1) % steps.length, $event)"
-            (keydown.arrowleft)="select((i + steps.length - 1) % steps.length, $event)"
-          >
-            <span class="track" aria-hidden="true"><span class="fill" [class.timed]="animate"></span></span>
-            <span class="label"><span class="tab-num">{{ i + 1 }}</span>{{ s.tab }}</span>
-          </button>
+          </li>
         }
-      </div>
-
+      </ol>
       <div class="after">
-        <a class="cta" [href]="startHref()">Get started for free</a>
+        <a class="cta" [href]="checkHref">Check my CV for free</a>
       </div>
     </section>
   `,
   styles: `
-    :host { display: block; padding-block: 120px; }
-    .intro { display: grid; justify-items: center; gap: 16px; margin-bottom: 48px; text-align: center; }
+    :host { display: block; }
+    .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin: 0; padding: 0; list-style: none; }
+    .step { display: flex; flex-direction: column; padding: 24px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); box-shadow: var(--shadow); }
+    .step-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .number { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 999px; background: var(--pill-bg); color: var(--pill-text); font-weight: 700; }
+    .icon { width: 24px; height: 24px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    h3 { font-size: 1.25rem; letter-spacing: -.02em; }
+    .step > p { margin-top: 8px; color: var(--text-secondary); line-height: 1.55; }
 
-    .card { display: grid; grid-template-columns: 3fr 2fr; align-items: center; gap: 56px; padding: 24px 56px 24px 24px; border: 1px solid var(--border); border-radius: 24px; background: var(--surface); box-shadow: var(--shadow); }
-    .stage { padding: 40px; border-radius: 18px; background: var(--primary-50); }
-    .window { overflow: hidden; border: 1px solid var(--border); border-radius: 14px; background: var(--surface-raised); box-shadow: 0 30px 60px -24px color-mix(in srgb, var(--primary-900) 30%, transparent), 0 10px 24px -12px color-mix(in srgb, var(--text) 14%, transparent); }
-    .titlebar { position: relative; display: flex; align-items: center; height: 36px; padding-inline: 14px; }
-    .window-lights { --light-size: 11px; }
-    .address { position: absolute; left: 50%; transform: translateX(-50%); padding: 2px 14px; border-radius: 6px; background: var(--surface); color: var(--text-muted); font-size: 11px; }
-    .screen { display: grid; padding: 24px; background: var(--surface); }
+    .mock-area { flex: 1; margin-top: 24px; padding: 16px; border-radius: 16px; background: var(--bg); color: var(--text); }
+    /* The mockups were made for full-width sections; make them card-sized. */
+    .mock-area ::ng-deep .mock { padding: 16px; border-radius: 14px; box-shadow: none; }
+    .mock-area ::ng-deep .ring { --ring-font: 18px; width: 72px; height: 72px; }
+    .mock-area ::ng-deep .score-row { gap: 14px; padding-bottom: 14px; }
+    .mock-area ::ng-deep .title { font-size: 1rem; }
+    .mock-area ::ng-deep .line { padding: 12px; }
+    .mock-area ::ng-deep .line p { font-size: .875rem; }
+    .mock-area ::ng-deep .arrow { height: 24px; }
 
-    /* Crossfade: every step sits in the same cell; only .on is visible. */
-    .screen, .copy { display: grid; }
-    .layer { grid-area: 1 / 1; align-self: center; opacity: 0; visibility: hidden; transform: translateY(6px); transition: opacity .45s ease, transform .45s ease, visibility 0s linear .45s; }
-    .layer.on { opacity: 1; visibility: visible; transform: none; transition: opacity .45s ease, transform .45s ease, visibility 0s; }
-    .stack { display: grid; gap: 14px; }
-
-    .question { display: grid; gap: 12px; }
-    .q-title { font-size: var(--text-lg); font-weight: 650; letter-spacing: -.2px; }
-    .question ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .question li { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: var(--text-sm); }
-    .radio { flex: none; width: 16px; height: 16px; border: 1.5px solid var(--border-strong); border-radius: 50%; }
-    .question li.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--pill-text); font-weight: 600; }
-    .question li.selected .radio { border: 5px solid var(--accent); }
-    .question .cta { justify-self: end; }
-    .pdf { display: flex; align-items: flex-end; gap: 12px; }
-    .sheet { flex: 1; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-sm); }
-
-    .copy .layer { display: grid; gap: 14px; }
-    .num { color: var(--primary-200); font-size: clamp(3.5rem, 6vw, 5rem); font-weight: 700; line-height: 1; letter-spacing: -.04em; }
-    h3 { color: var(--text); font-size: 1.75rem; font-weight: 700; line-height: 1.2; letter-spacing: -.6px; }
-    .copy p { max-width: 34ch; color: var(--text-secondary); font-size: var(--text-lg); line-height: 1.6; }
-
-    .tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
-    .tab { display: grid; gap: 14px; justify-items: start; min-height: 0; padding: 0 0 6px; border: 0; border-radius: 0; background: none; color: var(--text-muted); font-size: var(--text-base); text-align: left; }
-    .tab:hover { color: var(--text); }
-    .tab:focus-visible { outline-offset: 4px; }
-    .tab.active { color: var(--text); }
-    .track { width: 100%; height: 3px; overflow: hidden; border-radius: 3px; background: var(--border); }
-    .fill { display: block; height: 100%; background: var(--accent); transform: scaleX(0); transform-origin: left; }
-    .done .fill { transform: none; opacity: .35; }
-    .active .fill { transform: none; }
-    .active .fill.timed { animation: fill var(--advance) linear forwards; }
-    .paused .active .fill.timed { animation-play-state: paused; }
-    .label { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; }
-    .tab-num { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1.5px solid var(--border-strong); border-radius: 50%; color: var(--text-muted); font-size: var(--text-sm); transition: background-color .2s, border-color .2s, color .2s; }
-    .active .tab-num { border-color: var(--button-bg); background: var(--button-bg); color: var(--button-text); }
+    .tailor { margin: 0; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+    .tailor-label { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: .8125rem; font-weight: 600; }
+    .tailor-job { margin-top: 10px; font-weight: 650; }
+    .tailor-meta { color: var(--text-muted); font-size: .8125rem; }
+    .tailor-match { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; margin-top: 14px; }
+    .bar { height: 8px; overflow: hidden; border-radius: 999px; background: var(--surface-raised); }
+    .bar span { display: block; height: 100%; border-radius: inherit; transition: width 1.2s cubic-bezier(.2, .7, .2, 1); }
+    .bar [data-tone='high'] { background: var(--score-high); }
+    .bar [data-tone='mid'] { background: var(--score-mid); }
+    .bar [data-tone='low'] { background: var(--score-low); }
+    b { padding: 2px 8px; border-radius: 999px; font-size: .75rem; }
+    b[data-tone='high'] { background: var(--success-bg); color: var(--success-text); }
+    b[data-tone='mid'] { background: var(--warning-bg); color: var(--warning-text); }
+    b[data-tone='low'] { background: var(--danger-bg); color: var(--danger-text); }
+    .pdf { display: flex; align-items: center; gap: 8px; margin-top: 16px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); font-size: .8125rem; font-weight: 600; }
+    .pdf svg { flex: none; width: 18px; height: 18px; fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round; }
+    .pdf span:first-of-type { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pdf-tag { margin-left: auto; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: .6875rem; white-space: nowrap; }
 
     .after { display: flex; justify-content: center; margin-top: 48px; }
-    .after .cta { box-shadow: 0 8px 20px -6px color-mix(in srgb, var(--primary-700) 45%, transparent); }
-
-    @keyframes fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-    @media (prefers-reduced-motion: reduce) { .layer, .layer.on { transition: none; transform: none; } }
-    @media (max-width: 900px) {
-      :host { padding-block: 72px; }
-      .card { grid-template-columns: 1fr; gap: 28px; padding: 16px 16px 28px; }
-      .stage { padding: 16px; }
-      .screen { padding: 16px; }
-      .copy { padding-inline: 8px; }
-      .num { font-size: 3rem; }
-      h3 { font-size: 1.5rem; }
-      .tabs { display: flex; gap: 20px; margin-inline: -16px; padding-inline: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
-      .tabs::-webkit-scrollbar { display: none; }
-      .tab { flex: none; width: 140px; scroll-snap-align: start; }
-    }
+    @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
+    @media (max-width: 960px) { .steps { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; } }
+    @media (max-width: 520px) { .after .cta { width: 100%; } }
   `,
 })
 export class HowItWorks {
   readonly steps = STEPS;
-  readonly challenge = ONBOARDING_STEPS[0] as { title: string; options: OnboardingOption[] };
-  readonly sampleCv = SAMPLE_CV;
-  readonly template = DEFAULT_TEMPLATE;
-  readonly advanceMs = ADVANCE_MS;
-  readonly startHref = inject(AuthService).startHref;
-  readonly active = signal(0);
-  readonly paused = signal(false);
-  readonly animate = !prefersReducedMotion();
+  readonly tailor = SAMPLE_TAILOR;
+  readonly tone = scoreTone(SAMPLE_TAILOR.match);
+  readonly checkHref = CHECK_HREF;
+  readonly playing = signal(false);
+  readonly animate = signal(true);
 
-  constructor() {
-    const destroyRef = inject(DestroyRef);
-    afterNextRender(() => {
-      if (!this.animate) return;
-      let elapsed = 0;
-      const tick = 100;
-      const timer = setInterval(() => {
-        if (this.paused()) return;
-        elapsed += tick;
-        if (elapsed >= ADVANCE_MS) this.select((this.active() + 1) % STEPS.length);
-      }, tick);
-      this.restart = () => (elapsed = 0);
-      destroyRef.onDestroy(() => clearInterval(timer));
-    });
-  }
-
-  private restart = () => {};
-
-  select(index: number, event?: Event): void {
-    this.active.set(index);
-    this.restart();
-    if (event) {
-      event.preventDefault();
-      document.getElementById(`how-tab-${index}`)?.focus();
-    }
+  start(animate: boolean): void {
+    this.animate.set(animate);
+    this.playing.set(true);
   }
 }

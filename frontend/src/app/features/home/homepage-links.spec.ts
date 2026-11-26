@@ -84,21 +84,20 @@ describe('Homepage links', () => {
         .filter((a) => text(a).startsWith(label))
         .map((a) => a.getAttribute('href'));
     expect(hrefOf('Try it free')).toEqual(['/check']);
-    expect(hrefOf('Sign up, it')).toEqual(['/dashboard']);
-    expect(hrefOf('Check my CV for free')).toEqual(['/check', '/check']);
+    expect(hrefOf('Check my CV for free')).toEqual(['/check']);
     expect(hrefOf('Score my CV')).toEqual(['/check']);
-    expect(hrefOf('Start for free')).toEqual(['/check']);
+    expect(hrefOf('Get started for free')).toEqual(['/check']);
     expect(text(root)).not.toContain('PLACEHOLDER');
   });
 
   it('labels every demo with sample data as an example', async () => {
     const root = await renderHome();
-    for (const section of ['app-showcase', 'app-problem-section', 'app-hurdles-section']) {
+    for (const section of ['app-problem-section', 'app-how-it-works']) {
       const badges = Array.from(root.querySelectorAll(`${section} .example-badge`), text);
       expect(badges.length, section).toBeGreaterThan(0);
       expect(badges.every((b) => b === 'Example'), section).toBe(true);
     }
-    expect(root.querySelectorAll('app-hurdles-section .example-badge').length).toBe(3);
+    expect(root.querySelectorAll('app-how-it-works .example-badge').length).toBe(3);
   });
 
   it('shows the avatar menu instead of Log in / Try it free once signed in', async () => {

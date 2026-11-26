@@ -1,31 +1,39 @@
 import { Component } from '@angular/core';
-import { CvExamplesSection } from './cv-examples-section';
 import { DemoWindow } from './demo-window';
+import { FaqSection } from './faq-section';
 import { Hero } from './hero';
 import { HowItWorks } from './how-it-works';
-import { HurdlesSection } from './hurdles-section';
 import { ProblemSection } from './problem-section';
-import { Showcase } from './showcase';
-import { SmartPrompt } from '../../shared/smart-prompt';
+import { Reveal } from './reveal';
+import { SectionHead } from './section-head';
+import { TemplatesSection } from './templates-section';
+import { WhySection } from './why-section';
 
-/** The landing page. */
+/**
+ * The landing page as one story: hero → demo → problem → how it works → why Rezumo →
+ * templates → FAQ and final CTA. Every section shares the width, spacing and pill + headline.
+ */
 @Component({
   selector: 'app-home-page',
-  imports: [CvExamplesSection, DemoWindow, Hero, HowItWorks, HurdlesSection, ProblemSection, Showcase, SmartPrompt],
+  imports: [DemoWindow, FaqSection, Hero, HowItWorks, ProblemSection, Reveal, SectionHead, TemplatesSection, WhySection],
   template: `
-    <app-hero />
-    <!-- Guests sign up first; the prompt and file wait in memory (not across a reload). -->
-    <app-smart-prompt id="get-started" />
-    <app-demo-window />
-    <app-showcase />
-    <app-problem-section />
-    <app-hurdles-section />
-    <app-how-it-works />
-    <app-cv-examples-section />
+    <div class="home">
+      <app-hero />
+      <section aria-label="See it in action" appReveal>
+        <app-section-head pill="See it in action" />
+        <app-demo-window />
+      </section>
+      <app-problem-section />
+      <app-how-it-works />
+      <app-why-section />
+      <app-templates-section />
+      <app-faq-section />
+    </div>
   `,
   styles: `
-    app-smart-prompt { margin: 0 auto 72px; padding-inline: var(--space-4); animation: fade-up .7s .2s cubic-bezier(.2, .7, .2, 1) both; }
-    @media (max-width: 640px) { app-smart-prompt { margin-bottom: var(--space-7); } }
+    .home { display: grid; gap: 120px; max-width: 1120px; margin-inline: auto; padding-bottom: 120px; }
+    .home > * { min-width: 0; }
+    @media (max-width: 640px) { .home { gap: 72px; padding-bottom: 72px; } }
   `,
 })
 export class HomePage {}

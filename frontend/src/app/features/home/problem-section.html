@@ -1,19 +1,11 @@
-<section class="problem theme-dark" id="problem" aria-labelledby="problem-heading">
-  <p class="badge">The Problem</p>
-  <div class="problem-header">
-    <h2 id="problem-heading">Your CV isn't being rejected by humans</h2>
-    <p class="problem-copy">
-      Most companies use Applicant Tracking Systems (ATS) to filter CVs before a recruiter ever sees
-      them. Missing keywords, the wrong structure, or a single table or graphic can get you filtered
-      out. Silently, with no feedback. Our AI shows you exactly what the ATS sees, so you can fix it
-      before you apply.
+<section id="problem" aria-labelledby="problem-heading">
+  <app-section-head pill="Why it matters" title="Most CVs are filtered out before a human reads them" headingId="problem-heading">
+    <p>
+      Most companies let an Applicant Tracking System (ATS) read your CV first. Missing keywords or a
+      layout it can’t parse, and you’re out, without any feedback.
     </p>
-  </div>
-
-  <app-ats-panel [result]="result" [cv]="cv" />
-
-  <div class="problem-cta">
-    <p>See what the ATS sees in your CV</p>
-    <a class="cta" href="/check">Check my CV for free</a>
+  </app-section-head>
+  <div class="panel-wrap">
+    <app-ats-panel [result]="result" [cv]="cv" />
   </div>
 </section>

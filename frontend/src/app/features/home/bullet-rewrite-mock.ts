@@ -1,5 +1,5 @@
 import { Component, DestroyRef, effect, inject, input, signal, untracked } from '@angular/core';
-import { SAMPLE_REWRITE } from './hurdles-config';
+import { SAMPLE_REWRITE } from './home-samples';
 
 const SWAP_DELAY_MS = 700;
 
