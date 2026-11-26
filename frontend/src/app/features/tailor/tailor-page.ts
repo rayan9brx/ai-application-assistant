@@ -6,7 +6,9 @@ import { Navigation } from '../../core/navigation';
 import { JOB_LINK, PromptRouter } from '../../core/prompt-router';
 import { ScoreTone, scoreTone } from '../../core/score-tone';
 import { UsageStore } from '../../core/usage-store';
+import { CheckIcon } from '../../shared/check-icon';
 import { CvSheet } from '../../shared/cv-sheet';
+import { ScoreRing } from '../../shared/score-ring';
 
 type Step = 'input' | 'working' | 'review' | 'saved';
 type Decision = 'pending' | 'accepted' | 'rejected';
@@ -29,7 +31,7 @@ const SECTIONS: { id: Section; label: string }[] = [
  */
 @Component({
   selector: 'app-tailor-page',
-  imports: [CvSheet],
+  imports: [CvSheet, CheckIcon, ScoreRing],
   templateUrl: './tailor-page.html',
   styleUrl: './tailor-page.scss',
 })
@@ -53,6 +55,13 @@ export class TailorPage {
   readonly baseId = signal('');
   readonly file = signal<File | null>(null);
   readonly fileError = signal('');
+  /** Step 1 picks the CV, then "Continue" shows the job ad. */
+  readonly stage = signal<'cv' | 'job'>('cv');
+  readonly dragging = signal(false);
+  readonly hasBase = computed(() => (this.baseId() === UPLOAD ? !!this.file() : !!this.baseId()));
+  readonly baseTitle = computed(() =>
+    this.baseId() === UPLOAD ? (this.file()?.name ?? '') : (this.cvs()?.find((c) => c.id === this.baseId())?.title ?? ''),
+  );
   readonly jobMode = signal<'text' | 'link'>('text');
   readonly jobText = signal('');
   readonly jobLink = signal('');
@@ -63,7 +72,7 @@ export class TailorPage {
   readonly canTailor = computed(
     () =>
       this.jobText().trim().length >= MIN_JOB &&
-      (this.baseId() === UPLOAD ? !!this.file() : !!this.baseId()) &&
+      this.hasBase() &&
       this.usage.aiUsesLeft() !== 0,
   );
 
@@ -138,7 +147,7 @@ export class TailorPage {
       (cvs) => this.cvs.set([...cvs].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))),
       () => this.cvs.set([]),
     );
-    // Preselect ?cv=, else the latest CV, else "upload a new one".
+    // Preselect ?cv=, else the most recently edited CV.
     effect(() => {
       const cvs = this.cvs();
       const wanted = this.cv();
@@ -146,7 +155,7 @@ export class TailorPage {
       untracked(() => {
         if (this.baseId() === UPLOAD && this.file()) return;
         const pick = cvs.find((c) => c.id === wanted) ?? cvs[0];
-        this.baseId.set(pick ? pick.id : UPLOAD);
+        this.baseId.set(pick ? pick.id : '');
       });
     });
     this.applyPrompt();
@@ -180,7 +189,23 @@ export class TailorPage {
   pickFile(input: HTMLInputElement): void {
     const file = input.files?.[0];
     input.value = '';
-    if (!file) return;
+    if (file) this.useFile(file);
+  }
+
+  dragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.dragging.set(true);
+  }
+
+  drop(event: DragEvent): void {
+    event.preventDefault();
+    this.dragging.set(false);
+    const file = event.dataTransfer?.files[0];
+    if (file) this.useFile(file);
+  }
+
+  /** Checks the file, shows it as the first card and selects it. */
+  private useFile(file: File): void {
     if (!/\.(pdf|docx)$/i.test(file.name)) {
       this.fileError.set(`“${file.name}” isn’t a PDF or Word (.docx) file.`);
       return;
@@ -191,6 +216,25 @@ export class TailorPage {
     }
     this.fileError.set('');
     this.file.set(file);
+    this.setBase(UPLOAD);
+  }
+
+  /** "2h ago", "3 days ago"… */
+  ago(value: string): string {
+    const seconds = Math.round((Date.parse(value) - Date.now()) / 1000);
+    const units: [Intl.RelativeTimeFormatUnit, number][] = [
+      ['year', 31536000],
+      ['month', 2592000],
+      ['week', 604800],
+      ['day', 86400],
+      ['hour', 3600],
+      ['minute', 60],
+    ];
+    const format = new Intl.RelativeTimeFormat('en', { numeric: 'auto', style: 'short' });
+    for (const [unit, size] of units) {
+      if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
+    }
+    return 'just now';
   }
 
   /** Reads the ad behind the link into the text field; on failure asks to paste the text. */
@@ -320,6 +364,7 @@ export class TailorPage {
     this.jobTitle.set('');
     this.linkNote.set('');
     this.error.set('');
+    this.stage.set('job');
     this.step.set('input');
     scrollTo({ top: 0 });
   }

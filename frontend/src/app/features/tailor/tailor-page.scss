@@ -24,8 +24,44 @@
 select, input:not([type='file']), textarea { width: 100%; min-height: 42px; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface-muted); color: var(--text); font: inherit; font-size: var(--text-sm); }
 textarea { min-height: 240px; line-height: 1.5; resize: vertical; }
 select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 1px; }
-.upload { justify-content: flex-start; width: 100%; border-style: dashed; background: var(--surface-muted); color: var(--text-secondary); }
-.file-name { color: var(--text); }
+// Step 1: CV picker
+.choose-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.cv-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; border-radius: 14px; }
+.cv-grid.dragging { outline: 2px dashed var(--accent); outline-offset: 6px; }
+.cv-pick {
+  position: relative; display: grid; align-content: start; justify-content: stretch; gap: 0; min-height: 0; padding: 12px 12px 0;
+  overflow: hidden; border: 1.5px solid var(--border); border-radius: 14px; background: var(--surface-muted); color: var(--text); text-align: left;
+  transition: border-color .15s, box-shadow .15s;
+}
+.cv-pick:hover { border-color: var(--border-strong); }
+.cv-pick[aria-checked='true'] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.cv-pick:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.check { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; padding: 4px; border-radius: 999px; background: var(--accent); fill: none; stroke: var(--white); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.paper {
+  display: block; height: 128px; overflow: hidden; padding: 10px 10px 0; border-radius: 6px 6px 0 0;
+  background: var(--white); text-align: left; mask-image: linear-gradient(var(--black) 70%, transparent);
+}
+.paper-text { display: block; color: color-mix(in srgb, var(--black) 70%, var(--white)); font-size: 5px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.paper-text::first-line { color: var(--black); font-size: 7.5px; font-weight: 700; }
+.paper.file { display: grid; place-content: center; justify-items: center; gap: 6px; mask-image: none; background: var(--accent-soft); color: var(--text); font-size: 12px; font-weight: 700; }
+.paper.file svg { width: 36px; height: 36px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
+.cv-info { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -12px; padding: 10px 12px 12px; border-top: 1px solid var(--border); background: var(--surface); }
+.cv-text { display: grid; gap: 2px; min-width: 0; }
+.cv-title { overflow: hidden; font-size: var(--text-sm); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.tailored-tag { justify-self: start; max-width: 100%; margin-top: 4px; padding: 2px 8px; overflow: hidden; border-radius: 999px; background: var(--pill-bg); color: var(--pill-text); font-size: 11.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.ring { flex: none; }
+.unscored { flex: none; color: var(--text-secondary); font-size: 11.5px; white-space: nowrap; }
+.drop-zone {
+  display: grid; justify-items: center; gap: 8px; width: 100%; min-height: 240px; padding: 40px 16px;
+  border: 1.5px dashed var(--border-strong); border-radius: 16px; background: var(--surface-muted); color: var(--text); text-align: center;
+  transition: border-color .15s, background-color .15s;
+}
+.drop-zone:hover, .drop-zone.dragging { border-color: var(--accent); background: var(--accent-soft); }
+.drop-zone svg { width: 40px; height: 40px; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.drop-title { font-size: 1.1rem; font-weight: 650; }
+.continue-row { display: flex; justify-content: flex-end; }
+.continue-row .cta { min-width: 160px; }
+.base-name { overflow: hidden; color: var(--text); font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .link-row { display: flex; gap: 8px; }
 .link-row input { flex: 1; }
 .text-link { justify-self: start; min-height: 0; padding: 0; border: 0; background: none; color: var(--accent); font-weight: 600; }
@@ -96,12 +132,15 @@ select:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px
 
 @media (max-width: 960px) {
   .input-grid, .split { grid-template-columns: minmax(0, 1fr); }
+  .cv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .preview { position: static; max-height: none; }
   .summary { grid-template-columns: minmax(0, 1fr); }
   .match { padding: 0 0 16px; border-right: 0; border-bottom: 1px solid var(--border); }
 }
 @media (max-width: 560px) {
   .optional { grid-template-columns: minmax(0, 1fr); }
+  .cv-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .continue-row .cta { width: 100%; }
   .go, .save-actions .cta { width: 100%; }
   .save-bar { position: static; }
 }
