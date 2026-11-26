@@ -128,7 +128,7 @@ describe('Pricing buttons', () => {
   });
 });
 
-describe('Home upload bar', () => {
+describe('Home smart prompt', () => {
   const drop = (file: File) => {
     const event = new Event('drop', { bubbles: true, cancelable: true }) as DragEvent;
     Object.defineProperty(event, 'dataTransfer', { value: { files: [file] } });
@@ -138,7 +138,7 @@ describe('Home upload bar', () => {
   const start = location.href;
   afterEach(() => history.replaceState(null, '', start));
 
-  it('waits for "Score my CV", then opens /check and scores the file with the real API', async () => {
+  it('waits for "Go", then opens /check and scores the file with the real API', async () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       providers: [
@@ -155,17 +155,18 @@ describe('Home upload bar', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const root: HTMLElement = fixture.nativeElement;
-    const bar = root.querySelector('app-upload-bar .upload-bar') as HTMLElement;
+    const bar = root.querySelector('app-smart-prompt .smart-prompt') as HTMLElement;
 
     bar.dispatchEvent(drop(new File(['PK'], 'cv.docx')));
     fixture.detectChanges();
     expect(router.url).toBe('/'); // picking a file alone doesn't leave the page
-    expect(root.querySelector('app-upload-bar .file-name')?.textContent).toBe('cv.docx');
+    expect(root.querySelector('app-smart-prompt .attached-name')?.textContent).toBe('cv.docx');
 
-    root.querySelector<HTMLButtonElement>('app-upload-bar .score')!.click();
+    root.querySelector<HTMLButtonElement>('app-smart-prompt .go')!.click();
     await fixture.whenStable();
     fixture.detectChanges();
     expect(router.url).toBe('/check');
+    expect(http.expectOne('/api/prompts').request.body).toEqual({ text: '', route: 'score' });
     const extract = http.expectOne('/api/cv/extract');
     expect((extract.request.body as FormData).get('file')).toBeInstanceOf(File);
     extract.flush({ text: 'Taylor Brooks\nExperience\n- Built things' });

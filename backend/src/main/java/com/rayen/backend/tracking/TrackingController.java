@@ -39,7 +39,7 @@ public class TrackingController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void track(@Valid @RequestBody PageView view, HttpServletRequest request) {
         try {
-            UUID user = userFromToken(request.getHeader(HttpHeaders.AUTHORIZATION));
+            UUID user = userFromToken(jwtDecoder, request.getHeader(HttpHeaders.AUTHORIZATION));
             if (user != null && admins.isAdmin(user)) return;
             analytics.record(view.path(), view.referrer(), request.getRemoteAddr(),
                 request.getHeader(HttpHeaders.USER_AGENT), request.getServerName(), user);
@@ -53,7 +53,8 @@ public class TrackingController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void ignoreInvalid() {}
 
-    private UUID userFromToken(String header) {
+    /** The user id of a valid Bearer token, or null; never throws for a missing or bad token. */
+    static UUID userFromToken(JwtDecoder jwtDecoder, String header) {
         if (header == null || !header.regionMatches(true, 0, "Bearer ", 0, 7)) return null;
         try {
             return UUID.fromString(jwtDecoder.decode(header.substring(7).strip()).getSubject());

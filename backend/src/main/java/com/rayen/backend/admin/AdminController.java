@@ -2,6 +2,7 @@ package com.rayen.backend.admin;
 
 import com.rayen.backend.admin.AdminService.*;
 import com.rayen.backend.tracking.AnalyticsService;
+import com.rayen.backend.tracking.PromptLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -29,10 +30,12 @@ import org.springframework.web.server.ResponseStatusException;
 public class AdminController {
     private final AdminService admin;
     private final AnalyticsService analytics;
+    private final PromptLogService prompts;
 
-    public AdminController(AdminService admin, AnalyticsService analytics) {
+    public AdminController(AdminService admin, AnalyticsService analytics, PromptLogService prompts) {
         this.admin = admin;
         this.analytics = analytics;
+        this.prompts = prompts;
     }
 
     public record ViewRequest(@NotBlank @Size(min = 3, max = 300) String reason) {}
@@ -94,6 +97,12 @@ public class AdminController {
         int deleted = analytics.deleteBetween(start, end);
         admin.logAction(UUID.fromString(jwt.getSubject()), "Deleted " + deleted + " page views from " + start + " to " + end);
         return new Deleted(deleted);
+    }
+
+    /** "What users ask for": smart-prompt requests per route and the 20 latest. */
+    @GetMapping("/prompts")
+    public PromptLogService.PromptInsights prompts() {
+        return prompts.insights();
     }
 
     @GetMapping("/audit")

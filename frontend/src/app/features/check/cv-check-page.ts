@@ -14,6 +14,7 @@ import { Router } from '@angular/router';
 import { CvApi, CvSummary } from '../../core/cv-api';
 import { CvFlow, MAX_FILE_BYTES } from '../../core/cv-flow';
 import { CvLibrary } from '../../core/cv-library';
+import { PromptIntent, PromptRoute, PromptRouter, looksLikeJobAd } from '../../core/prompt-router';
 import { ScoreRing } from '../../shared/score-ring';
 import { CvSheet } from '../../shared/cv-sheet';
 import { CvTemplateId, TEMPLATES_HREF, exampleBySlug, isTemplateId, templateById } from '../../core/cv-templates';
@@ -76,6 +77,8 @@ export class CvCheckPage {
   /** The three most recently updated saved CVs, for one-click scoring. */
   readonly savedCvs = signal<CvSummary[]>([]);
   readonly loadingSaved = signal<string | null>(null);
+  /** What they typed in the smart prompt box, when it was routed here. */
+  readonly promptHint = signal<{ text: string; route: PromptRoute } | null>(null);
   private readonly api = inject(CvApi);
   private readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
   private readonly pasteBox = viewChild<ElementRef<HTMLTextAreaElement>>('pasteBox');
@@ -137,13 +140,14 @@ export class CvCheckPage {
         });
       });
     });
-    // A file from the landing page's upload bar: score it right away.
+    // A file from the dashboard's upload card: score it right away.
     const handedOff = this.flow.takeHandOff();
     if (handedOff) {
       this.mode.set('file');
       this.file.set(handedOff);
       this.score();
     }
+    this.applyPrompt(inject(PromptRouter).take());
     this.api
       .list()
       .then((cvs) =>
@@ -154,6 +158,41 @@ export class CvCheckPage {
       .catch(() => {
         /* The saved CV shortcuts are optional. */
       });
+  }
+
+  /**
+   * A request from the smart prompt box: an attached file is scored (or, when tailoring, waits
+   * next to the job description); a pasted job ad fills the job description; anything else is
+   * shown above the upload as a reminder of what they asked.
+   */
+  private applyPrompt(intent: PromptIntent | null): void {
+    if (!intent) return;
+    const jobAd = intent.route === 'tailor' && looksLikeJobAd(intent.text);
+    if (intent.file) {
+      this.flow.reset();
+      this.mode.set('file');
+      this.file.set(intent.file);
+    }
+    if (intent.route === 'tailor') {
+      if (jobAd) this.flow.jobDescription.set(intent.text);
+      this.jobOpen.set(true);
+    }
+    if (intent.text && !jobAd) this.promptHint.set({ text: intent.text, route: intent.route });
+    if (intent.file && intent.route !== 'tailor') this.score();
+  }
+
+  /** The line under the prompt hint, for what they asked. */
+  hintAdvice(route: PromptRoute): string {
+    switch (route) {
+      case 'tailor':
+        return 'Paste the job ad below, add your CV and we’ll show how well they match.';
+      case 'fix':
+        return 'You don’t have a saved CV yet. Upload one and we’ll show you what to fix.';
+      case 'score':
+        return 'Upload your CV to get your ATS score.';
+      default:
+        return 'Start with your score: upload your CV and we’ll show you exactly what to improve.';
+    }
   }
 
   browse(): void {

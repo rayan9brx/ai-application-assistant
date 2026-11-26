@@ -91,7 +91,10 @@ export const routes: Routes = [
    *   Legal basis: legitimate interest (Art. 6(1)(f) GDPR). The user's latest country is
    *   also kept on their profile.
    * - AI usage: token counts per AI request (score, fix, tailor), linked to the account, to
-   *   monitor costs. No prompts or answers are stored.
+   *   monitor costs. No AI prompts or answers are stored.
+   * - Smart prompt box: what people type there (cut to 300 characters), the feature it was
+   *   routed to, the user id when signed in, and the time; shown to admins without user
+   *   details and deleted after 90 days (app.prompts.retention-days=90).
    * - Admin access: admins can see account metadata (email, sign-up and last login, country,
    *   number of CVs, plan) and open a CV's content only for support or abuse handling; every
    *   view is logged with the admin, CV, reason and time. No bulk export of CVs.

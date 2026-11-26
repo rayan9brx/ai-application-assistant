@@ -40,10 +40,10 @@ public class SecurityConfig {
             || path.equals("/api/cvs") || path.startsWith("/api/cvs/");
     }
 
-    /** Everything under /api needs a signed-in user, except the health check and page views. */
+    /** Everything under /api needs a signed-in user, except the health check, page views and smart prompts. */
     static boolean isProtectedPath(String path) {
         return (path.equals("/api") || path.startsWith("/api/"))
-            && !path.equals("/api/health") && !path.equals("/api/track");
+            && !path.equals("/api/health") && !path.equals("/api/track") && !path.equals("/api/prompts");
     }
 
     static boolean isAdminPath(String path) {

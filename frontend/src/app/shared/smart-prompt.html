@@ -1,0 +1,79 @@
+<div class="smart-prompt-wrap">
+  <div
+    class="smart-prompt"
+    [class.dragging]="dragging()"
+    (dragenter)="dragOver($event)"
+    (dragover)="dragOver($event)"
+    (dragleave)="dragLeave($event)"
+    (drop)="drop($event)"
+  >
+    <label class="sr-only" for="smart-prompt-input">What do you want to do with your CV?</label>
+    <div class="field">
+      <textarea
+        #box
+        id="smart-prompt-input"
+        rows="3"
+        maxlength="20000"
+        [value]="text()"
+        [attr.aria-describedby]="error() ? 'smart-prompt-error' : null"
+        (input)="input($event)"
+        (keydown)="keydown($event)"
+      ></textarea>
+      @if (!text()) {
+        <!-- Re-created on every change so the fade-in replays; screen readers get the label instead. -->
+        @for (i of [example()]; track i) {
+          <span class="placeholder" aria-hidden="true">{{ examples[i] }}</span>
+        }
+      }
+    </div>
+
+    <div class="bottom">
+      <div class="attach">
+        <button
+          class="icon-button"
+          type="button"
+          [attr.aria-label]="file() ? 'Choose another CV file' : 'Attach a CV file (PDF or Word)'"
+          title="Attach a CV (PDF or Word, up to 5 MB)"
+          (click)="browse()"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4M7 9l5-5 5 5" />
+            <path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" />
+          </svg>
+        </button>
+        @if (file(); as f) {
+          <span class="attached">
+            <span class="attached-name" [title]="f.name">{{ f.name }}</span>
+            <button class="remove" type="button" [attr.aria-label]="'Remove ' + f.name" (click)="removeFile()">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+            </button>
+          </span>
+        } @else {
+          <span class="hint">{{ dragging() ? 'Drop your CV here' : 'Attach or drop your CV' }}</span>
+        }
+        <input
+          #picker
+          class="sr-only"
+          type="file"
+          [accept]="accept"
+          tabindex="-1"
+          aria-hidden="true"
+          (change)="pick(picker)"
+        />
+      </div>
+      <button class="cta go" type="button" [attr.aria-busy]="busy()" [disabled]="busy()" (click)="go()">
+        Go ✨
+      </button>
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="error" id="smart-prompt-error" role="alert">{{ error() }}</p>
+  }
+
+  <ul class="chips" role="list" aria-label="Suggestions">
+    @for (chip of chips; track chip.label) {
+      <li><button class="chip" type="button" (click)="useChip(chip.text)">{{ chip.label }}</button></li>
+    }
+  </ul>
+</div>

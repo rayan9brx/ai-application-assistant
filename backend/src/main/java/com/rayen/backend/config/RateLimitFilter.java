@@ -96,7 +96,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if (!"POST".equals(method)) return null;
         if (path.equals("/api/cv/score") || path.equals("/api/cv/fix") || path.equals("/api/cv/tailor")) return "ai";
         if (path.equals("/api/cv/extract") || path.equals("/api/documents/export")) return "files";
-        if (path.equals("/api/track")) return "track";
+        if (path.equals("/api/track") || path.equals("/api/prompts")) return "track";
         return null;
     }
 }

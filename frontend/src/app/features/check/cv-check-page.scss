@@ -5,6 +5,8 @@ h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-si
 .small { margin-top: 8px; font-size: var(--text-sm); text-align: center; }
 .intro { max-width: 680px; margin: 0 auto; text-align: center; }
 .lede { margin-top: 12px; color: var(--text-secondary); font-size: 1.125rem; line-height: 1.5; }
+.prompt-hint { margin-top: var(--space-4); padding: var(--space-3) var(--space-4); border-radius: var(--radius); background: var(--pill-bg); color: var(--pill-text); font-size: var(--text-sm); line-height: 1.5; }
+.prompt-hint .prompt-asked { font-weight: 600; overflow-wrap: anywhere; }
 
 /* Upload card: the page's one main element. */
 .input-card { position: relative; isolation: isolate; max-width: 680px; margin: 32px auto 0; padding: 20px; border: 1px solid var(--border); border-radius: 28px; background: var(--surface); box-shadow: var(--shadow-lg); }

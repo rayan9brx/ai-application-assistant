@@ -166,6 +166,12 @@
       <p class="pill-badge">CV Checker</p>
       <h1 id="check-title">How strong is your CV?</h1>
       <p class="lede">Get your ATS score and see exactly what to fix, in under a minute.</p>
+      @if (promptHint(); as hint) {
+        <div class="prompt-hint" role="status">
+          <p class="prompt-asked">You asked: “{{ hint.text.length > 160 ? hint.text.slice(0, 160) + '…' : hint.text }}”</p>
+          <p>{{ hintAdvice(hint.route) }}</p>
+        </div>
+      }
     </section>
 
     <div class="input-card">

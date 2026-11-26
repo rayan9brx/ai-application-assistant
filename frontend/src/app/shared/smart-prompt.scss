@@ -1,0 +1,142 @@
+:host { display: block; }
+
+// Pages can widen it, left-align it or left-align the chips with these custom properties.
+.smart-prompt-wrap { width: 100%; max-width: var(--smart-prompt-width, 720px); margin-inline: var(--smart-prompt-margin, auto); }
+
+.smart-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  text-align: left;
+  transition: border-color .15s, box-shadow .15s;
+
+  &:focus-within { border-color: var(--accent); box-shadow: var(--shadow), 0 0 0 3px var(--accent-soft); }
+  &.dragging { border-style: dashed; border-color: var(--accent); background: var(--surface-muted); }
+}
+
+.field { position: relative; }
+
+textarea {
+  display: block;
+  width: 100%;
+  min-height: 84px;
+  max-height: 260px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0 0 auto;
+  color: var(--text-muted);
+  font-size: var(--text-lg);
+  line-height: 1.5;
+  pointer-events: none;
+  animation: placeholder-in .45s ease-out;
+}
+
+@keyframes placeholder-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .placeholder { animation: none; }
+}
+
+.bottom { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+.attach { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+
+.icon-button {
+  flex: none;
+  width: 44px;
+  padding: 0;
+  border-color: var(--border);
+  border-radius: 999px;
+  color: var(--text-secondary);
+
+  svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  &:hover { border-color: var(--accent); color: var(--accent); }
+}
+
+.hint { color: var(--text-muted); font-size: var(--text-sm); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.attached {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: 2px 4px 2px 12px;
+  border-radius: 999px;
+  background: var(--pill-bg);
+  color: var(--pill-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.attached-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.remove {
+  min-height: 28px;
+  width: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+
+  svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  &:hover { background: var(--surface); }
+}
+
+.go { flex: none; min-height: 44px; padding-inline: 22px; }
+.go[disabled] { opacity: .7; cursor: progress; }
+
+.error {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  font-size: var(--text-sm);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: var(--smart-prompt-chips, center);
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-color: var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-weight: 500;
+
+  &:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+}
+
+@media (max-width: 480px) {
+  .hint { display: none; }
+  textarea, .placeholder { font-size: var(--text-base); }
+}

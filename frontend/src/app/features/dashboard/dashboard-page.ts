@@ -14,6 +14,7 @@ import { CvFlow, MAX_FILE_BYTES } from '../../core/cv-flow';
 import { Navigation } from '../../core/navigation';
 import { ONBOARDING_STEPS, OnboardingAnswers } from '../../core/onboarding-options';
 import { ScoreRing } from '../../shared/score-ring';
+import { SmartPrompt } from '../../shared/smart-prompt';
 import { scoreTone } from '../../core/score-tone';
 
 type SortKey = 'created' | 'edited' | 'score';
@@ -27,7 +28,7 @@ const SORT_KEY = 'dashboard-sort';
  */
 @Component({
   selector: 'app-dashboard-page',
-  imports: [DatePipe, NgTemplateOutlet, ScoreRing],
+  imports: [DatePipe, NgTemplateOutlet, ScoreRing, SmartPrompt],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.scss',
 })

@@ -14,6 +14,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CvApi } from '../../core/cv-api';
 import { CvFlow } from '../../core/cv-flow';
 import { Navigation } from '../../core/navigation';
+import { PromptRouter } from '../../core/prompt-router';
 import { CvSheet } from '../../shared/cv-sheet';
 import { AnalyzerPanel } from './analyzer-panel';
 import { BuilderStore, BuilderTab, NEW_CV, UNTITLED } from './builder-store';
@@ -25,6 +26,8 @@ import { JobMatcherPanel } from './job-matcher-panel';
 const REAL_WIDTH = (595 * 96) / 72;
 const ZOOM_STEPS = [50, 67, 75, 90, 100, 110, 125, 150, 175, 200];
 const ZOOM_KEY = 'rezumo.builder.zoom';
+/** /builder/latest opens the user's most recently edited CV. */
+const LATEST_CV = 'latest';
 /** 'fit' fills the preview's width; a number is a percent of the real size. */
 type Zoom = 'fit' | number;
 
@@ -56,6 +59,7 @@ export class BuilderPage {
   private readonly flow = inject(CvFlow);
   private readonly navigation = inject(Navigation);
   private readonly router = inject(Router);
+  private readonly prompts = inject(PromptRouter);
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
   private readonly deleteDialog = viewChild<ElementRef<HTMLDialogElement>>('deleteDialog');
   private readonly pages = viewChild<ElementRef<HTMLElement>>('pages');
@@ -105,8 +109,15 @@ export class BuilderPage {
       const id = params.get('cvId') ?? '';
       void (async () => {
         await this.store.save();
+        // A smart-prompt request ends here, so /check won't show it later.
+        if (id !== LATEST_CV) this.prompts.take();
+        if (id === LATEST_CV) {
+          await this.openLatest(route.snapshot.queryParamMap.get('tab'));
+          return;
+        }
         if (id !== NEW_CV) {
           await this.store.load(id);
+          this.applyTabParam(route.snapshot.queryParamMap.get('tab'));
           return;
         }
         // /builder/new (the "+ New CV" buttons): create an empty CV, then show it at its own URL.
@@ -136,6 +147,28 @@ export class BuilderPage {
       subscription.unsubscribe();
       void this.store.save();
     });
+  }
+
+  /** /builder/latest (the smart prompt's "fix" requests): the most recently edited CV, or /check without one. */
+  private async openLatest(tab: string | null): Promise<void> {
+    let latest: string | undefined;
+    try {
+      latest = [...(await this.api.list())].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))[0]?.id;
+    } catch {
+      latest = undefined;
+    }
+    // Without a CV the request goes on to /check, which shows it.
+    if (latest) this.prompts.take();
+    const url = latest ?`/builder/${latest}${tab ? `?tab=${encodeURIComponent(tab)}` : ''}` : '/check';
+    await this.router.navigateByUrl(url, { replaceUrl: true });
+  }
+
+  /** ?tab=analyze opens that tab once; the parameter is then dropped so a refresh starts normally. */
+  private applyTabParam(tab: string | null): void {
+    const match = this.tabs.find((t) => t.id === tab);
+    if (!match) return;
+    this.store.tab.set(match.id);
+    void this.router.navigate([], { queryParams: { tab: null }, queryParamsHandling: 'merge', replaceUrl: true });
   }
 
   @HostListener('window:beforeunload', ['$event'])

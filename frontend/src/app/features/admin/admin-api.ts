@@ -87,6 +87,13 @@ export interface AuditEntry {
   reason: string;
 }
 
+/** Smart-prompt requests kept (90 days): counts per route and the 20 latest. */
+export interface PromptInsights {
+  total: number;
+  routes: KeyCount[];
+  recent: { text: string; route: string; signedIn: boolean; createdAt: string }[];
+}
+
 /** /api/admin/**; the backend answers 403 unless the signed-in user is an admin. */
 @Injectable({ providedIn: 'root' })
 export class AdminApi {
@@ -115,6 +122,9 @@ export class AdminApi {
     return firstValueFrom(
       this.http.delete<{ deleted: number }>('/api/admin/page-views', { params: new HttpParams({ fromObject: { from, to } }) }),
     );
+  }
+  prompts(): Promise<PromptInsights> {
+    return this.get('/api/admin/prompts', {});
   }
   audit(page: number): Promise<AdminPage<AuditEntry>> {
     return this.get('/api/admin/audit', { page });

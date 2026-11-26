@@ -1,31 +1,21 @@
-import { Component, inject, signal } from '@angular/core';
-import { AuthService, signupUrl } from '../../core/auth.service';
+import { Component } from '@angular/core';
 import { CvExamplesSection } from './cv-examples-section';
-import { CvFlow } from '../../core/cv-flow';
 import { DemoWindow } from './demo-window';
 import { Hero } from './hero';
 import { HowItWorks } from './how-it-works';
 import { HurdlesSection } from './hurdles-section';
-import { CHECK_HREF } from '../../core/menu-config';
-import { Navigation } from '../../core/navigation';
 import { ProblemSection } from './problem-section';
 import { Showcase } from './showcase';
-import { UploadBar } from '../../shared/upload-bar';
+import { SmartPrompt } from '../../shared/smart-prompt';
 
 /** The landing page. */
 @Component({
   selector: 'app-home-page',
-  imports: [CvExamplesSection, DemoWindow, Hero, HowItWorks, HurdlesSection, ProblemSection, Showcase, UploadBar],
+  imports: [CvExamplesSection, DemoWindow, Hero, HowItWorks, HurdlesSection, ProblemSection, Showcase, SmartPrompt],
   template: `
     <app-hero />
-    <app-upload-bar
-      id="get-started"
-      [busy]="starting()"
-      [browseWhenEmpty]="auth.signedIn()"
-      (selected)="picked($event)"
-      (submitted)="startCheck($event)"
-      (emptySubmit)="toSignup()"
-    />
+    <!-- Guests sign up first; the prompt and file wait in memory (not across a reload). -->
+    <app-smart-prompt id="get-started" />
     <app-demo-window />
     <app-showcase />
     <app-problem-section />
@@ -33,41 +23,9 @@ import { UploadBar } from '../../shared/upload-bar';
     <app-how-it-works />
     <app-cv-examples-section />
   `,
+  styles: `
+    app-smart-prompt { margin: 0 auto 72px; padding-inline: var(--space-4); animation: fade-up .7s .2s cubic-bezier(.2, .7, .2, 1) both; }
+    @media (max-width: 640px) { app-smart-prompt { margin-bottom: var(--space-7); } }
+  `,
 })
-export class HomePage {
-  private readonly navigation = inject(Navigation);
-  private readonly flow = inject(CvFlow);
-  readonly auth = inject(AuthService);
-  readonly starting = signal(false);
-
-  /** Guests don't need to press "Score my CV": picking a file already leads to sign-up. */
-  picked(file: File | null): void {
-    if (file && !this.auth.signedIn()) void this.startCheck(file);
-  }
-
-  /** "Score my CV" without a file, as a guest. */
-  toSignup(): void {
-    void this.navigation.go(signupUrl(CHECK_HREF));
-  }
-
-  /**
-   * Hands the file to the checker, which starts scoring it as soon as /check opens. A guest
-   * signs up (or logs in) first; the file waits in memory, so it is still there after a log-in
-   * in this tab, but not after a reload (e.g. an email confirmation link).
-   */
-  async startCheck(file: File): Promise<void> {
-    if (this.starting()) return;
-    this.starting.set(true);
-    this.flow.reset();
-    this.flow.handOff(file);
-    const signedIn = this.auth.signedIn();
-    try {
-      const done = await this.navigation.go(signedIn ? CHECK_HREF : signupUrl(CHECK_HREF));
-      if (!done && signedIn) this.flow.takeHandOff();
-    } catch {
-      this.flow.takeHandOff();
-    } finally {
-      this.starting.set(false);
-    }
-  }
-}
+export class HomePage {}
