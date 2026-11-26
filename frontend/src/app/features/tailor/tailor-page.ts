@@ -25,8 +25,8 @@ const SECTIONS: { id: Section; label: string }[] = [
 ];
 
 /**
- * /tailor: pick a base CV and a job ad → review the AI's changes one by one next to a live
- * preview → save the result as a new CV (the base CV is never changed). The AI may only
+ * /tailor: pick a base CV and a job ad on one screen → review the AI's changes one by one next
+ * to a live preview and save the result as a new CV (the base CV is never changed). The AI may only
  * rephrase, reorder and emphasize; missing requirements are listed, never added.
  */
 @Component({
@@ -55,13 +55,8 @@ export class TailorPage {
   readonly baseId = signal('');
   readonly file = signal<File | null>(null);
   readonly fileError = signal('');
-  /** Step 1 picks the CV, then "Continue" shows the job ad. */
-  readonly stage = signal<'cv' | 'job'>('cv');
   readonly dragging = signal(false);
   readonly hasBase = computed(() => (this.baseId() === UPLOAD ? !!this.file() : !!this.baseId()));
-  readonly baseTitle = computed(() =>
-    this.baseId() === UPLOAD ? (this.file()?.name ?? '') : (this.cvs()?.find((c) => c.id === this.baseId())?.title ?? ''),
-  );
   readonly jobMode = signal<'text' | 'link'>('text');
   readonly jobText = signal('');
   readonly jobLink = signal('');
@@ -364,7 +359,6 @@ export class TailorPage {
     this.jobTitle.set('');
     this.linkNote.set('');
     this.error.set('');
-    this.stage.set('job');
     this.step.set('input');
     scrollTo({ top: 0 });
   }
