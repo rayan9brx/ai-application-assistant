@@ -33,6 +33,12 @@ nav ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
 .nav-item.active { background: var(--accent-soft); color: var(--text); box-shadow: inset 3px 0 0 var(--accent); }
 .nav-item.active svg { color: var(--accent); }
 .nav-label { flex: 1; min-width: 0; }
+/* The main feature (Tailor to job): a filled button-like item. */
+.nav-item.highlight { margin-block: 4px; background: var(--button-bg); color: var(--button-text); }
+.nav-item.highlight svg { color: var(--button-text); }
+.nav-item.highlight:hover { background: var(--button-bg-hover); color: var(--button-text); }
+.nav-item.highlight.active { box-shadow: inset 3px 0 0 var(--button-text); color: var(--button-text); }
+.nav-item.highlight.active svg { color: var(--button-text); }
 
 .sidebar-bottom { display: grid; gap: 14px; margin-top: auto; }
 .usage { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--surface-raised); border-radius: 12px; background: color-mix(in srgb, var(--surface) 80%, transparent); }

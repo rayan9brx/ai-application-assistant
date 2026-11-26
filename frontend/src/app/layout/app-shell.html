@@ -18,7 +18,7 @@
       <ul role="list">
         @for (item of nav; track item.label) {
           <li>
-            <a class="nav-item" [href]="item.href" [class.active]="active(item)"
+            <a class="nav-item" [href]="item.href" [class.active]="active(item)" [class.highlight]="item.highlight"
               [attr.aria-current]="active(item) ? 'page' : null">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path [attr.d]="item.icon" /></svg>
               <span class="nav-label">{{ item.label }}</span>

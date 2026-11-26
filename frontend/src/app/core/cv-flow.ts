@@ -45,6 +45,23 @@ export interface CvTailoring {
   changes: CvChange[];
   notes: string[];
 }
+/** /api/cv/tailor-job: the /tailor page's result. missingKeywords are never added to the CV. */
+export interface JobTailoring {
+  company: string;
+  jobTitle: string;
+  matchBefore: number;
+  matchAfter: number;
+  matchedKeywords: string[];
+  missingKeywords: string[];
+  changes: (CvChange & { section: 'title' | 'summary' | 'bullets' | 'skills' })[];
+  notes: string[];
+}
+/** /api/cv/job-ad: a job ad read from a link. */
+export interface JobAd {
+  text: string;
+  jobTitle: string;
+  company: string;
+}
 
 export type FlowPhase = 'input' | 'reading' | 'scoring' | 'results';
 
@@ -160,10 +177,7 @@ export class CvFlow {
     }
     this.phase.set('reading');
     try {
-      const data = new FormData();
-      data.append('file', file);
-      const { text } = await this.post<{ text: string }>('/api/cv/extract', data);
-      this.cvText.set(text);
+      this.cvText.set(await this.extract(file));
     } catch (error) {
       this.fail(error, 'We couldn’t read this file. Try another one or paste your CV text.');
       return;
@@ -185,6 +199,23 @@ export class CvFlow {
   /** Asks the AI to fix one issue; the caller shows the proposal and applies it on Accept. */
   fix(issue: CvIssue): Promise<CvFix> {
     return this.fixText(this.cvText(), this.jobDescription(), issue);
+  }
+
+  /** The text of a PDF or Word CV. */
+  async extract(file: File): Promise<string> {
+    const data = new FormData();
+    data.append('file', file);
+    return (await this.post<{ text: string }>('/api/cv/extract', data)).text;
+  }
+
+  /** One AI use; answers 429 when a Free user has none left this month. */
+  tailorJob(cvText: string, jobDescription: string): Promise<JobTailoring> {
+    return this.post<JobTailoring>('/api/cv/tailor-job', { cvText, jobDescription });
+  }
+
+  /** Reads a job ad from a link; fails with "paste it instead" when the site blocks it. */
+  jobAd(url: string): Promise<JobAd> {
+    return this.post<JobAd>('/api/cv/job-ad', { url });
   }
 
   /* The AI and export endpoints for any CV text (the checker's or the builder's). */

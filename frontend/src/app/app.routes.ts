@@ -19,6 +19,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/check/cv-check-page').then((m) => m.CvCheckPage),
   },
   {
+    path: 'tailor',
+    title: 'Tailor your CV to a job — Rezumo',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/tailor/tailor-page').then((m) => m.TailorPage),
+  },
+  {
     path: 'pricing',
     title: 'Pricing — Rezumo',
     loadComponent: () => import('./features/pricing/pricing-page').then((m) => m.PricingPage),

@@ -4,6 +4,15 @@
     <p class="muted">{{ subline() }}</p>
   </header>
 
+  <a class="tailor-card" href="/tailor">
+    <span class="tailor-icon" aria-hidden="true">🎯</span>
+    <span class="tailor-copy">
+      <strong>Applying for a job?</strong>
+      <span>Paste the ad and get a tailored CV, with your match score and every change to review.</span>
+    </span>
+    <span class="tailor-go">Tailor my CV <span aria-hidden="true">→</span></span>
+  </a>
+
   <app-smart-prompt class="prompt" />
 
   <ul class="features" role="list">
@@ -15,7 +24,7 @@
       </a>
     </li>
     <li>
-      <a class="feature" href="/check?focus=job">
+      <a class="feature" href="/tailor">
         <span class="feature-icon" aria-hidden="true">🎯</span>
         <strong>Tailor to Job</strong>
         <span>Match your CV to any job description</span>

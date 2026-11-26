@@ -9,6 +9,14 @@ import { BuilderStore } from './builder-store';
   imports: [ScoreRing],
   template: `
     @let match = jobMatch();
+    <section class="card tailored">
+      <div>
+        <h3>Applying for a specific job?</h3>
+        <p class="muted">Keep this CV as it is and make a tailored copy for the job ad, with every change for you to review.</p>
+      </div>
+      <a class="cta cta-small" [href]="'/tailor?cv=' + store.id()">Create tailored version ✨</a>
+    </section>
+
     <section class="card">
       <label>
         <span>Job description</span>
@@ -98,6 +106,8 @@ import { BuilderStore } from './builder-store';
   styleUrls: ['./builder-panels.scss'],
   styles: `
     .card { display: grid; gap: 12px; }
+    .tailored { justify-items: start; border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); background: var(--accent-soft); }
+    .tailored h3 { margin-bottom: 4px; }
     .row { display: flex; flex-wrap: wrap; gap: 8px; }
     .row .ai { min-height: 34px; padding: 6px 14px; font-size: var(--text-sm); }
     .match.stale { opacity: .7; }

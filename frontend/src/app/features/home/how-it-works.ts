@@ -1,4 +1,5 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { AuthService } from '../../core/auth.service';
 import { CHECK_HREF } from '../../core/menu-config';
 import { scoreTone } from '../../core/score-tone';
 import { AtsScoreMock } from './ats-score-mock';
@@ -14,13 +15,13 @@ const STEPS = [
     icon: 'M12 16V4M7 9l5-5 5 5M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3',
   },
   {
-    title: 'Fix it with AI',
-    text: 'See missing keywords and improve weak points with one click.',
-    icon: 'M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
+    title: 'Paste the job ad',
+    text: 'Paste the text or a link. See your match score and the keywords that matter.',
+    icon: 'M9 4h6v3H9zM7 5.5H5.5v15h13v-15H17M9 12h6M9 16h4',
   },
   {
-    title: 'Tailor and download',
-    text: 'Match any job ad and download an ATS-friendly PDF.',
+    title: 'Review changes & download',
+    text: 'Accept or reject every change, then download an ATS-friendly PDF.',
     icon: 'M12 4v11M7 10l5 5 5-5M5 20h14',
   },
 ];
@@ -31,7 +32,7 @@ const STEPS = [
   imports: [AtsScoreMock, BulletRewriteMock, Reveal, SectionHead],
   template: `
     <section id="features" aria-labelledby="how-title">
-      <app-section-head pill="How it works" title="From upload to interview-ready in three steps" headingId="how-title" />
+      <app-section-head pill="How it works" title="A CV made for every job, in three steps" headingId="how-title" />
       <ol class="steps" role="list" appReveal (revealed)="start($event)">
         @for (step of steps; track step.title; let i = $index) {
           <li class="step">
@@ -44,12 +45,9 @@ const STEPS = [
             <div class="mock-area theme-dark">
               @switch (i) {
                 @case (0) { <app-ats-score-mock [play]="playing()" [animate]="animate()" /> }
-                @case (1) { <app-bullet-rewrite-mock [play]="playing()" [animate]="animate()" /> }
-                @default {
+                @case (1) {
                   <figure class="tailor">
-                    <figcaption class="sr-only">
-                      Example only: the CV matches the job ad {{ tailor.match }}% and downloads as a PDF.
-                    </figcaption>
+                    <figcaption class="sr-only">Example only: the CV matches the job ad {{ tailor.match }}% after tailoring.</figcaption>
                     <div aria-hidden="true">
                       <p class="tailor-label">Job ad <span class="example-badge">Example</span></p>
                       <p class="tailor-job">{{ tailor.job }}</p>
@@ -58,13 +56,16 @@ const STEPS = [
                         <span class="bar"><span [attr.data-tone]="tone" [style.width.%]="playing() ? tailor.match : 0"></span></span>
                         <b [attr.data-tone]="tone">{{ tailor.match }}% match</b>
                       </div>
-                      <p class="pdf">
-                        <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5" /></svg>
-                        <span>{{ tailor.file }}</span>
-                        <span class="pdf-tag">ATS-friendly</span>
-                      </p>
                     </div>
                   </figure>
+                }
+                @default {
+                  <app-bullet-rewrite-mock [play]="playing()" [animate]="animate()" />
+                  <p class="pdf" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8zM14 3v5h5" /></svg>
+                    <span>{{ tailor.file }}</span>
+                    <span class="pdf-tag">ATS-friendly</span>
+                  </p>
                 }
               }
             </div>
@@ -72,7 +73,8 @@ const STEPS = [
         }
       </ol>
       <div class="after">
-        <a class="cta" [href]="checkHref">Check my CV for free</a>
+        <a class="cta" [href]="tailorHref()">Tailor my CV to a job</a>
+        <a class="secondary" [href]="checkHref">Or check your CV for free</a>
       </div>
     </section>
   `,
@@ -115,7 +117,9 @@ const STEPS = [
     .pdf span:first-of-type { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .pdf-tag { margin-left: auto; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: .6875rem; white-space: nowrap; }
 
-    .after { display: flex; justify-content: center; margin-top: 48px; }
+    .after { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 48px; }
+    .secondary { color: var(--accent); font-weight: 600; text-decoration: none; }
+    .secondary:hover { color: var(--accent-hover); text-decoration: underline; }
     @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
     @media (max-width: 960px) { .steps { grid-template-columns: minmax(0, 1fr); max-width: 520px; margin-inline: auto; } }
     @media (max-width: 520px) { .after .cta { width: 100%; } }
@@ -125,6 +129,8 @@ export class HowItWorks {
   readonly steps = STEPS;
   readonly tailor = SAMPLE_TAILOR;
   readonly tone = scoreTone(SAMPLE_TAILOR.match);
+  private readonly auth = inject(AuthService);
+  readonly tailorHref = computed(() => this.auth.gate('/tailor'));
   readonly checkHref = CHECK_HREF;
   readonly playing = signal(false);
   readonly animate = signal(true);

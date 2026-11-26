@@ -75,6 +75,33 @@ public class CvAiService {
         add it only if you have really used it") and places where the user should add real numbers.
         Never add a skill to the CV just because the job asks for it.""";
 
+    private static final String TAILOR_JOB_SYSTEM = """
+        You tailor a CV to one job ad, so the applicant can send it for exactly this job.
+        """ + SHARED_RULES + """
+
+        Honesty rule, above everything else: only rephrase, reorder and emphasize experience the CV
+        already shows. Never invent or add skills, tools, jobs, employers, job titles, numbers, dates
+        or degrees. If the job requires something the CV doesn't show, list it in missingKeywords
+        instead of adding it to the CV.
+
+        Propose up to 10 changes. Each change has a section:
+        - "title": the target title line under the name, moved toward the job title only as far as
+          the CV's real experience supports it.
+        - "summary": the profile or summary paragraph, rewritten to lead with the most relevant real experience.
+        - "bullets": one bullet point, reworded with the job ad's wording where that wording is true for this person.
+        - "skills": the skills line with exactly the same skills, reordered so the ones the job asks for
+          come first. Never add or remove a skill.
+        original must be copied character for character from the CV; replacement replaces exactly that
+        text. reason is one short sentence.
+        matchBefore is an honest estimate (0-100) of how well the CV as it is matches the job; matchAfter
+        the same estimate with all your changes applied. Requirements the CV doesn't show keep
+        matchAfter down; never raise it for skills the person doesn't have.
+        matchedKeywords: the job ad's important keywords that the CV truthfully shows.
+        missingKeywords: the job ad's important requirements the CV doesn't show.
+        company and jobTitle: as written in the job ad, or "" if it doesn't say.
+        notes: up to 4 short hints, for example where the user should add a real number.""";
+
+    private static final Set<String> TAILOR_SECTIONS = Set.of("title", "summary", "bullets", "skills");
     private static final Set<String> SEVERITIES = Set.of("high", "medium", "low");
 
     private final ClaudeClient claude;
@@ -96,6 +123,11 @@ public class CvAiService {
 
     public Tailoring tailor(String cv, String job) {
         return withRetry(() -> toTailoring(claude.complete(TAILOR_SYSTEM, input(cv, job), TAILOR_SCHEMA), cv));
+    }
+
+    /** The /tailor flow: changes grouped by section, the match before → after and the keywords, in one AI call. */
+    public JobTailoring tailorJob(String cv, String job) {
+        return withRetry(() -> toJobTailoring(claude.complete(TAILOR_JOB_SYSTEM, input(cv, job), TAILOR_JOB_SCHEMA), cv));
     }
 
     // One retry when the model's JSON is unusable; then a clear error.
@@ -161,6 +193,50 @@ public class CvAiService {
             }
         }
         return new Tailoring(changes, list(node.path("notes"), 6, n -> limit(n.asString(""), 300)));
+    }
+
+    /**
+     * Enforces the honesty rule where it can be checked: every change must replace real CV text, a
+     * skills change may only reorder the same skills, and a keyword counts as matched only when the
+     * CV contains it (otherwise it is listed as missing).
+     */
+    static JobTailoring toJobTailoring(JsonNode node, String cv) {
+        var changes = new ArrayList<Change>();
+        for (JsonNode change : node.path("changes")) {
+            if (changes.size() == 10) break;
+            String section = text(change, "section", 20);
+            String located = locate(cv, text(change, "original", 3000));
+            String replacement = text(change, "replacement", 4000);
+            if (!TAILOR_SECTIONS.contains(section) || located == null || located.equals(replacement)) continue;
+            if (section.equals("skills") && !skillTokens(located).equals(skillTokens(replacement))) continue;
+            changes.add(new Change(section, located, replacement, text(change, "reason", 300)));
+        }
+        String lowerCv = cv.toLowerCase(java.util.Locale.ROOT);
+        var matched = new LinkedHashSet<String>();
+        var missing = new LinkedHashSet<String>();
+        for (String keyword : keywords(node.path("matchedKeywords"))) {
+            (lowerCv.contains(keyword.toLowerCase(java.util.Locale.ROOT)) ? matched : missing).add(keyword);
+        }
+        for (String keyword : keywords(node.path("missingKeywords"))) {
+            if (!matched.contains(keyword)) missing.add(keyword);
+        }
+        int before = percent(node, "matchBefore");
+        // Rewording can't lower the match; a lower "after" would only confuse.
+        int after = changes.isEmpty() ? before : Math.max(before, percent(node, "matchAfter"));
+        return new JobTailoring(text(node, "company", 120), text(node, "jobTitle", 160), before, after,
+            List.copyOf(matched).subList(0, Math.min(15, matched.size())),
+            List.copyOf(missing).subList(0, Math.min(15, missing.size())),
+            changes, list(node.path("notes"), 4, n -> limit(n.asString(""), 300)));
+    }
+
+    /** The skills of a skills line, ignoring order, case and separators. */
+    private static Set<String> skillTokens(String line) {
+        var tokens = new java.util.TreeSet<String>();
+        for (String part : line.split("[,;·|•/\\n]+")) {
+            String token = part.strip().toLowerCase(java.util.Locale.ROOT).replaceFirst("^(skills|kenntnisse|fähigkeiten)\\s*:\\s*", "");
+            if (!token.isEmpty()) tokens.add(token);
+        }
+        return tokens;
     }
 
     /** Finds `original` in the CV exactly, or with whitespace differences; returns the CV's own text. */
@@ -283,4 +359,18 @@ public class CvAiService {
             "replacement", string("Tailored text, truthful to the CV"),
             "reason", string("One short sentence")))),
         "notes", array(string("Missing requirement or a place to add a real number"))));
+
+    static final Map<String, Object> TAILOR_JOB_SCHEMA = object(ordered(
+        "company", string("Company from the job ad, or empty"),
+        "jobTitle", string("Job title from the job ad, or empty"),
+        "matchBefore", integer("0-100, the CV as it is"),
+        "matchAfter", integer("0-100, with all changes applied"),
+        "matchedKeywords", array(string("Job keyword the CV truthfully shows")),
+        "missingKeywords", array(string("Job requirement the CV doesn't show")),
+        "changes", array(object(ordered(
+            "section", Map.of("type", "string", "enum", List.of("title", "summary", "bullets", "skills")),
+            "original", string("Exact text copied from the CV"),
+            "replacement", string("Tailored text, truthful to the CV"),
+            "reason", string("One short sentence")))),
+        "notes", array(string("Short hint, e.g. where to add a real number"))));
 }

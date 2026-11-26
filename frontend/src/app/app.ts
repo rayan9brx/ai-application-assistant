@@ -12,7 +12,7 @@ import { SiteFooter } from './layout/site-footer';
 
 const FULL_SCREEN_PATHS = ['/login', '/signup'];
 /** Pages of the logged-in app, shown in AppShell (sidebar + top bar). */
-const APP_PATHS = ['/dashboard', '/documents', '/check', '/settings', '/admin', '/cover-letters'];
+const APP_PATHS = ['/dashboard', '/tailor', '/documents', '/check', '/settings', '/admin', '/cover-letters'];
 
 @Component({
   selector: 'app-root',

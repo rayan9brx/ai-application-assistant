@@ -34,6 +34,17 @@ public class Cv {
     @Column(nullable = false, length = 20)
     private String template = "classic";
 
+    /** Set when the CV was made on /tailor; kept when the CV is edited later. */
+    @Column(name = "tailored_company", length = 120)
+    private String tailoredCompany;
+
+    @Column(name = "tailored_job_title", length = 160)
+    private String tailoredJobTitle;
+
+    /** The estimated job match (0–100) after tailoring. */
+    @Column(name = "match_score")
+    private Integer matchScore;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -61,6 +72,14 @@ public class Cv {
     public void setJobDescription(String jobDescription) { this.jobDescription = jobDescription; }
     public String getTemplate() { return template; }
     public void setTemplate(String template) { this.template = template; }
+    public String getTailoredCompany() { return tailoredCompany; }
+    public String getTailoredJobTitle() { return tailoredJobTitle; }
+    public Integer getMatchScore() { return matchScore; }
+    public void setTailoring(String company, String jobTitle, Integer matchScore) {
+        this.tailoredCompany = company;
+        this.tailoredJobTitle = jobTitle;
+        this.matchScore = matchScore;
+    }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     /** Marks the CV as changed, e.g. after re-scoring, so it sorts first on the dashboard. */

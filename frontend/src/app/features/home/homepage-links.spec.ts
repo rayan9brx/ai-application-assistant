@@ -84,7 +84,7 @@ describe('Homepage links', () => {
         .filter((a) => text(a).startsWith(label))
         .map((a) => a.getAttribute('href'));
     expect(hrefOf('Try it free')).toEqual(['/check']);
-    expect(hrefOf('Check my CV for free')).toEqual(['/check']);
+    expect(hrefOf('Or check your CV for free')).toEqual(['/check', '/check']);
     expect(hrefOf('Score my CV')).toEqual(['/check']);
     expect(hrefOf('Get started for free')).toEqual(['/check']);
     expect(text(root)).not.toContain('PLACEHOLDER');

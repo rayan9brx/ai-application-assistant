@@ -1,0 +1,217 @@
+<section class="tailor" aria-labelledby="tailor-title">
+  <header class="page-head">
+    <div>
+      <p class="pill-badge">Tailor to job</p>
+      <h1 id="tailor-title">
+        @switch (step()) {
+          @case ('review') { Review your tailored CV }
+          @case ('saved') { Your tailored CV is ready }
+          @default { Tailor your CV to a job }
+        }
+      </h1>
+    </div>
+    <ol class="steps" aria-label="Steps">
+      <li [class.current]="step() === 'input' || step() === 'working'" [class.done]="step() === 'review' || step() === 'saved'">1 Job ad</li>
+      <li [class.current]="step() === 'review'" [class.done]="step() === 'saved'">2 Review</li>
+      <li [class.current]="step() === 'saved'">3 Save</li>
+    </ol>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @switch (step()) {
+    @case ('working') {
+      <div class="working" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <p class="working-text">{{ progressText() }}</p>
+        <p class="muted">This takes up to a minute. We only rephrase, reorder and emphasize what’s really in your CV.</p>
+      </div>
+    }
+
+    @case ('input') {
+      <div class="input-grid">
+        <section class="card" aria-labelledby="base-title">
+          <h2 id="base-title"><span class="num">1</span> Your CV</h2>
+          @if (cvs() === null) {
+            <p class="muted" role="status">Loading your CVs…</p>
+          } @else {
+            <label class="field">
+              <span>Base CV</span>
+              <select [value]="baseId()" (change)="setBase(value($event))">
+                @for (c of cvs(); track c.id) {
+                  <option [value]="c.id" [selected]="baseId() === c.id">{{ c.title }}</option>
+                }
+                <option [value]="upload" [selected]="baseId() === upload">Upload a new CV…</option>
+              </select>
+            </label>
+            @if (baseId() === upload) {
+              <input #picker class="sr-only" type="file" tabindex="-1" aria-hidden="true"
+                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                (change)="pickFile(picker)" />
+              <button type="button" class="upload" (click)="picker.click()">
+                @if (file(); as f) { <span class="file-name">{{ f.name }}</span> <span class="muted">· Choose another</span> }
+                @else { Choose a PDF or Word file (up to 5 MB) }
+              </button>
+              @if (fileError()) { <p class="error small" role="alert">{{ fileError() }}</p> }
+            }
+            <p class="muted small">Your base CV stays unchanged. The tailored version is saved as a new CV.</p>
+          }
+        </section>
+
+        <section class="card job" aria-labelledby="job-title">
+          <h2 id="job-title"><span class="num">2</span> The job ad</h2>
+          @if (jobMode() === 'link') {
+            <label class="field">
+              <span>Link to the job ad</span>
+              <div class="link-row">
+                <input type="url" inputmode="url" placeholder="https://…" [value]="jobLink()"
+                  (input)="jobLink.set(value($event))" (keydown.enter)="loadLink()" />
+                <button type="button" class="cta cta-small" [disabled]="!jobLink().trim() || fetching()" (click)="loadLink()">
+                  {{ fetching() ? 'Reading…' : 'Load' }}
+                </button>
+              </div>
+            </label>
+            <button type="button" class="text-link" (click)="jobMode.set('text')">or paste the text instead</button>
+          } @else {
+            <label class="field">
+              <span>Paste the job ad</span>
+              <textarea rows="12" maxlength="15000" placeholder="Paste the full job ad: tasks, requirements, company…"
+                [value]="jobText()" (input)="jobText.set(value($event))"></textarea>
+            </label>
+            <button type="button" class="text-link" (click)="jobMode.set('link')">or paste a link</button>
+          }
+          @if (linkNote()) { <p class="note" role="status">{{ linkNote() }}</p> }
+
+          <div class="optional">
+            <label class="field">
+              <span>Company <small>optional</small></span>
+              <input maxlength="120" placeholder="Detected from the ad" [value]="company()" (input)="company.set(value($event))" />
+            </label>
+            <label class="field">
+              <span>Job title <small>optional</small></span>
+              <input maxlength="160" placeholder="Detected from the ad" [value]="jobTitle()" (input)="jobTitle.set(value($event))" />
+            </label>
+          </div>
+        </section>
+      </div>
+
+      <div class="go-row">
+        @let left = usage.aiUsesLeft();
+        <p class="uses" [class.empty]="left === 0">
+          @if (left === null) {
+            {{ usage.role() === 'admin' ? 'Admin: unlimited AI uses' : usage.plan() && usage.plan() !== 'free' ? 'Unlimited AI uses' : '' }}
+          } @else if (left === 0) {
+            You’ve used all AI uses this month. <a href="/pricing">Upgrade for unlimited tailoring</a>
+          } @else {
+            Tailoring uses 1 AI use · {{ left }} left this month
+          }
+        </p>
+        <button type="button" class="cta go" [disabled]="!canTailor()" (click)="tailor()">Tailor my CV ✨</button>
+      </div>
+      @if (jobText().trim().length > 0 && jobText().trim().length < minJob) {
+        <p class="muted small right">Paste a bit more of the job ad.</p>
+      }
+    }
+
+    @case ('review') {
+      @let r = result()!;
+      @let kw = keywords();
+      <section class="summary" aria-label="Job match">
+        <div class="match">
+          <span class="label">Job match</span>
+          <span class="values">
+            <span class="value" [attr.data-tone]="tone(r.matchBefore)">{{ r.matchBefore }}%</span>
+            <span aria-hidden="true">→</span>
+            <span class="value" [attr.data-tone]="tone(matchNow())">{{ matchNow() }}%</span>
+          </span>
+          <span class="muted small">AI estimate with the changes you accepted</span>
+        </div>
+        <div class="kw">
+          @if (kw.added.length) {
+            <p class="kw-label">Keywords added</p>
+            <ul role="list">@for (k of kw.added; track k) { <li class="pill good">+ {{ k }}</li> }</ul>
+          }
+          @if (kw.matched.length) {
+            <p class="kw-label">Already in your CV</p>
+            <ul role="list">@for (k of kw.matched; track k) { <li class="pill">{{ k }}</li> }</ul>
+          }
+          @if (kw.missing.length) {
+            <p class="kw-label">Missing, add only if true</p>
+            <ul role="list">@for (k of kw.missing; track k) { <li class="pill bad">{{ k }}</li> }</ul>
+          }
+        </div>
+      </section>
+
+      <div class="split">
+        <section class="changes" aria-labelledby="changes-title">
+          <div class="changes-head">
+            <h2 id="changes-title">Suggested changes <span class="muted">{{ acceptedCount() }} of {{ r.changes.length }} accepted</span></h2>
+            @if (pendingCount()) {
+              <button type="button" class="cta cta-small cta-secondary" (click)="acceptAll()">Accept all</button>
+            }
+          </div>
+          @for (group of groups(); track group.id) {
+            <h3 class="group">{{ group.label }}</h3>
+            <ul class="change-list" role="list">
+              @for (item of group.items; track item.index) {
+                @let d = decisions()[item.index];
+                <li class="change" [attr.data-decision]="d">
+                  <p class="before"><span class="sr-only">Before: </span>{{ item.change.original }}</p>
+                  <p class="arrow" aria-hidden="true">↓</p>
+                  <p class="after"><span class="sr-only">After: </span>{{ item.change.replacement }}</p>
+                  <p class="reason">{{ item.change.reason }}</p>
+                  @if (applied().conflicts.has(item.index)) {
+                    <p class="conflict">This line was already changed by another accepted change.</p>
+                  }
+                  <div class="decide">
+                    <button type="button" class="small-btn accept" [attr.aria-pressed]="d === 'accepted'" (click)="decide(item.index, 'accepted')">
+                      {{ d === 'accepted' ? 'Accepted ✓' : 'Accept' }}
+                    </button>
+                    <button type="button" class="small-btn reject" [attr.aria-pressed]="d === 'rejected'" (click)="decide(item.index, 'rejected')">
+                      {{ d === 'rejected' ? 'Rejected' : 'Reject' }}
+                    </button>
+                  </div>
+                </li>
+              }
+            </ul>
+          } @empty {
+            <p class="muted">No changes needed. Your CV already fits this job well.</p>
+          }
+          @if (r.notes.length) {
+            <h3 class="group">Notes</h3>
+            <ul class="notes">@for (n of r.notes; track $index) { <li>{{ n }}</li> }</ul>
+          }
+        </section>
+
+        <section class="preview" aria-label="Preview of the tailored CV">
+          <app-cv-sheet class="sheet" [text]="applied().text" [template]="template()" />
+        </section>
+      </div>
+
+      <div class="save-bar">
+        <p class="muted small">Saved as <strong>{{ saveTitle() }}</strong> in My Documents, with the job ad attached.</p>
+        <div class="save-actions">
+          <button type="button" class="plain" (click)="startOver()">Start over</button>
+          <button type="button" class="cta" [disabled]="saving()" (click)="save()">{{ saving() ? 'Saving…' : 'Save as new CV' }}</button>
+        </div>
+      </div>
+    }
+
+    @case ('saved') {
+      <div class="saved card">
+        <p class="saved-icon" aria-hidden="true">✓</p>
+        <h2>“{{ saveTitle() }}” is in My Documents</h2>
+        <p class="muted">Estimated job match: {{ matchNow() }}%. Edit it further in the builder or download it now.</p>
+        <div class="save-actions">
+          <button type="button" class="cta" (click)="openBuilder()">Open in builder</button>
+          <button type="button" class="cta cta-secondary" [disabled]="downloading()" (click)="download()">
+            {{ downloading() ? 'Preparing…' : 'Download PDF' }}
+          </button>
+        </div>
+        <button type="button" class="text-link" (click)="startOver()">Tailor for another job</button>
+      </div>
+    }
+  }
+</section>

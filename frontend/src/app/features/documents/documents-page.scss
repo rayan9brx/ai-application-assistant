@@ -21,3 +21,11 @@
   .controls, .search, .search input { width: 100%; }
   .controls select { flex: 1; }
 }
+
+// "Tailored for {Company}" on CVs made on /tailor; small text uses the -text/-bg pairs.
+.tailored-tag { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; font-size: 11.5px; font-weight: 600; }
+.tailored-tag > span:first-child { max-width: 100%; padding: 2px 8px; overflow: hidden; border-radius: 999px; background: var(--pill-bg); color: var(--pill-text); text-overflow: ellipsis; white-space: nowrap; }
+.tailored-tag .match { padding: 2px 8px; border-radius: 999px; }
+.tailored-tag .match[data-tone='high'] { background: var(--success-bg); color: var(--success-text); }
+.tailored-tag .match[data-tone='mid'] { background: var(--warning-bg); color: var(--warning-text); }
+.tailored-tag .match[data-tone='low'] { background: var(--danger-bg); color: var(--danger-text); }

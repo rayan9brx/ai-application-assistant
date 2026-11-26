@@ -188,7 +188,7 @@ export function isAnswered(step: OnboardingStep, answers: OnboardingAnswers): bo
 /** Where "Continue" on the success screen leads, from the step 1 answer. */
 export function destinationFor(answers: OnboardingAnswers): string {
   if (answers.challenge === 'job_search') return '/dashboard';
-  if (answers.challenge === 'tailor') return '/check?focus=job';
+  if (answers.challenge === 'tailor') return '/tailor';
   return '/check';
 }
 

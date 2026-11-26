@@ -4,16 +4,17 @@ import { PromptRouter } from '../core/prompt-router';
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 
+/** The first one is the main use: it shows first and every other turn. */
 const EXAMPLES = [
-  'Improve my CV for a frontend job…',
+  'Paste a job ad or link…',
   'Check if my CV passes ATS…',
-  'Tailor my CV to this job ad…',
+  'Paste a job ad or link…',
   'Make my bullet points stronger…',
 ];
 
 const CHIPS = [
-  { label: 'Score my CV', text: 'Score my CV and check if it passes ATS' },
   { label: 'Tailor to a job', text: 'Tailor my CV to this job ad: ' },
+  { label: 'Score my CV', text: 'Score my CV and check if it passes ATS' },
   { label: 'Fix weak points', text: 'Fix the weak points in my CV' },
   { label: 'Build a new CV', text: 'Build a new CV' },
 ];

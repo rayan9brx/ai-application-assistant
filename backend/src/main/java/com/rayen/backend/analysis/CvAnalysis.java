@@ -28,6 +28,11 @@ public final class CvAnalysis {
 
     public record Tailoring(List<Change> changes, List<String> notes) {}
 
+    /** missingKeywords are shown as "Missing, add only if true"; they are never added to the CV. */
+    public record JobTailoring(String company, String jobTitle, int matchBefore, int matchAfter,
+                               List<String> matchedKeywords, List<String> missingKeywords,
+                               List<Change> changes, List<String> notes) {}
+
     static String label(int overall) {
         return overall >= 80 ? "Excellent" : overall >= 60 ? "Good" : "Needs improvement";
     }

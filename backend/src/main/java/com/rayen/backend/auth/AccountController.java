@@ -40,11 +40,18 @@ public class AccountController {
     public record CvRequest(@NotBlank @Size(max = 200) String title, @NotNull JsonNode content,
                             @Size(max = 15000) String jobDescription,
                             // Optional: null creates the CV with "classic" and keeps the current one on update.
-                            @Pattern(regexp = CvTemplate.IDS) String template) {}
+                            @Pattern(regexp = CvTemplate.IDS) String template,
+                            // Only read on create (from /tailor); updates keep what the CV has.
+                            @Valid Tailoring tailoring) {}
 
-    /** preview: the start of the CV text, for the dashboard's mini page. */
+    /** The job a CV was tailored for on /tailor, and the estimated match after tailoring. */
+    public record Tailoring(@Size(max = 120) String company, @Size(max = 160) String jobTitle,
+                            @jakarta.validation.constraints.Min(0) @jakarta.validation.constraints.Max(100) Integer matchScore) {}
+
+    /** preview: the start of the CV text, for the dashboard's mini page. tailoring is null for ordinary CVs. */
     public record CvSummary(UUID id, String title, Instant createdAt, Instant updatedAt,
-                            Integer lastScore, Instant lastScoredAt, String preview, String template) {}
+                            Integer lastScore, Instant lastScoredAt, String preview, String template,
+                            Tailoring tailoring) {}
 
     static final int PREVIEW_CHARS = 700;
 
@@ -80,7 +87,7 @@ public class AccountController {
             Analysis last = latest.get(cv.getId());
             return new CvSummary(cv.getId(), cv.getTitle(), cv.getCreatedAt(), cv.getUpdatedAt(),
                 last == null ? null : last.getOverallScore(), last == null ? null : last.getCreatedAt(),
-                preview(cv.getContent()), cv.getTemplate());
+                preview(cv.getContent()), cv.getTemplate(), tailoring(cv));
         }).toList();
     }
 
@@ -89,8 +96,10 @@ public class AccountController {
     public CvView createCv(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody CvRequest request) {
         // Saving is often a new user's first request: create the profile with their sign-up name.
         accounts.profile(userId(jwt), signupName(jwt));
+        var t = request.tailoring();
         return view(accounts.createCv(userId(jwt), request.title(), request.content(), request.jobDescription(),
-            request.template()));
+            request.template(), t == null ? null : t.company(), t == null ? null : t.jobTitle(),
+            t == null ? null : t.matchScore()));
     }
 
     @GetMapping("/cvs/{id}")
@@ -168,6 +177,11 @@ public class AccountController {
         if (text == null || !text.isString()) return "";
         String value = text.asString();
         return value.length() > PREVIEW_CHARS ? value.substring(0, PREVIEW_CHARS) : value;
+    }
+
+    private static Tailoring tailoring(Cv cv) {
+        if (cv.getTailoredCompany() == null && cv.getTailoredJobTitle() == null && cv.getMatchScore() == null) return null;
+        return new Tailoring(cv.getTailoredCompany(), cv.getTailoredJobTitle(), cv.getMatchScore());
     }
 
     private static CvView view(Cv cv) {

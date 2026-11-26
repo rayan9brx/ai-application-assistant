@@ -25,6 +25,9 @@ const JOB = /\b(job|stelle|position|role|vacancy|bewerb)/i;
 /** Phrases that show up in job ads but rarely in a request. */
 const JOB_AD = /(responsibilities|requirements|qualifications|what you('|’)ll do|we offer|about (the role|us)|nice to have|aufgaben|anforderungen|ihr profil|dein profil|wir bieten|\([mwfd]\/[mwfd]\/[mwfd]\))/i;
 
+/** A pasted link (to a job ad). */
+export const JOB_LINK = /https?:\/\/\S+/i;
+
 /** Long or ad-like text is a pasted job ad, not a request. */
 export function looksLikeJobAd(text: string): boolean {
   const t = text.trim();
@@ -35,7 +38,7 @@ export function looksLikeJobAd(text: string): boolean {
 export function detectRoute(text: string): PromptRoute {
   const t = text.trim();
   if (!t) return 'score';
-  if (looksLikeJobAd(t) || TAILOR.test(t)) return 'tailor';
+  if (JOB_LINK.test(t) || looksLikeJobAd(t) || TAILOR.test(t)) return 'tailor';
   if (SCORE.test(t)) return 'score';
   if (FIX.test(t)) return 'fix';
   if (BUILD.test(t)) return 'build';
@@ -83,7 +86,7 @@ export class PromptRouter {
 function destination(route: PromptRoute, hasFile: boolean): string {
   switch (route) {
     case 'tailor':
-      return '/check?focus=job';
+      return '/tailor';
     // An attached file is the CV they mean: score it, the report lists the fixes.
     case 'fix':
       return hasFile ? '/check' : '/builder/latest?tab=analyze';

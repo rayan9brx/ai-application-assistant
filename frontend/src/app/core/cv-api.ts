@@ -39,6 +39,14 @@ export interface CvSummary {
   template: CvTemplateId;
   /** The start of the CV text, for the dashboard's mini page. */
   preview: string;
+  /** Set for CVs made on /tailor. */
+  tailoring: CvTailorTag | null;
+}
+/** The job a CV was tailored for, and the estimated match after tailoring. */
+export interface CvTailorTag {
+  company: string | null;
+  jobTitle: string | null;
+  matchScore: number | null;
 }
 export interface Usage {
   cvs: number;
@@ -67,6 +75,8 @@ export interface CvInput {
   jobDescription: string | null;
   /** Omitted: "classic" for a new CV, unchanged on update. */
   template?: CvTemplateId;
+  /** Only read on create; updates keep what the CV has. */
+  tailoring?: CvTailorTag;
 }
 
 /** Account and saved-CV endpoints; the auth interceptor adds the access token. */

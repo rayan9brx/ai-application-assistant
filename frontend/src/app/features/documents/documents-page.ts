@@ -3,6 +3,7 @@ import { CvApi, CvSummary } from '../../core/cv-api';
 import { CvFlow } from '../../core/cv-flow';
 import { Navigation } from '../../core/navigation';
 import { ScoreRing } from '../../shared/score-ring';
+import { ScoreTone, scoreTone } from '../../core/score-tone';
 
 type SortKey = 'edited' | 'name';
 const SORT_KEY = 'documents-sort';
@@ -133,6 +134,11 @@ export class DocumentsPage {
 
   closeDialog(dialog: HTMLDialogElement): void {
     dialog.close();
+  }
+
+  /** Score colours only come from scoreTone(). */
+  tone(score: number): ScoreTone {
+    return scoreTone(score);
   }
 
   /** "2h ago", "3 days ago"… */

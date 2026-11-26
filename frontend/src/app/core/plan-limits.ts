@@ -2,7 +2,8 @@ import { Profile } from './cv-api';
 
 /**
  * Usage limits per plan, shown in the app sidebar's usage card. Change them here.
- * null means unlimited. These are display limits only; the backend doesn't enforce them yet.
+ * null means unlimited. Display limits, except the Free AI limit on /tailor, which the backend
+ * enforces too (app.limits.free-ai-uses-per-month; keep both equal).
  */
 export interface PlanLimits {
   /** Saved CVs. */

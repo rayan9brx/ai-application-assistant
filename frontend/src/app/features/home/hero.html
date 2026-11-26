@@ -1,11 +1,12 @@
 <section class="hero" aria-labelledby="page-title">
-  <h1 id="page-title">Your CV, ready for every job.</h1>
+  <h1 id="page-title">Paste a job ad. Get a CV made for it.</h1>
   <p class="lede">
-    Rezumo checks your CV like an ATS does, shows you exactly what’s missing, and fixes it with AI,
-    in minutes.
+    Rezumo tailors your CV to every job in one minute, shows your match score, and keeps everything
+    ATS-friendly.
   </p>
-  <!-- Guests sign up first; the prompt and file wait in memory (not across a reload). -->
+  <!-- A pasted job ad or link goes to /tailor; guests sign up first (the prompt waits in memory). -->
   <app-smart-prompt id="get-started" class="prompt" />
+  <a class="secondary" [href]="checkHref()">Or check your CV for free <span aria-hidden="true">→</span></a>
   <ul class="trust" role="list">
     @for (item of trust; track item) {
       <li><svg appCheckIcon></svg>{{ item }}</li>

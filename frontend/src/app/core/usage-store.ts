@@ -16,6 +16,16 @@ export interface UsageMeter {
 export class UsageStore {
   private readonly api = inject(CvApi);
   readonly plan = signal<Profile['plan'] | null>(null);
+  /** Admins have no limits. */
+  readonly role = signal<Profile['role'] | null>(null);
+  /** AI uses left this month; null while loading or when unlimited (paid plans, admins). */
+  readonly aiUsesLeft = computed<number | null>(() => {
+    const usage = this.usage();
+    const plan = this.plan();
+    const limit = plan ? (PLAN_LIMITS[plan] ?? PLAN_LIMITS.free).aiUsesPerMonth : null;
+    if (!usage || this.role() === 'admin' || limit === null) return null;
+    return Math.max(0, limit - usage.aiUsesThisMonth);
+  });
   readonly usage = signal<Usage | null>(null);
   private pending: Promise<void> | null = null;
   /** Set when a CV changes while a refresh is running, so the newer count is fetched too. */
@@ -52,6 +62,7 @@ export class UsageStore {
     this.pending ??= Promise.all([this.api.me(), this.api.usage()])
       .then(([profile, usage]) => {
         this.plan.set(profile.plan);
+        this.role.set(profile.role);
         this.usage.set(usage);
       })
       .catch(() => undefined)
@@ -67,6 +78,7 @@ export class UsageStore {
 
   reset(): void {
     this.plan.set(null);
+    this.role.set(null);
     this.usage.set(null);
   }
 }

@@ -49,6 +49,14 @@
               <div class="cv-text">
                 <h3 [title]="cv.title">{{ cv.title }}</h3>
                 <p class="muted small">edited {{ ago(cv.updatedAt) }}</p>
+                @if (cv.tailoring; as t) {
+                  <p class="tailored-tag">
+                    <span>Tailored for {{ t.company || t.jobTitle || 'a job' }}</span>
+                    @if (t.matchScore !== null) {
+                      <span class="match" [attr.data-tone]="tone(t.matchScore)">{{ t.matchScore }}% match</span>
+                    }
+                  </p>
+                }
               </div>
               @if (cv.lastScore !== null) {
                 <app-score-ring class="ring" [value]="cv.lastScore" [attr.aria-label]="'Last score ' + cv.lastScore" role="img" />

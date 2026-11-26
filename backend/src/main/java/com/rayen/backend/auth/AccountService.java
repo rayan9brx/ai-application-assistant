@@ -102,9 +102,17 @@ public class AccountService {
         return cvs.findByIdAndUserId(cvId, userId).orElseThrow(AccountService::notFound);
     }
 
-    /** Not @Transactional on purpose: profile() may insert and must not share a transaction. */
     /** A null template means the default, 'classic'. */
     public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription, String template) {
+        return createCv(userId, title, content, jobDescription, template, null, null, null);
+    }
+
+    /**
+     * With the job it was tailored for (from /tailor); blank values are stored as null.
+     * Not @Transactional on purpose: profile() may insert and must not share a transaction.
+     */
+    public Cv createCv(UUID userId, String title, JsonNode content, String jobDescription, String template,
+                       String company, String jobTitle, Integer matchScore) {
         profile(userId, null);
         // Admins have no limits; the role comes from the database, never from the request.
         if (cvs.countByUserId(userId) >= MAX_CVS && !admins.isAdmin(userId)) {
@@ -112,6 +120,7 @@ public class AccountService {
         }
         var cv = new Cv(userId, title.strip(), checkedJson(content), blankToNull(jobDescription));
         if (template != null) cv.setTemplate(template);
+        cv.setTailoring(blankToNull(company), blankToNull(jobTitle), matchScore);
         return cvs.saveAndFlush(cv);
     }
 
@@ -133,7 +142,7 @@ public class AccountService {
         Cv source = cv(userId, cvId);
         String title = source.getTitle().length() > 190 ? source.getTitle().substring(0, 190) : source.getTitle();
         return createCv(userId, title + " (copy)", source.getContent().deepCopy(), source.getJobDescription(),
-            source.getTemplate());
+            source.getTemplate(), source.getTailoredCompany(), source.getTailoredJobTitle(), source.getMatchScore());
     }
 
     @Transactional
