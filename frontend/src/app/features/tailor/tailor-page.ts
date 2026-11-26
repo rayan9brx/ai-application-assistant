@@ -153,6 +153,12 @@ export class TailorPage {
         this.baseId.set(pick ? pick.id : '');
       });
     });
+    // A file chosen on /check ("Tailor your CV to it"): use it as the base CV.
+    const handedOff = this.flow.takeHandOff();
+    if (handedOff) {
+      this.file.set(handedOff);
+      this.baseId.set(UPLOAD);
+    }
     this.applyPrompt();
   }
 

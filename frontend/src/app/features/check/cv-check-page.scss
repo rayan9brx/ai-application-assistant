@@ -31,7 +31,7 @@ h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-si
 }
 @media (prefers-reduced-motion: reduce) {
   .drop-ring .value { animation: none; stroke-dashoffset: 85; }
-  .drop-visual, .drop-zone, .job-section { transition: none; }
+  .drop-visual, .drop-zone { transition: none; }
 }
 
 .file-card { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--primary-200); border-radius: 18px; background: var(--accent-soft); }
@@ -44,15 +44,8 @@ h2 { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; font-si
 .remove:hover { background: var(--surface-muted); color: var(--text); }
 
 .text-link { display: block; margin: 12px auto 0; padding: 4px 6px; border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--text-sm); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.add-job { display: flex; width: 100%; margin-top: 16px; }
-
-.job-section { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .3s ease, opacity .25s ease; }
-.job-section.open { grid-template-rows: 1fr; opacity: 1; }
-.job-inner { min-height: 0; overflow: hidden; }
-.job-section.open .job-inner { padding: 4px 3px 3px; margin: -4px -3px -3px; }
-.job-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
-.small-link { margin: 0; }
-.hint-line { margin-bottom: 8px; font-size: var(--text-sm); }
+.tailor-link { margin-top: 16px; text-decoration: none; }
+.tailor-link:hover { text-decoration: underline; }
 
 .privacy { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; color: var(--text-secondary); font-size: .8125rem; }
 .privacy svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
@@ -100,7 +93,6 @@ textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; 
 .count { padding: 2px 10px; border-radius: 999px; background: var(--surface-muted); color: var(--text-secondary); font-size: .875rem; }
 .issues { display: grid; gap: 12px; }
 .work-column .cta { margin-top: 12px; gap: 8px; }
-app-tailor-panel { margin-top: 16px; }
 .editor { font-size: .9375rem; }
 .count-line { margin-top: 6px; color: var(--text-secondary); font-size: .75rem; text-align: right; }
 

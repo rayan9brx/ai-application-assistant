@@ -43,6 +43,14 @@
           >
             {{ openingBuilder() ? 'Opening…' : 'Edit in CV Builder' }}
           </button>
+          <button
+            class="cta cta-small cta-secondary"
+            type="button"
+            [disabled]="!!flow.busy() || openingTailor() || library.state() === 'saving'"
+            (click)="openTailor()"
+          >
+            {{ openingTailor() ? 'Opening…' : 'Tailor to a job ✨' }}
+          </button>
           <button class="link-button" type="button" (click)="startOver()">Start over</button>
         </div>
       </header>
@@ -80,35 +88,6 @@
                 <p class="muted">No issues found. Nice work.</p>
               }
             </div>
-          </section>
-
-          <section aria-labelledby="tailor-title">
-            <h2 id="tailor-title">Tailor to the job</h2>
-            <p class="muted">
-              We rewrite your summary and bullet points to fit the job, using only what’s already in
-              your CV.
-            </p>
-            <label class="field-label" for="results-job">Job description</label>
-            <textarea
-              id="results-job"
-              rows="5"
-              placeholder="Paste the job description here"
-              [value]="flow.jobDescription()"
-              (input)="flow.jobDescription.set(value($event))"
-            ></textarea>
-            <button
-              class="cta cta-small"
-              type="button"
-              [disabled]="!!flow.busy() || !flow.jobDescription().trim()"
-              (click)="flow.tailor()"
-            >
-              @if (flow.busy() === 'tailor') {
-                <span class="spinner" aria-hidden="true"></span> Tailoring…
-              } @else {
-                <span aria-hidden="true">✦</span> Tailor to job description
-              }
-            </button>
-            <app-tailor-panel />
           </section>
 
           <section aria-labelledby="editor-title">
@@ -238,28 +217,9 @@
         <button class="text-link" type="button" (click)="mode.set('file')">or upload a file instead</button>
       }
 
-      @if (!jobOpen()) {
-        <button class="cta cta-small cta-secondary add-job" type="button" (click)="openJob()">
-          + Add a job description for a match score
-        </button>
-      }
-      <div class="job-section" [class.open]="jobOpen()" [attr.inert]="jobOpen() ? null : ''">
-        <div class="job-inner">
-          <div class="job-head">
-            <label class="field-label" for="job">Job description</label>
-            <button class="text-link small-link" type="button" (click)="closeJob()">Remove</button>
-          </div>
-          <p class="muted hint-line">Paste the job ad to see matched and missing keywords.</p>
-          <textarea
-            #jobBox
-            id="job"
-            rows="5"
-            placeholder="Paste the job you're applying for"
-            [value]="flow.jobDescription()"
-            (input)="flow.jobDescription.set(value($event))"
-          ></textarea>
-        </div>
-      </div>
+      <button class="text-link tailor-link" type="button" (click)="openTailor()">
+        Applying for a specific job? Tailor your CV to it →
+      </button>
 
       @if (uploadError()) {
         <p class="error" role="alert">{{ uploadError() }}</p>

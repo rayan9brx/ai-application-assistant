@@ -157,7 +157,7 @@ export class CvFlow {
     }
   }
 
-  /** Hands a file to /check, which starts scoring it as soon as it opens. */
+  /** Hands a file to the next page: /check scores it right away, /tailor uses it as the base CV. */
   handOff(file: File): void {
     this.handedOff = file;
   }
