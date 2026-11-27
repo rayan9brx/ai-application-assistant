@@ -146,7 +146,7 @@ function paginate(page: HTMLElement, scale: number, px: number): SheetPage[] {
   selector: 'app-cv-sheet',
   imports: [NgTemplateOutlet],
   template: `
-    <ng-template #rich let-runs>@for (run of runs; track $index) {@if (run.href) {<span class="c-link" [class.c-bold]="run.bold">{{ run.text }}</span>} @else if (run.bold) {<strong>{{ run.text }}</strong>} @else {<span>{{ run.text }}</span>}}</ng-template>
+    <ng-template #rich let-runs>@for (run of runs; track $index) {@if (run.href) {<a class="c-link" [class.c-bold]="run.bold" [attr.href]="run.href" target="_blank" rel="noopener">{{ run.text }}</a>} @else if (run.bold) {<strong>{{ run.text }}</strong>} @else {<span>{{ run.text }}</span>}}</ng-template>
 
     @if (paged()) {
       <!-- One sheet per A4 page: each shows its slice of the same laid-out CV. -->
@@ -183,7 +183,7 @@ function paginate(page: HTMLElement, scale: number, px: number): SheetPage[] {
                     @default { <circle cx="8" cy="8" r="6.5" /><path d="M1.5 8h13M8 1.5c-3.6 3.6-3.6 9.4 0 13M8 1.5c3.6 3.6 3.6 9.4 0 13" /> }
                   }
                 </svg>
-                <span [class.c-link]="!!item.href">{{ item.short }}</span>
+                @if (item.href) {<a class="c-link" [attr.href]="item.href" target="_blank" rel="noopener">{{ item.short }}</a>} @else {<span>{{ item.short }}</span>}
               </span>
             }
           </p>

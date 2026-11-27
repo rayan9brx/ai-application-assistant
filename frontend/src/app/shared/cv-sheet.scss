@@ -33,8 +33,9 @@ p { margin: 0; }
 .body > .heading:first-child { margin-top: 0; }
 .page[data-template='creative'] .heading { display: flex; align-items: center; gap: 7px; }
 .page[data-template='creative'] .heading::before { content: ''; flex: none; width: 6px; height: 6px; background: var(--cv-accent, var(--primary-600)); }
-.bullet { position: relative; padding-left: 14px; margin-bottom: 1.5px; }
-.bullet::before { content: '•'; position: absolute; left: 4px; color: var(--bullet-color); }
+.bullet { padding-left: 14px; margin-bottom: 1.5px; }
+/* The bullet hangs in the indent as inline text (no positioning), so PDF text stays in reading order. */
+.bullet::before { content: '•'; display: inline-block; width: 10px; margin-left: -10px; color: var(--bullet-color); }
 .entry { display: flex; justify-content: space-between; gap: 12px; margin-top: 2px; }
 .entry strong { font-weight: 650; }
 .dates { flex: none; color: var(--text-secondary); }
@@ -68,8 +69,8 @@ p { margin: 0; }
 .c-summary { margin-top: calc(5 * var(--pt) * var(--g)) !important; text-align: justify; hyphens: none; }
 .c-summary + .c-summary { margin-top: 0 !important; }
 .c-heading { margin-top: calc(9 * var(--pt) * var(--sp, 1) * var(--g)) !important; margin-bottom: calc(4 * var(--pt) * var(--g)) !important; padding-bottom: calc(1 * var(--pt)); border-bottom: max(1px, calc(.6 * var(--pt))) solid var(--black); font-size: calc(14 * var(--pt) * var(--fs, 1)); font-weight: 700; line-height: 1.2; }
-.c-bullet { position: relative; padding-left: calc(14 * var(--pt)); margin-bottom: calc(.5 * var(--pt) * var(--g)) !important; }
-.c-bullet::before { content: '•'; position: absolute; left: calc(4 * var(--pt)); }
+.c-bullet { padding-left: calc(14 * var(--pt)); margin-bottom: calc(.5 * var(--pt) * var(--g)) !important; }
+.c-bullet::before { content: '•'; display: inline-block; width: calc(10 * var(--pt)); margin-left: calc(-10 * var(--pt)); }
 /* Title and dates on one line: never justified, the title never stretches. */
 .c-entry { display: flex; justify-content: space-between; align-items: baseline; gap: calc(12 * var(--pt)); text-align: left; }
 .c-entry.spaced { margin-top: calc(2 * var(--pt) * var(--g)) !important; }
@@ -84,3 +85,15 @@ p { margin: 0; }
 .page.custom-accent:not([data-template='simple'], [data-template='compact']) { --name-color: var(--cv-accent); }
 .page.custom-accent[data-template='modern'] { --rule: .9px solid var(--cv-accent); }
 .page.custom-accent[data-template='creative'] .contact { color: color-mix(in srgb, var(--white) 82%, var(--cv-accent)); }
+
+/*
+ * Printed (CvPrint, "Save as PDF"): one tall sheet that the browser splits into A4 pages, each with
+ * the page margins (cloned padding), breaking between lines and keeping headings with what follows.
+ */
+@media print {
+  :host { height: auto !important; overflow: visible; background: var(--white); }
+  .page, .page.classic { min-height: 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .page:not(.sharp) { transform: none; zoom: var(--scale); }
+  .page p { break-inside: avoid; }
+  .heading, .c-heading { break-after: avoid; }
+}

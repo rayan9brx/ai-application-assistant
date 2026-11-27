@@ -16,33 +16,30 @@ public class PdfExportController {
         this.pdfExport = pdfExport;
     }
 
+    /** The motivation letter only: CV PDFs are printed in the browser from the preview's CvSheet. */
     public record ExportRequest(
-        @NotBlank @Pattern(regexp = "cv|motivationLetter") String documentType,
-        @NotBlank @Size(max = 60000) String text,
-        // CV only; optional, defaults to "classic".
-        @Pattern(regexp = CvTemplate.IDS) String template
+        @NotBlank @Pattern(regexp = "motivationLetter") String documentType,
+        @NotBlank @Size(max = 60000) String text
     ) {}
 
-    // Export exactly the submitted editor text, using fixed safe download filenames.
+    // Export exactly the submitted editor text, using a fixed safe download filename.
     @PostMapping(value = "/export", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> export(@Valid @RequestBody ExportRequest request) throws IOException {
         if (request.text().codePoints().anyMatch(cp -> Character.isISOControl(cp) && cp != '\n' && cp != '\r' && cp != '\t' && cp != '\u0085')) {
             throw new PdfExportService.UnsupportedCharacterException();
         }
-        boolean cv = request.documentType().equals("cv");
-        String filename = cv ? "cv.pdf" : "motivation-letter-demo.pdf";
         return ResponseEntity.ok()
             .contentType(MediaType.APPLICATION_PDF)
-            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(filename).build().toString())
+            .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("motivation-letter-demo.pdf").build().toString())
             .cacheControl(CacheControl.noStore())
-            .body(cv ? pdfExport.generateCv(request.text(), CvTemplate.of(request.template())) : pdfExport.generate(request.text()));
+            .body(pdfExport.generate(request.text()));
     }
 
     // Suppress default validation logging, which can include rejected document text.
     @ExceptionHandler({org.springframework.web.bind.MethodArgumentNotValidException.class,
         org.springframework.http.converter.HttpMessageNotReadableException.class})
     public ResponseEntity<Map<String, String>> invalidRequest() {
-        return error(HttpStatus.BAD_REQUEST, "Use document type cv or motivationLetter, a known template, and nonempty text of at most 60,000 characters.");
+        return error(HttpStatus.BAD_REQUEST, "Use document type motivationLetter and nonempty text of at most 60,000 characters.");
     }
 
     // Explain unsupported symbols instead of silently deleting or replacing text.

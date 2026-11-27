@@ -170,3 +170,15 @@ button:disabled { background: var(--surface-muted); border-color: var(--border);
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/*
+ * CV PDF export (CvPrint): the CV sheet is laid out off screen at A4 width, then printed alone on
+ * A4 pages without browser margins, so "Save as PDF" gives exactly the preview's layout.
+ */
+.cv-print { position: fixed; top: 0; left: -10000px; width: 210mm; pointer-events: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media print {
+  @page { size: A4; margin: 0; }
+  html:has(body.printing-cv), body.printing-cv { background: var(--white); }
+  body.printing-cv > :not(.cv-print) { display: none !important; }
+  body.printing-cv > .cv-print { position: static; width: 210mm; }
+}

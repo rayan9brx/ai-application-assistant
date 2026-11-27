@@ -1,9 +1,8 @@
-import { HttpClient } from '@angular/common/http';
 import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
 import { AuthService, signupUrl } from '../../core/auth.service';
 import { CvFlow } from '../../core/cv-flow';
+import { CvPrint } from '../../shared/cv-print';
 import { CvSheet } from '../../shared/cv-sheet';
 import { CV_TEMPLATES, CvTemplateId, SAMPLE_CV, TEMPLATES_HREF } from '../../core/cv-templates';
 import { CHECK_HREF } from '../../core/menu-config';
@@ -174,7 +173,7 @@ export class TemplatesPage {
   readonly error = signal('');
 
   private readonly flow = inject(CvFlow);
-  private readonly http = inject(HttpClient);
+  private readonly printer = inject(CvPrint);
 
   constructor() {
     // Coming from another page (/templates#modern, or an old /templates/modern link): the
@@ -230,28 +229,14 @@ export class TemplatesPage {
     return this.active()[template] ?? 0;
   }
 
-  /** The sample CV as a PDF in this template (the export needs an account). */
+  /** The sample CV as a PDF in this template. */
   async download(template: CvTemplateId, key: string): Promise<void> {
     if (this.downloading()) return;
     this.downloading.set(key);
     this.error.set('');
     try {
-      const blob = await firstValueFrom(
-        this.http.post(
-          '/api/documents/export',
-          { documentType: 'cv', text: this.sample, template },
-          { responseType: 'blob' },
-        ),
-      );
-      const url = URL.createObjectURL(blob);
-      const link = Object.assign(document.createElement('a'), {
-        href: url,
-        download: `${template}-cv-template.pdf`,
-      });
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      // Printed from the same CvSheet as the thumbnails (CvPrint), so the PDF matches them.
+      await this.printer.print(this.sample, template, null, `${template}-cv-template`);
     } catch {
       this.error.set('The PDF couldn’t be created. Please try again.');
     } finally {

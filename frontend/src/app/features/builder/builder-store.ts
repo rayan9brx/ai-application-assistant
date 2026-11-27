@@ -268,7 +268,7 @@ export class BuilderStore {
 
   async exportPdf(): Promise<void> {
     this.error.set('');
-    await this.flow.exportPdf(this.text(), this.design().template);
+    await this.flow.exportPdf(this.text(), this.design().template, this.design());
   }
 }
 

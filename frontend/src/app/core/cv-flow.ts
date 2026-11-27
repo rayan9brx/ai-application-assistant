@@ -2,6 +2,8 @@ import { Injectable, effect, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { CvTemplateId, DEFAULT_TEMPLATE, isTemplateId } from './cv-templates';
+import { BuilderDesign } from './cv-builder';
+import { CvPrint } from '../shared/cv-print';
 
 /** Mirrors the backend's CvAnalysis records. */
 export interface CvField {
@@ -102,6 +104,7 @@ function preferredTemplate(): CvTemplateId {
 @Injectable({ providedIn: 'root' })
 export class CvFlow {
   private readonly http = inject(HttpClient);
+  private readonly printer = inject(CvPrint);
 
   readonly phase = signal<FlowPhase>('input');
   readonly cvText = signal('');
@@ -243,33 +246,15 @@ export class CvFlow {
     return this.post<CvTailoring>('/api/cv/tailor', { cvText, jobDescription });
   }
 
-  /** Downloads the text as a PDF in the template; throws an Error with a readable message. */
-  async exportPdf(text: string, template: CvTemplateId): Promise<void> {
+  /**
+   * Exports the CV as a PDF: prints the preview's own CvSheet (CvPrint), so the PDF matches the
+   * preview exactly. Throws an Error with a readable message.
+   */
+  async exportPdf(text: string, template: CvTemplateId, design: BuilderDesign | null = null): Promise<void> {
     try {
-      const blob = await firstValueFrom(
-        this.http.post(
-          '/api/documents/export',
-          { documentType: 'cv', text, template },
-          { responseType: 'blob' },
-        ),
-      );
-      const url = URL.createObjectURL(blob);
-      const link = Object.assign(document.createElement('a'), { href: url, download: 'cv.pdf' });
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error) {
-      // Errors come back as a JSON blob from the export endpoint.
-      let message = 'The PDF couldn’t be created. Please try again.';
-      if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
-        try {
-          message = JSON.parse(await error.error.text()).message ?? message;
-        } catch {
-          /* keep the default */
-        }
-      }
-      throw new Error(message);
+      await this.printer.print(text, template, design);
+    } catch {
+      throw new Error('The PDF couldn’t be created. Please try again.');
     }
   }
 
