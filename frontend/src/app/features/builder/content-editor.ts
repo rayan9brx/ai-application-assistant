@@ -194,6 +194,61 @@ export class ContentEditor {
     });
   }
 
+  // Drag & drop of sections by their header's handle (the order is saved with the CV).
+
+  readonly dragging = signal<SectionKind | null>(null);
+  /** Where the dragged section would land: before or after this section. */
+  readonly dropAt = signal<{ kind: SectionKind; after: boolean } | null>(null);
+
+  dragStart(event: DragEvent, kind: SectionKind): void {
+    if (!event.dataTransfer) return;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', kind);
+    const card = (event.target as HTMLElement).closest('.card');
+    if (card) event.dataTransfer.setDragImage(card, 24, 20);
+    this.menuFor.set(null);
+    this.dragging.set(kind);
+  }
+
+  dragOver(event: DragEvent, kind: SectionKind): void {
+    if (!this.dragging()) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const after = event.clientY > rect.top + rect.height / 2;
+    const at = this.dropAt();
+    if (at?.kind !== kind || at.after !== after) this.dropAt.set({ kind, after });
+  }
+
+  drop(event: DragEvent): void {
+    const dragged = this.dragging();
+    const at = this.dropAt();
+    event.preventDefault();
+    this.dragEnd();
+    if (!dragged || !at || at.kind === dragged) return;
+    this.store.update((content) => {
+      const from = content.sections.findIndex((s) => s.kind === dragged);
+      if (from < 0) return;
+      const [section] = content.sections.splice(from, 1);
+      const target = content.sections.findIndex((s) => s.kind === at.kind);
+      content.sections.splice(target + (at.after ? 1 : 0), 0, section);
+    });
+  }
+
+  dragEnd(): void {
+    this.dragging.set(null);
+    this.dropAt.set(null);
+  }
+
+  /** The handle also moves its section with the arrow keys. */
+  handleKey(event: KeyboardEvent, kind: SectionKind): void {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    this.move(kind, event.key === 'ArrowUp' ? -1 : 1);
+    const handle = event.target as HTMLElement;
+    setTimeout(() => handle.focus());
+  }
+
   setHidden(kind: SectionKind, hidden: boolean): void {
     this.menuFor.set(null);
     this.edit(kind, (section) => (section.hidden = hidden));

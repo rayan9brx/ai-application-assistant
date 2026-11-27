@@ -101,6 +101,7 @@ export const SECTIONS: readonly SectionInfo[] = [
   },
   { kind: 'experience', label: 'Work Experience', heading: 'EXPERIENCE', type: 'entries', entryLabels: { title: 'Job title', org: 'Company' } },
   { kind: 'education', label: 'Education', heading: 'EDUCATION', type: 'entries', entryLabels: { title: 'Degree', org: 'School' } },
+  { kind: 'projects', label: 'Projects', heading: 'PROJECTS', type: 'entries', entryLabels: { title: 'Project', org: '' } },
   {
     kind: 'skills',
     label: 'Skills & Interests',
@@ -116,7 +117,6 @@ export const SECTIONS: readonly SectionInfo[] = [
     entryLabels: { title: 'Certificate', org: 'Issuer' },
   },
   { kind: 'awards', label: 'Awards & Scholarships', heading: 'AWARDS & SCHOLARSHIPS', type: 'entries', entryLabels: { title: 'Award', org: 'Awarded by' } },
-  { kind: 'projects', label: 'Projects', heading: 'PROJECTS', type: 'entries', entryLabels: { title: 'Project', org: 'Context' } },
   { kind: 'volunteering', label: 'Volunteering & Leadership', heading: 'VOLUNTEERING & LEADERSHIP', type: 'entries', entryLabels: { title: 'Role', org: 'Organisation' } },
   { kind: 'publications', label: 'Publications', heading: 'PUBLICATIONS', type: 'entries', entryLabels: { title: 'Title', org: 'Publisher' } },
 ];

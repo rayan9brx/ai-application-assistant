@@ -38,3 +38,11 @@
 .empty:hover { border-color: var(--accent); color: var(--text); }
 .counter { color: var(--text-muted); font-size: 12px; }
 .counter.over { width: fit-content; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--warning-bg); color: var(--warning-text); }
+
+/* Section drag & drop: a grip on each header, a line where the section will land. */
+.icon.drag-handle { width: 24px; cursor: grab; color: var(--text-muted); }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle svg { stroke-width: 3; }
+.card.dragging { opacity: .5; }
+.card.drop-before { box-shadow: 0 -3px 0 0 var(--accent); }
+.card.drop-after { box-shadow: 0 3px 0 0 var(--accent); }

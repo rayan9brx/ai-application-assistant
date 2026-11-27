@@ -59,9 +59,18 @@
 @for (section of content.sections; track section.kind; let first = $first, last = $last) {
   @let meta = info(section.kind);
   @let isOpen = open().has(section.kind);
+  @let at = dropAt();
   <section class="card" [id]="'sec-' + section.kind" [class.hidden-section]="section.hidden"
-    [attr.aria-labelledby]="'title-' + section.kind">
+    [attr.aria-labelledby]="'title-' + section.kind" [class.dragging]="dragging() === section.kind"
+    [class.drop-before]="at?.kind === section.kind && !at?.after && dragging() !== section.kind"
+    [class.drop-after]="at?.kind === section.kind && at?.after && dragging() !== section.kind"
+    (dragover)="dragOver($event, section.kind)" (drop)="drop($event)">
     <header class="card-head">
+      <button type="button" class="icon drag-handle" draggable="true" [attr.aria-label]="'Reorder ' + meta.label + ' (drag, or use the arrow keys)'"
+        title="Drag to reorder" (dragstart)="dragStart($event, section.kind)" (dragend)="dragEnd()"
+        (keydown)="handleKey($event, section.kind)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" /></svg>
+      </button>
       <button type="button" class="chevron" [attr.aria-expanded]="isOpen" [attr.aria-controls]="'body-' + section.kind"
         (click)="toggle(section.kind)">
         <svg viewBox="0 0 24 24" aria-hidden="true" [class.turned]="isOpen"><path d="M9 6l6 6-6 6" /></svg>
