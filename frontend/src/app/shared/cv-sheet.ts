@@ -37,28 +37,25 @@ const FITS = [
   { body: 10, lh: 1.05, gap: 0.5 },
 ];
 /** Contact items: the usual gap, and the smallest one before the line may wrap (pt). */
-const CONTACT_GAP = 11;
-const CONTACT_MIN_GAP = 4;
+/** Contact line font size (pt): the usual size, the smallest, and the step between them. */
+const CONTACT_SIZE = 9.5;
+const CONTACT_MIN_SIZE = 8;
+const CONTACT_STEP = 0.25;
 
 /**
- * Keeps Classic's contact items on one line: full links with the usual gap, else short links
- * (no "https://", "www."), else a smaller gap; only when even that is too wide does it wrap.
+ * Keeps Classic's contact line on one row: shrinks its font in 0.25pt steps down to 8pt
+ * (as ClassicCvRenderer does); only if it still doesn't fit do the last items wrap.
  */
-function fitContact(page: HTMLElement, scale: number): void {
+function fitContact(page: HTMLElement): void {
   const line = page.querySelector<HTMLElement>('.c-contact');
   if (!line) return;
-  line.classList.remove('short', 'wrap');
-  line.style.removeProperty('--cgap');
-  const items = [...line.children] as HTMLElement[];
+  line.classList.remove('wrap');
   const fits = () => line.scrollWidth <= line.clientWidth + 1;
-  if (items.length < 2 || fits()) return;
-  line.classList.add('short');
-  if (fits()) return;
-  // Visual sizes over the scale are PDF points, with or without the transform.
-  const used = items.reduce((sum, item) => sum + item.getBoundingClientRect().width, 0) / scale;
-  const gap = (line.getBoundingClientRect().width / scale - used) / (items.length - 1);
-  if (gap >= CONTACT_MIN_GAP) line.style.setProperty('--cgap', String(Math.floor(gap * 10) / 10));
-  else line.classList.add('wrap');
+  for (let size = CONTACT_SIZE; size >= CONTACT_MIN_SIZE; size -= CONTACT_STEP) {
+    line.style.setProperty('--cfs', String(size));
+    if (fits()) return;
+  }
+  line.classList.add('wrap');
 }
 
 /**
@@ -68,11 +65,11 @@ function fitContact(page: HTMLElement, scale: number): void {
 function fitClassic(page: HTMLElement, scale: number): number {
   const usable = PAGE_HEIGHT - 2 * 34;
   let pages = 1;
+  fitContact(page);
   for (const fit of FITS) {
     page.style.setProperty('--fit-body', String(fit.body));
     page.style.setProperty('--fit-lh', String(fit.lh));
     page.style.setProperty('--fit-gap', String(fit.gap));
-    fitContact(page, scale);
     const top = page.getBoundingClientRect().top;
     const last = page.lastElementChild?.getBoundingClientRect().bottom ?? top;
     pages = ((last - top) / scale - 34) / usable;
@@ -186,12 +183,7 @@ function paginate(page: HTMLElement, scale: number, px: number): SheetPage[] {
                     @default { <circle cx="8" cy="8" r="6.5" /><path d="M1.5 8h13M8 1.5c-3.6 3.6-3.6 9.4 0 13M8 1.5c3.6 3.6 3.6 9.4 0 13" /> }
                   }
                 </svg>
-                @if (item.short !== item.text) {
-                  <span class="c-full" [class.c-link]="!!item.href">{{ item.text }}</span>
-                  <span class="c-short" [class.c-link]="!!item.href">{{ item.short }}</span>
-                } @else {
-                  <span [class.c-link]="!!item.href">{{ item.text }}</span>
-                }
+                <span [class.c-link]="!!item.href">{{ item.short }}</span>
               </span>
             }
           </p>

@@ -56,13 +56,11 @@ p { margin: 0; }
 .classic .c-link { color: var(--cv-link); text-decoration: underline; text-underline-offset: calc(1.4 * var(--pt)); text-decoration-thickness: max(1px, calc(.5 * var(--pt))); }
 .c-name { font-size: calc(20 * var(--pt) * var(--fs, 1)); font-weight: 700; line-height: 1.2; }
 .c-title { margin-top: calc(1 * var(--pt) * var(--g)) !important; font-size: calc(14 * var(--pt) * var(--fs, 1)); font-weight: 700; line-height: 1.2; }
-.c-contact { display: flex; flex-wrap: nowrap; column-gap: calc(var(--cgap, 11) * var(--pt)); margin-top: calc(3 * var(--pt) * var(--g)) !important; }
+/* Contact line: 9.5pt, one nowrap row, 8pt between items; fitContact shrinks it to 8pt before it may wrap. */
+.c-contact { display: flex; flex-wrap: nowrap; column-gap: calc(8 * var(--pt)); margin: calc(3 * var(--pt) * var(--g)) 0 0 !important; padding: 0; font-size: calc(var(--cfs, 9.5) * var(--pt)); white-space: nowrap; }
 .c-contact.wrap { flex-wrap: wrap; }
-/* Long links show short ("linkedin.com/in/…") only when the full line would not fit. */
-.c-contact .c-short, .c-contact.short .c-full { display: none; }
-.c-contact.short .c-short { display: inline; }
-.c-item { display: inline-flex; align-items: center; gap: calc(3 * var(--pt)); white-space: nowrap; }
-.c-item svg { flex: none; width: calc(var(--fit-body, 11) * .8 * var(--pt)); height: calc(var(--fit-body, 11) * .8 * var(--pt)); fill: none; stroke: var(--black); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.c-item { display: inline-flex; flex: none; align-items: center; gap: calc(2 * var(--pt)); margin: 0; padding: 0; white-space: nowrap; }
+.c-item svg { flex: none; width: calc(8 * var(--pt)); height: calc(8 * var(--pt)); fill: none; stroke: var(--black); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
 .c-item svg .fill { fill: var(--black); stroke: none; }
 .c-item svg .knockout { stroke: var(--white); stroke-width: 1.7; }
 /* The thin full-width line that closes the header, above the summary. */

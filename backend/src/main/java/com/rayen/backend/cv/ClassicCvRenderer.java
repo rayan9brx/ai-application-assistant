@@ -273,8 +273,13 @@ final class ClassicCvRenderer {
     private static final Fit[] FITS = {
         new Fit(11, 1.15f, 1), new Fit(11, 1.1f, 0.8f), new Fit(10.5f, 1.08f, 0.65f), new Fit(10, 1.05f, 0.5f),
     };
-    private static final float CONTACT_GAP = 11;
-    private static final float CONTACT_MIN_GAP = 4;
+    /** Contact line (pt): font size, smallest size, shrink step, icon, icon-text gap, item gap. */
+    private static final float CONTACT_SIZE = 9.5f;
+    private static final float CONTACT_MIN_SIZE = 8;
+    private static final float CONTACT_STEP = 0.25f;
+    private static final float CONTACT_ICON = 8;
+    private static final float CONTACT_ICON_GAP = 2;
+    private static final float CONTACT_GAP = 8;
 
     private ClassicCvRenderer(PDDocument document, PDType0Font regular, PDType0Font bold, Fit fit) {
         this.document = document;
@@ -420,47 +425,43 @@ final class ClassicCvRenderer {
     }
 
     /** The widths of the contact items (icon, space, text) with full or short texts. */
-    private float contactWidth(List<ContactItem> items, boolean shortTexts) throws IOException {
-        float sum = 0;
-        for (ContactItem item : items) sum += body * 0.8f + 3 + width(regular, shortTexts ? item.shortText() : item.text(), body);
+    /** The contact line's width at a font size: icons, icon gaps, short texts and item gaps. */
+    private float contactWidth(List<ContactItem> items, float size) throws IOException {
+        float sum = CONTACT_GAP * Math.max(0, items.size() - 1);
+        for (ContactItem item : items) sum += CONTACT_ICON + CONTACT_ICON_GAP + width(regular, item.shortText(), size);
         return sum;
     }
 
     /**
-     * Contact items in one line with a small icon before each: full links with the usual gap,
-     * else short links (no "https://", "www."), else a smaller gap; wraps only as a last resort.
+     * Contact items in one row with a small icon before each and short links (no "https://",
+     * "www.", trailing "/"). Too wide at 9.5pt: the font shrinks in 0.25pt steps down to 8pt
+     * (as fitContact in cv-sheet.ts); only if it still doesn't fit do the last items wrap.
      */
     private void contactLine(List<String> texts) throws IOException {
         List<ContactItem> items = new ArrayList<>(texts.stream().map(ClassicCvRenderer::contactItem).toList());
         items.sort(Comparator.comparingInt(item -> item.kind().ordinal()));
-        int gapsCount = Math.max(1, items.size() - 1);
-        boolean shortTexts = contactWidth(items, false) + CONTACT_GAP * (items.size() - 1) > width;
-        float gap = CONTACT_GAP;
-        if (shortTexts) {
-            float free = (width - contactWidth(items, true)) / gapsCount;
-            if (free < CONTACT_GAP && free >= CONTACT_MIN_GAP) gap = (float) Math.floor(free * 10) / 10;
-        }
-        float icon = body * 0.8f;
+        float size = CONTACT_SIZE;
+        while (size - CONTACT_STEP >= CONTACT_MIN_SIZE - 0.001f && contactWidth(items, size) > width + 0.5f) size -= CONTACT_STEP;
         float x = MARGIN_X;
-        float lineHeight = body * lineFactor;
+        float lineHeight = size * lineFactor;
         ensure(lineHeight);
         for (ContactItem contact : items) {
             Contact kind = contact.kind();
-            String item = shortTexts ? contact.shortText() : contact.text();
+            String item = contact.shortText();
             boolean link = contact.href() != null;
-            float textWidth = width(regular, item, body);
-            float itemWidth = icon + 3 + textWidth;
+            float textWidth = width(regular, item, size);
+            float itemWidth = CONTACT_ICON + CONTACT_ICON_GAP + textWidth;
             if (x > MARGIN_X && x + itemWidth > MARGIN_X + width + 0.5f) {
                 y -= lineHeight;
                 ensure(lineHeight);
                 x = MARGIN_X;
             }
-            float baseline = y - body * 0.85f;
-            icon(kind, x, baseline - 0.5f, icon);
-            float textX = x + icon + 3;
-            draw(item, regular, body, textX, baseline, link ? LINK : INK);
-            if (link) underlineAndLink(textX, baseline, textWidth, body, contact.href());
-            x += itemWidth + gap;
+            float baseline = y - size * 0.85f;
+            icon(kind, x, baseline - 0.5f, CONTACT_ICON);
+            float textX = x + CONTACT_ICON + CONTACT_ICON_GAP;
+            draw(item, regular, size, textX, baseline, link ? LINK : INK);
+            if (link) underlineAndLink(textX, baseline, textWidth, size, contact.href());
+            x += itemWidth + CONTACT_GAP;
         }
         y -= lineHeight;
     }
