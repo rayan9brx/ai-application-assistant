@@ -1,4 +1,4 @@
-import { CERTIFICATES, TRAILING_YEAR, isHeading, isProse } from './classic-cv';
+import { CERTIFICATES, PROJECTS, TRAILING_YEAR, isHeading, isProse } from './classic-cv';
 
 /**
  * The CV templates, the sample CV used to show them, and the example CVs. The ids match the
@@ -267,7 +267,7 @@ export function parseCv(text: string): ParsedCv {
     if (!line) blocks.push({ kind: 'gap' });
     else if (isHeading(line)) {
       blocks.push({ kind: 'heading', text: line.replace(/:$/, '').toUpperCase() });
-      certificates = CERTIFICATES.test(line);
+      certificates = CERTIFICATES.test(line) || PROJECTS.test(line);
     } else if (BULLET.test(raw)) blocks.push({ kind: 'bullet', text: raw.replace(BULLET, '').trim() });
     else {
       const entry = ENTRY.exec(line) ?? (certificates ? TRAILING_YEAR.exec(line) : null);

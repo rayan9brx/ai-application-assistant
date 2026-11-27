@@ -369,7 +369,8 @@ final class ClassicCvRenderer {
             boolean certificates = CERTIFICATES.matcher(section).matches();
             Matcher bullet = BULLET.matcher(raw);
             Matcher entry = ENTRY.matcher(line);
-            if (!entry.matches() && certificates) entry = TRAILING_YEAR.matcher(line);
+            if (!entry.matches() && (certificates || section.toLowerCase(Locale.ROOT).matches(".*(project|projekt).*")))
+                entry = TRAILING_YEAR.matcher(line);
             Matcher label = LABEL.matcher(line);
             if (bullet.find()) {
                 bulletLine(runs(raw.substring(bullet.end()).strip(), false));

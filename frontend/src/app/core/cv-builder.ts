@@ -1,4 +1,4 @@
-import { mergeSkillLines } from './classic-cv';
+import { TRAILING_YEAR, mergeSkillLines } from './classic-cv';
 import { CvTemplateId, DEFAULT_TEMPLATE, isTemplateId, parseCv } from './cv-templates';
 
 /**
@@ -27,6 +27,8 @@ export interface BuilderEntry {
   end: string;
   present: boolean;
   bullets: string[];
+  /** Projects only: an optional link. Projects use `start` as their single year (no org, location, end). */
+  link: string;
 }
 
 export interface BuilderSection {
@@ -161,7 +163,19 @@ export const emptyEntry = (): BuilderEntry => ({
   end: '',
   present: false,
   bullets: [''],
+  link: '',
 });
+
+/** The single year of a project: the end year, else the start year (Present → the start year). */
+export function projectYear(entry: Pick<BuilderEntry, 'start' | 'end' | 'present'>): string {
+  const year = (value: string) => value.match(/\b(19|20)\d{2}\b/g)?.pop() ?? '';
+  return (!entry.present && year(entry.end)) || year(entry.start) || entry.start.trim();
+}
+
+/** Projects keep only title, one year (in `start`), link and bullets. */
+function asProject(entry: BuilderEntry): BuilderEntry {
+  return { ...entry, org: '', location: '', start: projectYear(entry), end: '', present: false };
+}
 
 export function emptyContent(template: CvTemplateId = DEFAULT_TEMPLATE): BuilderContent {
   return {
@@ -200,16 +214,21 @@ export function normalizeContent(raw: unknown, template: CvTemplateId): BuilderC
       kind,
       hidden: !!s?.hidden,
       text: str(s?.text),
-      entries: (Array.isArray(s?.entries) ? s.entries : []).map((e) => ({
-        id: str(e?.id) || newId(),
-        title: str(e?.title),
-        org: str(e?.org),
-        location: str(e?.location),
-        start: str(e?.start),
-        end: str(e?.end),
-        present: !!e?.present,
-        bullets: Array.isArray(e?.bullets) ? e.bullets.map(str) : [],
-      })),
+      entries: (Array.isArray(s?.entries) ? s.entries : []).map((e) => {
+        const entry: BuilderEntry = {
+          id: str(e?.id) || newId(),
+          title: str(e?.title),
+          org: str(e?.org),
+          location: str(e?.location),
+          start: str(e?.start),
+          end: str(e?.end),
+          present: !!e?.present,
+          bullets: Array.isArray(e?.bullets) ? e.bullets.map(str) : [],
+          link: str(e?.link),
+        };
+        // Migration: older projects had context, location and a date range.
+        return kind === 'projects' ? asProject(entry) : entry;
+      }),
     };
   });
   const d = (value.design ?? {}) as Partial<BuilderDesign>;
@@ -321,8 +340,12 @@ export function toCvText(content: BuilderContent): string {
       body.push(...text.split('\n').map((line) => line.trimEnd()).filter((line) => line.trim()));
     } else {
       section.entries.forEach((entry, i) => {
-        const head = [clean(entry.title), clean(entry.org), clean(entry.location)].filter(Boolean).join(', ');
-        const dates = dateRange(entry);
+        const project = section.kind === 'projects';
+        // A project: "Title | stack · link   2024" (bold title left, the year right).
+        const head = project
+          ? [clean(entry.title), clean(entry.link)].filter(Boolean).join(' · ')
+          : [clean(entry.title), clean(entry.org), clean(entry.location)].filter(Boolean).join(', ');
+        const dates = project ? projectYear(entry) : dateRange(entry);
         // Two or more spaces before the dates make parseCv draw them right-aligned.
         if (head && dates && /\d/.test(dates)) body.push(`${head}   ${dates}`);
         else if (head || dates) body.push([head, dates].filter(Boolean).join(', '));
@@ -370,6 +393,18 @@ function splitDates(dates: string): Pick<BuilderEntry, 'start' | 'end' | 'presen
 function splitTitle(line: string): Pick<BuilderEntry, 'title' | 'org' | 'location'> {
   const parts = line.split(/,\s+|\s+[|·]\s+|\s+at\s+|\s+@\s+/).map((part) => part.trim()).filter(Boolean);
   return { title: parts[0] ?? '', org: parts[1] ?? '', location: parts.slice(2).join(', ') };
+}
+
+/** A parsed project line: a link in it moves to `link`, the dates become one year. */
+function project(title: string, dates: string): BuilderEntry {
+  const link = title.match(/(https?:\/\/\S+|www\.\S+|(github\.com|gitlab\.com)\/\S+)/i)?.[0] ?? '';
+  const rest = title
+    .replace(link, ' ')
+    .replace(/\s*[·•]\s*[·•]\s*/g, ' · ')
+    .replace(/^\s*[·|•]\s*|\s*[·|•]\s*$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  return asProject({ ...emptyEntry(), title: rest, link, ...splitDates(dates), bullets: [] });
 }
 
 export function fromCvText(text: string, template: CvTemplateId): BuilderContent {
@@ -422,7 +457,16 @@ export function fromCvText(text: string, template: CvTemplateId): BuilderContent
       label = '';
       continue;
     }
-    if (block.kind === 'entry') {
+    if (current === 'projects' && block.kind !== 'bullet') {
+      // Projects: the whole line is the title (stack included), one year, a link if there is one.
+      const year = block.kind === 'entry' ? null : TRAILING_YEAR.exec(block.text);
+      if (block.kind === 'text' && !year && entry && !entry.bullets.length) {
+        entry.bullets.push(block.text);
+        continue;
+      }
+      entry = project(block.kind === 'entry' ? block.title : year ? year[1] : block.text, block.kind === 'entry' ? block.dates : year?.[2] ?? '');
+      entries().push(entry);
+    } else if (block.kind === 'entry') {
       entry = { ...emptyEntry(), ...splitTitle(block.title), ...splitDates(block.dates), bullets: [] };
       entries().push(entry);
     } else if (block.kind === 'text') {

@@ -209,7 +209,7 @@ export class ContentEditor {
     });
   }
 
-  setEntry(kind: SectionKind, id: string, key: 'title' | 'org' | 'location' | 'start' | 'end', value: string): void {
+  setEntry(kind: SectionKind, id: string, key: 'title' | 'org' | 'location' | 'start' | 'end' | 'link', value: string): void {
     this.editEntry(kind, id, (entry) => (entry[key] = value));
   }
 

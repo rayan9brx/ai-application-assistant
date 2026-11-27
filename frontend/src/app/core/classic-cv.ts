@@ -48,7 +48,9 @@ const SKILLS = /skill|kenntnisse|fähigkeit|kompetenz|languages|sprachen|interes
 export const CERTIFICATES = /certif|zertifikat|training|weiterbildung|fortbildung|course|kurse/i;
 const BULLET = /^\s*[-•*–▪●]\s+/;
 const ENTRY = /^(.*\S)\s{2,}(\S.{0,34})$/;
-/** A certificate line whose year (or date range) ends it with a single space before it. */
+/** Projects sections: a year after a single space is read as the right-aligned year too. */
+export const PROJECTS = /project|projekt/i;
+/** A certificate (or project) line whose year (or date range) ends it with a single space before it. */
 export const TRAILING_YEAR =
   /^(.*\S)\s+\(?((?:(?:\d{1,2}[./]\s?|[A-Za-zäöü]{3,9}\.? )?(?:19|20)\d{2})(?:\s*[–-]\s*(?:(?:\d{1,2}[./]\s?|[A-Za-zäöü]{3,9}\.? )?(?:19|20)\d{2}|present|heute|now))?)\)?$/i;
 const LABEL = /^([^:]{1,40}):\s+(\S.*)$/;
@@ -253,7 +255,7 @@ export function parseClassic(text: string): ClassicCv {
       continue;
     }
     const certificates = CERTIFICATES.test(section);
-    const entry = ENTRY.exec(line) ?? (certificates ? TRAILING_YEAR.exec(line) : null);
+    const entry = ENTRY.exec(line) ?? (certificates || PROJECTS.test(section) ? TRAILING_YEAR.exec(line) : null);
     const label = LABEL.exec(line);
     if (BULLET.test(raw)) {
       blocks.push({ kind: 'bullet', runs: runs(raw.replace(BULLET, '').trim()) });

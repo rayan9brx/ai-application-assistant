@@ -138,6 +138,26 @@
                   </button>
                 </div>
               </div>
+              @if (section.kind === 'projects') {
+                <!-- Projects: title (with the tech stack), one year and an optional link. -->
+                <div class="grid">
+                  <label>
+                    <span>Project title</span>
+                    <input type="text" placeholder="Finance Tracker | React, TypeScript, PostgreSQL" [value]="entry.title"
+                      (input)="setEntry(section.kind, entry.id, 'title', value($event))" />
+                  </label>
+                  <label>
+                    <span>Year</span>
+                    <input type="text" inputmode="numeric" maxlength="4" placeholder="2024" [value]="entry.start"
+                      (input)="setEntry(section.kind, entry.id, 'start', value($event))" />
+                  </label>
+                  <label>
+                    <span>Link <span class="field-hint">(optional)</span></span>
+                    <input type="url" placeholder="github.com/you/finance-tracker" [value]="entry.link"
+                      (input)="setEntry(section.kind, entry.id, 'link', value($event))" />
+                  </label>
+                </div>
+              } @else {
               <div class="grid">
                 <label>
                   <span>{{ meta.entryLabels?.title }}</span>
@@ -168,6 +188,7 @@
                   </label>
                 </div>
               </div>
+              }
 
               <div class="bullets">
                 <span class="field-label">Bullet points</span>
