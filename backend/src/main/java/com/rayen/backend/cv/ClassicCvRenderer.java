@@ -36,9 +36,7 @@ final class ClassicCvRenderer {
     private static final float MARGIN_Y = 1.2f * CM;
     private static final float NAME = 20;
     private static final float TITLE = 14;
-    private static final float BODY = 11;
     private static final float HEADING = 14;
-    private static final float LINE = 1.15f;
     private static final float BULLET_INDENT = 14;
     private static final Color INK = Color.BLACK;
     /** The usual hyperlink blue (the frontend's --cv-link token). */
@@ -58,10 +56,23 @@ final class ClassicCvRenderer {
             + "fähigkeiten|kompetenzen|projekte|sprachen|zertifikate|interessen)\\s*:?");
     private static final Pattern SUMMARY = Pattern.compile(
         "(?i)(professional |career )?(summary|profile|about me|zusammenfassung|profil|kurzprofil)");
+    /** Headings not in SECTION or in capitals: "Selected Projects", "Certificates & Further Training". */
+    private static final Pattern LOOSE_SECTION = Pattern.compile(
+        "(?iU)^(?:[\\p{L}-]+ ){0,2}(summary|profile|experience|employment|education|studies|skills|competencies|expertise|"
+            + "projects|certifications|certificates|further training|trainings|courses|languages|interests|awards|scholarships|"
+            + "honou?rs|volunteering|leadership|publications|references|zusammenfassung|profil|kurzprofil|berufserfahrung|"
+            + "erfahrung|praxiserfahrung|ausbildung|bildung|studium|kenntnisse|fähigkeiten|kompetenzen|projekte|sprachen|"
+            + "zertifikate|weiterbildungen?|fortbildungen?|interessen|ehrenamt)(?: ?(?:&|and|und|/) ?[^\\d,@]{1,30})?:?$");
     private static final Pattern SKILLS = Pattern.compile("(?i).*(skill|kenntnisse|fähigkeit|kompetenz|languages|sprachen|interest|interessen).*");
-    private static final Pattern CERTIFICATES = Pattern.compile("(?i).*(certif|zertifikat).*");
+    private static final Pattern CERTIFICATES = Pattern.compile(
+        "(?i).*(certif|zertifikat|training|weiterbildung|fortbildung|course|kurse).*");
     private static final Pattern BULLET = Pattern.compile("^\\s*[-•*–▪●]\\s+");
     private static final Pattern ENTRY = Pattern.compile("^(.*\\S)\\s{2,}(\\S.{0,34})$");
+    /** A certificate line whose year (or date range) ends it after a single space. */
+    private static final Pattern TRAILING_YEAR = Pattern.compile(
+        "(?i)^(.*\\S)\\s+\\(?((?:(?:\\d{1,2}[./]\\s?|[A-Za-zäöü]{3,9}\\.? )?(?:19|20)\\d{2})"
+            + "(?:\\s*[–-]\\s*(?:(?:\\d{1,2}[./]\\s?|[A-Za-zäöü]{3,9}\\.? )?(?:19|20)\\d{2}|present|heute|now))?)\\)?$");
+    private static final Pattern PROSE_MARKERS = Pattern.compile("(?i).*(@|https?:|www\\.|linkedin|github|\\s[·|•]\\s).*");
     private static final Pattern LABEL = Pattern.compile("^([^:]{1,40}):\\s+(\\S.*)$");
     private static final Pattern SEPARATOR = Pattern.compile("\\s+[·|•]\\s+");
     private static final Pattern EMAIL = Pattern.compile("[\\w.+-]+@[\\w-]+(\\.[\\w-]+)+");
@@ -72,8 +83,115 @@ final class ClassicCvRenderer {
     static boolean isHeading(String line) {
         if (line.length() > 40 || line.endsWith(".")) return false;
         if (SECTION.matcher(line).matches()) return true;
+        if (!line.isEmpty() && Character.isUpperCase(line.codePointAt(0)) && LOOSE_SECTION.matcher(line).matches()) return true;
         boolean hasLetters = line.codePoints().anyMatch(Character::isLetter);
         return hasLetters && line.length() >= 4 && line.equals(line.toUpperCase(Locale.ROOT));
+    }
+
+    /** A long sentence-like line: the summary, never part of the header. */
+    static boolean isProse(String line) {
+        return line.length() > 60 && !PROSE_MARKERS.matcher(line).matches();
+    }
+
+    /** Splits "a, b (x, y); c · d" into items, never inside parentheses. */
+    static List<String> skillItems(String text) {
+        List<String> items = new ArrayList<>();
+        int depth = 0;
+        StringBuilder current = new StringBuilder();
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch == '(' || ch == '[') depth++;
+            if (ch == ')' || ch == ']') depth = Math.max(0, depth - 1);
+            boolean middot = (ch == '·' || ch == '•' || ch == '|') && i > 0 && text.charAt(i - 1) == ' ';
+            if (depth == 0 && (ch == ',' || ch == ';' || middot)) {
+                items.add(current.toString().strip());
+                current.setLength(0);
+            } else {
+                current.append(ch);
+            }
+        }
+        items.add(current.toString().strip());
+        items.removeIf(String::isEmpty);
+        return items;
+    }
+
+    /**
+     * Merges skill groups with the same label into the first one and drops repeated items
+     * (mirrors mergeSkillLines in classic-cv.ts). Lines that need no change stay as they are.
+     */
+    static List<String> mergeSkillLines(List<String> lines) {
+        record Group(int index, String prefix, String label, List<String> items, boolean[] changed) {}
+        List<String> out = new ArrayList<>();
+        var groups = new java.util.LinkedHashMap<String, Group>();
+        for (String line : lines) {
+            Matcher bullet = BULLET.matcher(line);
+            String prefix = bullet.find() ? bullet.group() : "";
+            Matcher label = LABEL.matcher(line.substring(prefix.length()).strip());
+            if (!label.matches()) {
+                out.add(line);
+                continue;
+            }
+            String key = label.group(1).strip().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+            Group group = groups.get(key);
+            if (group == null) {
+                group = new Group(out.size(), prefix, label.group(1).strip(), new ArrayList<>(), new boolean[1]);
+                groups.put(key, group);
+                out.add(line);
+            } else {
+                group.changed()[0] = true;
+                out.add(null);
+            }
+            for (String item : skillItems(label.group(2))) {
+                if (group.items().stream().anyMatch(known -> known.equalsIgnoreCase(item))) group.changed()[0] = true;
+                else group.items().add(item);
+            }
+        }
+        for (Group group : groups.values()) {
+            if (group.changed()[0]) out.set(group.index(), group.prefix() + group.label() + ": " + String.join(", ", group.items()));
+        }
+        out.removeIf(java.util.Objects::isNull);
+        return out;
+    }
+
+    /** mergeSkillLines for every skills section of a CV text's lines. */
+    static String[] mergeSkillSections(String[] lines) {
+        List<String> out = new ArrayList<>();
+        int i = 0;
+        while (i < lines.length) {
+            String line = lines[i].strip();
+            out.add(lines[i++]);
+            if (line.isEmpty() || !isHeading(line) || !SKILLS.matcher(line).matches()) continue;
+            int start = i;
+            while (i < lines.length && !(!lines[i].isBlank() && isHeading(lines[i].strip()))) i++;
+            out.addAll(mergeSkillLines(java.util.Arrays.asList(lines).subList(start, i)));
+        }
+        return out.toArray(String[]::new);
+    }
+
+    /** Joins a summary's wrapped lines into paragraphs: an empty line or a bullet starts a new one. */
+    static List<String> summaryParagraphs(List<String> lines) {
+        List<String> paragraphs = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String raw : lines) {
+            String line = raw.strip();
+            Matcher bullet = BULLET.matcher(raw);
+            if (line.isEmpty() || bullet.find()) {
+                if (!current.isEmpty()) paragraphs.add(current.toString());
+                current.setLength(0);
+                if (!line.isEmpty()) paragraphs.add(BULLET.matcher(line).replaceFirst(""));
+                continue;
+            }
+            if (current.isEmpty()) current.append(line);
+            else if (current.toString().matches("(?s).*\\p{L}-$")) current.append(line);
+            else current.append(' ').append(line);
+        }
+        if (!current.isEmpty()) paragraphs.add(current.toString());
+        return paragraphs;
+    }
+
+    /** "https://www.linkedin.com/in/rayen/" → "linkedin.com/in/rayen". */
+    static String shortLink(String link) {
+        return link.replaceFirst("(?i)^https?://", "").replaceFirst("(?i)^www\\.", "").replaceFirst("/+$", "");
     }
 
     static Contact contactKind(String item) {
@@ -90,17 +208,19 @@ final class ClassicCvRenderer {
     /** "Portfolio: rayen.dev" from the builder's extra links: the label shows, the URL is the target. */
     private static final Pattern LABELED_LINK = Pattern.compile("^([^:]{1,30}):\\s+(\\S+\\.\\S+)$");
 
-    record ContactItem(Contact kind, String text, String href) {}
+    /** shortText: the text without "https://", "www." and a trailing slash, for a too-long line. */
+    record ContactItem(Contact kind, String text, String shortText, String href) {}
 
     static ContactItem contactItem(String item) {
         Matcher labeled = LABELED_LINK.matcher(item);
         if (labeled.matches() && !labeled.group(1).matches("(?i)https?|www.*")) {
             Contact kind = contactKind(labeled.group(2));
             if (kind == Contact.LOCATION || kind == Contact.PHONE) kind = Contact.LINK;
-            return new ContactItem(kind, labeled.group(1).strip(), href(labeled.group(2)));
+            return new ContactItem(kind, labeled.group(1).strip(), labeled.group(1).strip(), href(labeled.group(2)));
         }
         Contact kind = contactKind(item);
-        return new ContactItem(kind, item, kind == Contact.LOCATION || kind == Contact.PHONE ? null : href(item));
+        boolean link = kind != Contact.LOCATION && kind != Contact.PHONE;
+        return new ContactItem(kind, item, link ? shortLink(item) : item, link ? href(item) : null);
     }
 
     /** A header line counts as contact details when one of its items is an email, phone or link. */
@@ -138,42 +258,71 @@ final class ClassicCvRenderer {
     private final PDType0Font regular;
     private final PDType0Font bold;
     private final float width = PDRectangle.A4.getWidth() - 2 * MARGIN_X;
+    private final float body;
+    private final float lineFactor;
+    private final float gaps;
     private PDPage page;
     private PDPageContentStream content;
     private float y;
 
-    private ClassicCvRenderer(PDDocument document, PDType0Font regular, PDType0Font bold) {
+    /**
+     * Fit-to-page steps, tried in order until the CV fits one page (the last one otherwise): body
+     * size (never below 10pt), line height, factor for every gap. Same values as FITS in cv-sheet.ts.
+     */
+    private record Fit(float body, float line, float gaps) {}
+    private static final Fit[] FITS = {
+        new Fit(11, 1.15f, 1), new Fit(11, 1.1f, 0.8f), new Fit(10.5f, 1.08f, 0.65f), new Fit(10, 1.05f, 0.5f),
+    };
+    private static final float CONTACT_GAP = 11;
+    private static final float CONTACT_MIN_GAP = 4;
+
+    private ClassicCvRenderer(PDDocument document, PDType0Font regular, PDType0Font bold, Fit fit) {
         this.document = document;
         this.regular = regular;
         this.bold = bold;
+        this.body = fit.body();
+        this.lineFactor = fit.line();
+        this.gaps = fit.gaps();
     }
 
+    /** Renders at the first fit step that gives one page; content is never removed. */
     static byte[] render(String text) throws IOException {
+        for (int level = 0; ; level++) {
+            var result = render(text, FITS[level]);
+            if (result.pages() <= 1 || level == FITS.length - 1) return result.bytes();
+        }
+    }
+
+    private record Rendered(byte[] bytes, int pages) {}
+
+    private static Rendered render(String text, Fit fit) throws IOException {
         try (var document = new PDDocument();
              InputStream regularStream = ClassicCvRenderer.class.getResourceAsStream("/fonts/Carlito-Regular.ttf");
              InputStream boldStream = ClassicCvRenderer.class.getResourceAsStream("/fonts/Carlito-Bold.ttf");
              var output = new ByteArrayOutputStream()) {
             if (regularStream == null || boldStream == null) throw new IOException("Export font unavailable");
             var renderer = new ClassicCvRenderer(document,
-                PDType0Font.load(document, regularStream, true), PDType0Font.load(document, boldStream, true));
+                PDType0Font.load(document, regularStream, true), PDType0Font.load(document, boldStream, true), fit);
             String name = renderer.write(text);
             document.getDocumentInformation().setTitle(name.isEmpty() ? "CV" : name);
             renderer.content.close();
             document.save(output);
-            return output.toByteArray();
+            return new Rendered(output.toByteArray(), document.getNumberOfPages());
         }
     }
 
     /** Lays out the whole CV; returns the name for the document title. */
     private String write(String text) throws IOException {
         newPage();
-        String[] lines = text.replace("\t", "    ").split("\\R", -1);
+        String[] lines = mergeSkillSections(text.replace("\t", "    ").split("\\R", -1));
         int i = 0;
         while (i < lines.length && lines[i].isBlank()) i++;
         String name = i < lines.length ? lines[i++].strip() : "";
         String title = null;
         List<String> contactItems = new ArrayList<>();
-        for (int n = 0; n < 3 && i < lines.length && !lines[i].isBlank() && !isHeading(lines[i].strip()); n++, i++) {
+        // The header ends at the first prose line: that is the summary, which is never cut.
+        for (int n = 0; n < 3 && i < lines.length && !lines[i].isBlank() && !isHeading(lines[i].strip())
+                && !isProse(lines[i].strip()); n++, i++) {
             String line = lines[i].strip();
             if (title == null && contactItems.isEmpty() && !isContactLine(line)) title = line;
             else for (String item : SEPARATOR.split(line)) if (!item.isBlank()) contactItems.add(item.strip());
@@ -184,15 +333,19 @@ final class ClassicCvRenderer {
         if (!contactItems.isEmpty()) { gap(3); contactLine(contactItems); }
         if (!name.isEmpty() || title != null || !contactItems.isEmpty()) headerRule();
 
-        // A summary as the first section goes right below the header, justified, without a heading.
+        // A summary (with its heading, or the text before the first heading) goes right below the
+        // header, justified, without a heading; its wrapped lines are joined into paragraphs.
         while (i < lines.length && lines[i].isBlank()) i++;
-        if (i < lines.length && SUMMARY.matcher(lines[i].strip().replaceAll(":$", "")).matches()) {
-            i++;
-            gap(5);
-            for (; i < lines.length && !isHeading(lines[i].strip()); i++) {
-                String line = lines[i].strip();
-                if (line.isEmpty()) continue;
-                paragraph(runs(BULLET.matcher(line).replaceFirst(""), false), BODY, 0, 0, true);
+        if (i < lines.length) {
+            String first = lines[i].strip();
+            boolean summaryHeading = SUMMARY.matcher(first.replaceAll(":$", "")).matches();
+            if (summaryHeading || !isHeading(first)) {
+                if (summaryHeading) i++;
+                List<String> summaryLines = new ArrayList<>();
+                for (; i < lines.length && !isHeading(lines[i].strip()); i++) summaryLines.add(lines[i]);
+                List<String> paragraphs = summaryParagraphs(summaryLines);
+                if (!paragraphs.isEmpty()) gap(5);
+                for (String paragraph : paragraphs) paragraph(runs(paragraph, false), body, 0, 0, true);
             }
         }
 
@@ -211,6 +364,7 @@ final class ClassicCvRenderer {
             boolean certificates = CERTIFICATES.matcher(section).matches();
             Matcher bullet = BULLET.matcher(raw);
             Matcher entry = ENTRY.matcher(line);
+            if (!entry.matches() && certificates) entry = TRAILING_YEAR.matcher(line);
             Matcher label = LABEL.matcher(line);
             if (bullet.find()) {
                 bulletLine(runs(raw.substring(bullet.end()).strip(), false));
@@ -222,9 +376,9 @@ final class ClassicCvRenderer {
                 runs.add(new Run(label.group(1) + ":", true, null));
                 runs.add(new Run(" ", false, null));
                 runs.addAll(runs(label.group(2), false));
-                paragraph(runs, BODY, 0, 0, false);
+                paragraph(runs, body, 0, 0, false);
             } else {
-                paragraph(runs(line, false), BODY, 0, 0, false);
+                paragraph(runs(line, false), body, 0, 0, false);
             }
             afterHeading = false;
         }
@@ -234,7 +388,7 @@ final class ClassicCvRenderer {
     private void heading(String text) throws IOException {
         gap(9);
         // Keep the heading with the first lines below it.
-        ensure(HEADING * LINE + 3 + 2 * BODY * LINE);
+        ensure(HEADING * lineFactor + 3 + 2 * body * lineFactor);
         paragraph(List.of(new Run(text, true, null)), HEADING, 0, 0, false);
         content.setStrokingColor(INK);
         content.setLineWidth(0.6f);
@@ -245,51 +399,68 @@ final class ClassicCvRenderer {
     }
 
     private void bulletLine(List<Run> runs) throws IOException {
-        ensure(BODY * LINE);
-        draw("•", regular, BODY, MARGIN_X + 4, y - BODY * 0.85f, INK);
-        paragraph(runs, BODY, BULLET_INDENT, BULLET_INDENT, false);
+        ensure(body * lineFactor);
+        draw("•", regular, body, MARGIN_X + 4, y - body * 0.85f, INK);
+        paragraph(runs, body, BULLET_INDENT, BULLET_INDENT, false);
         gap(0.5f);
     }
 
     /** Title left, dates right on the same line; the title wraps before the dates if needed. */
     private void entry(String title, String dates, boolean boldTitle) throws IOException {
-        float datesWidth = width(regular, dates, BODY);
-        float lineHeight = BODY * LINE;
-        List<List<Word>> lines = wrap(runs(title, boldTitle), BODY, width - datesWidth - 12);
+        float datesWidth = width(regular, dates, body);
+        float lineHeight = body * lineFactor;
+        List<List<Word>> lines = wrap(runs(title, boldTitle), body, width - datesWidth - 12);
         for (int i = 0; i < lines.size(); i++) {
             ensure(lineHeight);
-            float baseline = y - BODY * 0.85f;
-            drawLine(lines.get(i), MARGIN_X, baseline, BODY, 0);
-            if (i == 0) draw(dates, regular, BODY, MARGIN_X + width - datesWidth, baseline, INK);
+            float baseline = y - body * 0.85f;
+            drawLine(lines.get(i), MARGIN_X, baseline, body, 0);
+            if (i == 0) draw(dates, regular, body, MARGIN_X + width - datesWidth, baseline, INK);
             y -= lineHeight;
         }
     }
 
-    /** Contact items in one line with a small icon before each; wraps only if they don't fit. */
+    /** The widths of the contact items (icon, space, text) with full or short texts. */
+    private float contactWidth(List<ContactItem> items, boolean shortTexts) throws IOException {
+        float sum = 0;
+        for (ContactItem item : items) sum += body * 0.8f + 3 + width(regular, shortTexts ? item.shortText() : item.text(), body);
+        return sum;
+    }
+
+    /**
+     * Contact items in one line with a small icon before each: full links with the usual gap,
+     * else short links (no "https://", "www."), else a smaller gap; wraps only as a last resort.
+     */
     private void contactLine(List<String> texts) throws IOException {
         List<ContactItem> items = new ArrayList<>(texts.stream().map(ClassicCvRenderer::contactItem).toList());
         items.sort(Comparator.comparingInt(item -> item.kind().ordinal()));
-        float icon = BODY * 0.8f;
+        int gapsCount = Math.max(1, items.size() - 1);
+        boolean shortTexts = contactWidth(items, false) + CONTACT_GAP * (items.size() - 1) > width;
+        float gap = CONTACT_GAP;
+        if (shortTexts) {
+            float free = (width - contactWidth(items, true)) / gapsCount;
+            if (free < CONTACT_GAP && free >= CONTACT_MIN_GAP) gap = (float) Math.floor(free * 10) / 10;
+        }
+        float icon = body * 0.8f;
         float x = MARGIN_X;
-        float lineHeight = BODY * LINE;
+        float lineHeight = body * lineFactor;
         ensure(lineHeight);
         for (ContactItem contact : items) {
             Contact kind = contact.kind();
-            String item = contact.text();
+            String item = shortTexts ? contact.shortText() : contact.text();
             boolean link = contact.href() != null;
-            float textWidth = width(regular, item, BODY);
+            float textWidth = width(regular, item, body);
             float itemWidth = icon + 3 + textWidth;
-            if (x > MARGIN_X && x + itemWidth > MARGIN_X + width) {
+            if (x > MARGIN_X && x + itemWidth > MARGIN_X + width + 0.5f) {
                 y -= lineHeight;
                 ensure(lineHeight);
                 x = MARGIN_X;
             }
-            float baseline = y - BODY * 0.85f;
+            float baseline = y - body * 0.85f;
             icon(kind, x, baseline - 0.5f, icon);
             float textX = x + icon + 3;
-            draw(item, regular, BODY, textX, baseline, link ? LINK : INK);
-            if (link) underlineAndLink(textX, baseline, textWidth, BODY, contact.href());
-            x += itemWidth + 11;
+            draw(item, regular, body, textX, baseline, link ? LINK : INK);
+            if (link) underlineAndLink(textX, baseline, textWidth, body, contact.href());
+            x += itemWidth + gap;
         }
         y -= lineHeight;
     }
@@ -307,7 +478,7 @@ final class ClassicCvRenderer {
 
     /** Wrapped rich text; `justify` spreads every line but the last to the full width. */
     private void paragraph(List<Run> runs, float size, float indent, float hanging, boolean justify) throws IOException {
-        float lineHeight = size * (size >= HEADING ? 1.2f : LINE);
+        float lineHeight = size * (size >= HEADING ? 1.2f : lineFactor);
         List<List<Word>> lines = wrap(runs, size, width - Math.max(indent, hanging));
         for (int i = 0; i < lines.size(); i++) {
             ensure(lineHeight);
@@ -576,8 +747,9 @@ final class ClassicCvRenderer {
         }
     }
 
+    /** Vertical space, smaller at the tighter fit steps. */
     private void gap(float points) {
-        y -= points;
+        y -= points * gaps;
     }
 
     private void ensure(float height) throws IOException {

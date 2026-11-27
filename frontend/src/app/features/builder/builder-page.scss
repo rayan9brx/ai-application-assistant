@@ -65,3 +65,14 @@
   .panel, .pages { overflow: visible; }
   .pages { padding: 12px; }
 }
+
+/* Fit to one page: the length, and cuts the user removes or keeps one by one. */
+.fit-banner { display: grid; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--warning-bg); color: var(--warning-text); }
+.fit-title { margin: 0; font-weight: 700; }
+.fit-hint { margin: 0; font-size: 12px; }
+.fit-cuts { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.fit-cuts li { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; }
+.fit-cut { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fit-detail { opacity: .8; }
+.fit-actions { display: flex; flex: none; gap: 4px; }
+.fit-actions button { min-height: 28px; padding: 2px 10px; font-size: 12px; }

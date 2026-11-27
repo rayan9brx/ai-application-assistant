@@ -81,9 +81,30 @@
           <button type="button" [attr.aria-pressed]="zoom() === 'fit'" (click)="setZoom('fit')">Fit width</button>
           <button type="button" [attr.aria-pressed]="zoom() === 100" (click)="setZoom(100)">100%</button>
         </div>
+        @if (pageCount() > 1) {
+          <div class="fit-banner" role="status">
+            <p class="fit-title">Your CV is {{ pagesLabel() }} pages</p>
+            @if (cuts().length) {
+              <p class="fit-hint">Spacing is already tightened. To fit one page, consider cutting:</p>
+              <ul class="fit-cuts">
+                @for (cut of cuts(); track cut.key) {
+                  <li>
+                    <span class="fit-cut"><strong>{{ cut.label }}</strong> <span class="fit-detail">{{ cut.detail }}</span></span>
+                    <span class="fit-actions">
+                      <button type="button" class="plain small" (click)="removeCut(cut)">Remove</button>
+                      <button type="button" class="plain small" (click)="keepCut(cut)">Keep</button>
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="fit-hint">Spacing is already tightened. Shorten some bullets to fit one page.</p>
+            }
+          </div>
+        }
         <div #pages class="pages">
           <app-cv-sheet class="sheet" paged [style.width.px]="sheetWidth()" [text]="store.text()"
-            [template]="store.design().template" [design]="store.design()" />
+            [template]="store.design().template" [design]="store.design()" (pageCount)="pageCount.set($event)" />
         </div>
       </aside>
     </div>

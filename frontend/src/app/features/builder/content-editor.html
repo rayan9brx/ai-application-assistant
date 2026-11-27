@@ -110,6 +110,11 @@
                 (paste)="pasteJoined($event, section.kind)" (blur)="joinText(section.kind)"></textarea>
             </label>
             @if (section.kind === 'summary') {
+              @let length = section.text.trim().length;
+              <p class="counter" [class.over]="length > summaryMax" aria-live="polite">
+                {{ length }} / {{ summaryMax }} characters
+                @if (length > summaryMax) { · Longer than 2 lines on the CV. Keep it to about {{ summaryMax }} characters. }
+              </p>
               <ng-container
                 *ngTemplateOutlet="ai; context: { key: 'summary', label: meta.label, line: section.text, kind: section.kind, id: '', index: 0 }" />
             }

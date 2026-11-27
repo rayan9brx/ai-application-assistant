@@ -7,6 +7,7 @@ import {
   BuilderSection,
   JOINS_LINES,
   MAX_EXTRA_LINKS,
+  SUMMARY_MAX,
   SectionKind,
   emptyEntry,
   joinLineBreaks,
@@ -251,13 +252,15 @@ export class ContentEditor {
     this.addBullet(kind, id);
   }
 
+  readonly summaryMax = SUMMARY_MAX;
+
   // ✨ Improve with AI
 
   async improve(key: string, sectionLabel: string, line: string): Promise<void> {
     if (!line.trim() || this.proposals()[key]?.busy) return;
     this.setProposal(key, { busy: true });
     try {
-      const fix = await this.store.improve(sectionLabel, line.trim());
+      const fix = await this.store.improve(sectionLabel, line.trim(), key === 'summary');
       const text = fix.replacement
         .split('\n')
         .map((l) => l.replace(/^\s*[-•*–▪●]\s+/, '').trim())

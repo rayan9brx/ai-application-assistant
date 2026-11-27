@@ -8,6 +8,7 @@ import {
   effect,
   inject,
   input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -24,6 +25,74 @@ const PAGE_WIDTH = 595;
  */
 const SHARP_MIN_SCALE = 0.6;
 const PAGE_HEIGHT = 842;
+
+/**
+ * Classic's fit-to-page steps, tried in order until the CV fits one page; the same values as
+ * ClassicCvRenderer.FITS: body size (pt, never below 10), line height, factor for every gap.
+ */
+const FITS = [
+  { body: 11, lh: 1.15, gap: 1 },
+  { body: 11, lh: 1.1, gap: 0.8 },
+  { body: 10.5, lh: 1.08, gap: 0.65 },
+  { body: 10, lh: 1.05, gap: 0.5 },
+];
+/** Contact items: the usual gap, and the smallest one before the line may wrap (pt). */
+const CONTACT_GAP = 11;
+const CONTACT_MIN_GAP = 4;
+
+/**
+ * Keeps Classic's contact items on one line: full links with the usual gap, else short links
+ * (no "https://", "www."), else a smaller gap; only when even that is too wide does it wrap.
+ */
+function fitContact(page: HTMLElement, scale: number): void {
+  const line = page.querySelector<HTMLElement>('.c-contact');
+  if (!line) return;
+  line.classList.remove('short', 'wrap');
+  line.style.removeProperty('--cgap');
+  const items = [...line.children] as HTMLElement[];
+  const fits = () => line.scrollWidth <= line.clientWidth + 1;
+  if (items.length < 2 || fits()) return;
+  line.classList.add('short');
+  if (fits()) return;
+  // Visual sizes over the scale are PDF points, with or without the transform.
+  const used = items.reduce((sum, item) => sum + item.getBoundingClientRect().width, 0) / scale;
+  const gap = (line.getBoundingClientRect().width / scale - used) / (items.length - 1);
+  if (gap >= CONTACT_MIN_GAP) line.style.setProperty('--cgap', String(Math.floor(gap * 10) / 10));
+  else line.classList.add('wrap');
+}
+
+/**
+ * Applies the first fit step with which a Classic CV fits one page (the last step otherwise) and
+ * returns its length in pages at that step (1 when it fits).
+ */
+function fitClassic(page: HTMLElement, scale: number): number {
+  const usable = PAGE_HEIGHT - 2 * 34;
+  let pages = 1;
+  for (const fit of FITS) {
+    page.style.setProperty('--fit-body', String(fit.body));
+    page.style.setProperty('--fit-lh', String(fit.lh));
+    page.style.setProperty('--fit-gap', String(fit.gap));
+    fitContact(page, scale);
+    const top = page.getBoundingClientRect().top;
+    const last = page.lastElementChild?.getBoundingClientRect().bottom ?? top;
+    pages = ((last - top) / scale - 34) / usable;
+    if (pages <= 1.001) return 1;
+  }
+  return pages;
+}
+
+/** A paged preview draws the CV once per sheet: give every copy the measured page's fit. */
+function copyFit(host: HTMLElement, page: HTMLElement): void {
+  const line = page.querySelector<HTMLElement>('.c-contact');
+  for (const copy of host.querySelectorAll<HTMLElement>('.page.classic')) {
+    if (copy === page) continue;
+    for (const name of ['--fit-body', '--fit-lh', '--fit-gap']) copy.style.setProperty(name, page.style.getPropertyValue(name));
+    const other = copy.querySelector<HTMLElement>('.c-contact');
+    if (!line || !other) continue;
+    other.className = line.className;
+    other.style.cssText = line.style.cssText;
+  }
+}
 
 /** One A4 sheet of a paged preview, in PDF points of the laid-out CV. */
 interface SheetPage {
@@ -117,7 +186,12 @@ function paginate(page: HTMLElement, scale: number, px: number): SheetPage[] {
                     @default { <circle cx="8" cy="8" r="6.5" /><path d="M1.5 8h13M8 1.5c-3.6 3.6-3.6 9.4 0 13M8 1.5c3.6 3.6 3.6 9.4 0 13" /> }
                   }
                 </svg>
-                <span [class.c-link]="!!item.href">{{ item.text }}</span>
+                @if (item.short !== item.text) {
+                  <span class="c-full" [class.c-link]="!!item.href">{{ item.text }}</span>
+                  <span class="c-short" [class.c-link]="!!item.href">{{ item.short }}</span>
+                } @else {
+                  <span [class.c-link]="!!item.href">{{ item.text }}</span>
+                }
               </span>
             }
           </p>
@@ -220,6 +294,9 @@ export class CvSheet {
   /** Where each sheet starts in the laid-out CV, and where its content ends (null: last page). */
   readonly pages = signal<SheetPage[]>([{ start: 0, mask: null }]);
   readonly pageHeight = computed(() => PAGE_HEIGHT * this.scale());
+  /** Classic only: the CV's length in pages after the fit-to-page steps (1 when it fits). */
+  readonly pageCount = output<number>();
+  private lastPages = 1;
 
   readonly parsed = computed(() => parseCv(this.text()));
   readonly classic = computed(() => parseClassic(this.text()));
@@ -250,7 +327,13 @@ export class CvSheet {
       const scale = host.clientWidth / PAGE_WIDTH;
       this.scale.set(scale);
       // Classic is laid out at its final size (sharp text); the others are scaled with a transform.
-      const sharp = page.classList.contains('classic') && scale >= SHARP_MIN_SCALE;
+      const classic = page.classList.contains('classic');
+      const sharp = classic && scale >= SHARP_MIN_SCALE;
+      if (classic && scale > 0) {
+        const pages = Math.round(fitClassic(page, scale) * 100) / 100;
+        copyFit(host, page);
+        if (pages !== this.lastPages) this.pageCount.emit((this.lastPages = pages));
+      } else if (!classic && this.lastPages !== 1) this.pageCount.emit((this.lastPages = 1));
       this.height.set(Math.ceil(sharp ? page.offsetHeight : page.offsetHeight * scale));
       if (this.paged() && scale > 0) {
         const pages = paginate(page, scale, sharp ? scale : 1);
@@ -275,6 +358,16 @@ export class CvSheet {
       this.page();
       watch();
     });
-    inject(DestroyRef).onDestroy(() => observer?.disconnect());
+    // A text change may not resize the page (min-height), but can change the fit and contact line.
+    let frame = 0;
+    effect(() => {
+      this.text();
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(measure);
+    });
+    inject(DestroyRef).onDestroy(() => {
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+    });
   }
 }

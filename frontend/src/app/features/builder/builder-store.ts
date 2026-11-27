@@ -3,6 +3,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import {
   BuilderContent,
   BuilderDesign,
+  SUMMARY_MAX,
   SectionKind,
   cleanLineBreaks,
   emptyContent,
@@ -222,7 +223,16 @@ export class BuilderStore {
   }
 
   /** Asks the fix endpoint for a stronger, truthful version of one line of the CV. */
-  improve(sectionLabel: string, line: string): Promise<CvFix> {
+  improve(sectionLabel: string, line: string, summary = false): Promise<CvFix> {
+    if (summary) {
+      return this.flow.fixText(this.text(), this.jobDescription(), {
+        section: sectionLabel,
+        problem: `This summary could be shorter and more focused: "${line.slice(0, 1200)}"`,
+        suggestion:
+          `Rewrite this exact summary as at most 2 lines on the CV: no more than ${SUMMARY_MAX} characters, ` +
+          'one or two sentences, leading with the most relevant experience. Use only facts already in the CV.',
+      });
+    }
     return this.flow.fixText(this.text(), this.jobDescription(), {
       section: sectionLabel,
       problem: `This line could be clearer and more results-focused: "${line.slice(0, 800)}"`,

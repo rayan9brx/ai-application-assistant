@@ -13,6 +13,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { CvApi } from '../../core/cv-api';
 import { CvFlow } from '../../core/cv-flow';
+import { FitSuggestion, fitSuggestions } from '../../core/fit-suggestions';
 import { Navigation } from '../../core/navigation';
 import { PromptRouter } from '../../core/prompt-router';
 import { CvSheet } from '../../shared/cv-sheet';
@@ -63,6 +64,27 @@ export class BuilderPage {
   private readonly titleInput = viewChild<ElementRef<HTMLInputElement>>('titleInput');
   private readonly deleteDialog = viewChild<ElementRef<HTMLDialogElement>>('deleteDialog');
   private readonly pages = viewChild<ElementRef<HTMLElement>>('pages');
+
+  /** The CV's length in pages after the template's own tightening (1 when it fits). */
+  readonly pageCount = signal(1);
+  /** Suggestions the user chose to keep; nothing is ever removed without a click. */
+  private readonly kept = signal<ReadonlySet<string>>(new Set());
+  readonly pagesLabel = computed(() => Math.max(1.1, Math.ceil(this.pageCount() * 10) / 10).toFixed(1));
+  readonly cuts = computed(() =>
+    this.pageCount() > 1
+      ? fitSuggestions(this.store.content(), this.store.jobDescription())
+          .filter((s) => !this.kept().has(s.key))
+          .slice(0, 4)
+      : [],
+  );
+
+  removeCut(cut: FitSuggestion): void {
+    this.store.update(cut.remove);
+  }
+
+  keepCut(cut: FitSuggestion): void {
+    this.kept.update((set) => new Set(set).add(cut.key));
+  }
 
   readonly minZoom = ZOOM_STEPS[0];
   readonly maxZoom = ZOOM_STEPS[ZOOM_STEPS.length - 1];

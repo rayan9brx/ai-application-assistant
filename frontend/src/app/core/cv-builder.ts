@@ -1,3 +1,4 @@
+import { mergeSkillLines } from './classic-cv';
 import { CvTemplateId, DEFAULT_TEMPLATE, isTemplateId, parseCv } from './cv-templates';
 
 /**
@@ -42,6 +43,8 @@ export interface ExtraLink {
 }
 
 export const MAX_EXTRA_LINKS = 5;
+/** About two lines of the Classic template's summary (11pt over the A4 width). */
+export const SUMMARY_MAX = 220;
 
 export interface BuilderContact {
   name: string;
@@ -103,7 +106,13 @@ export const SECTIONS: readonly SectionInfo[] = [
     type: 'text',
     placeholder: 'Java, Spring Boot, TypeScript…\nLanguages: German (native), English (C1)',
   },
-  { kind: 'certifications', label: 'Certifications', heading: 'CERTIFICATIONS', type: 'entries', entryLabels: { title: 'Certificate', org: 'Issuer' } },
+  {
+    kind: 'certifications',
+    label: 'Certificates & Further Training',
+    heading: 'CERTIFICATES & FURTHER TRAINING',
+    type: 'entries',
+    entryLabels: { title: 'Certificate', org: 'Issuer' },
+  },
   { kind: 'awards', label: 'Awards & Scholarships', heading: 'AWARDS & SCHOLARSHIPS', type: 'entries', entryLabels: { title: 'Award', org: 'Awarded by' } },
   { kind: 'projects', label: 'Projects', heading: 'PROJECTS', type: 'entries', entryLabels: { title: 'Project', org: 'Context' } },
   { kind: 'volunteering', label: 'Volunteering & Leadership', heading: 'VOLUNTEERING & LEADERSHIP', type: 'entries', entryLabels: { title: 'Role', org: 'Organisation' } },
@@ -241,6 +250,9 @@ export function joinLineBreaks(text: string): string {
     .join('\n\n');
 }
 
+/** One line per skill group: groups with the same label are merged, repeated items dropped. */
+export const mergeSkills = (text: string): string => mergeSkillLines(text.split('\n')).join('\n');
+
 /** Multi-line fields whose single line breaks are joined; skills keep one line per group. */
 export const JOINS_LINES: ReadonlySet<SectionKind> = new Set(['summary']);
 
@@ -254,6 +266,10 @@ export function cleanLineBreaks(content: BuilderContent): BuilderContent {
     let text = section.text;
     if (JOINS_LINES.has(section.kind) && text.includes('\n') && joinLineBreaks(text) !== text.trim()) {
       text = joinLineBreaks(text);
+      changed = true;
+    }
+    if (section.kind === 'skills' && mergeSkills(text) !== text) {
+      text = mergeSkills(text);
       changed = true;
     }
     const entries = section.entries.map((entry) => {
@@ -297,7 +313,11 @@ export function toCvText(content: BuilderContent): string {
     if (section.kind === 'target') continue;
     const body: string[] = [];
     if (info.type === 'text') {
-      const text = JOINS_LINES.has(section.kind) ? joinLineBreaks(section.text) : section.text;
+      const text = JOINS_LINES.has(section.kind)
+        ? joinLineBreaks(section.text)
+        : section.kind === 'skills'
+          ? mergeSkills(section.text)
+          : section.text;
       body.push(...text.split('\n').map((line) => line.trimEnd()).filter((line) => line.trim()));
     } else {
       section.entries.forEach((entry, i) => {
@@ -324,7 +344,7 @@ const HEADING_KINDS: [RegExp, SectionKind][] = [
   [/summary|profile|about|zusammenfassung|profil/i, 'summary'],
   [/experience|employment|work|career|berufserfahrung|erfahrung/i, 'experience'],
   [/education|ausbildung|bildung|studies/i, 'education'],
-  [/certif|zertifikat|licen/i, 'certifications'],
+  [/certif|zertifikat|licen|training|weiterbildung|fortbildung|course|kurse/i, 'certifications'],
   [/award|scholarship|honou?r|auszeichnung/i, 'awards'],
   [/project|projekt/i, 'projects'],
   [/publication|publikation/i, 'publications'],
@@ -367,7 +387,9 @@ export function fromCvText(text: string, template: CvTemplateId): BuilderContent
     const parts = line.split(/\s+[·|•]\s+|\s{2,}|\s+\|\s+/).map((p) => p.trim()).filter(Boolean);
     const isContact = parts.some((p) => EMAIL.test(p) || PHONE.test(p) || LINK.test(p));
     if (!isContact) {
+      // A second non-contact line is text, not a title: keep it (it starts the summary).
       if (!section('target').text) section('target').text = line;
+      else append('summary', line);
       continue;
     }
     for (const part of parts) {
@@ -417,6 +439,8 @@ export function fromCvText(text: string, template: CvTemplateId): BuilderContent
       entry.bullets.push(block.text);
     }
   }
+  section('summary').text = joinLineBreaks(section('summary').text);
+  section('skills').text = mergeSkills(section('skills').text);
   return content;
 }
 

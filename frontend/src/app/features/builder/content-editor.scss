@@ -36,3 +36,5 @@
 .note { color: var(--text-secondary); font-size: 12px; }
 .empty { justify-content: flex-start; min-height: 40px; border: 1px dashed var(--border-strong); background: transparent; color: var(--text-secondary); }
 .empty:hover { border-color: var(--accent); color: var(--text); }
+.counter { color: var(--text-muted); font-size: 12px; }
+.counter.over { width: fit-content; padding: 2px 8px; border-radius: var(--radius-sm); background: var(--warning-bg); color: var(--warning-text); }

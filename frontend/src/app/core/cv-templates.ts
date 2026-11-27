@@ -1,3 +1,5 @@
+import { CERTIFICATES, TRAILING_YEAR, isHeading, isProse } from './classic-cv';
+
 /**
  * The CV templates, the sample CV used to show them, and the example CVs. The ids match the
  * backend's CvTemplate enum and the check constraint on cvs.template (V5 migration); the
@@ -243,35 +245,32 @@ export interface ParsedCv {
   blocks: CvBlock[];
 }
 
-const SECTION =
-  /^(professional |work |career )?(summary|profile|about me|experience|employment|employment history|work history|education|skills|technical skills|key skills|projects|certifications|certificates|languages|interests|awards|volunteering|publications|references|zusammenfassung|profil|berufserfahrung|erfahrung|ausbildung|bildung|kenntnisse|fähigkeiten|kompetenzen|projekte|sprachen|zertifikate|interessen)\s*:?$/i;
 const BULLET = /^\s*[-•*–▪●]\s+/;
 const ENTRY = /^(.*\S)\s{2,}(\S.{0,34})$/;
 
-function isHeading(line: string): boolean {
-  if (line.length > 40 || line.endsWith('.')) return false;
-  if (SECTION.test(line)) return true;
-  return /\p{L}/u.test(line) && line.length >= 4 && line === line.toUpperCase();
-}
-
+/** Headings, header and certificate dates follow the Classic reading (classic-cv.ts). */
 export function parseCv(text: string): ParsedCv {
   const lines = text.replace(/\t/g, '    ').split(/\r\n?|\n/);
   let i = 0;
   while (i < lines.length && !lines[i].trim()) i++;
   const name = i < lines.length ? lines[i++].trim() : '';
   const contact: string[] = [];
-  while (i < lines.length && contact.length < 3 && lines[i].trim() && !isHeading(lines[i].trim())) {
+  // The header ends at the first prose line: that is the summary's start, never header text.
+  while (i < lines.length && contact.length < 3 && lines[i].trim() && !isHeading(lines[i].trim()) && !isProse(lines[i].trim())) {
     contact.push(lines[i++].trim());
   }
   const blocks: CvBlock[] = [];
+  let certificates = false;
   for (; i < lines.length; i++) {
     const raw = lines[i];
     const line = raw.trim();
     if (!line) blocks.push({ kind: 'gap' });
-    else if (isHeading(line)) blocks.push({ kind: 'heading', text: line.replace(/:$/, '').toUpperCase() });
-    else if (BULLET.test(raw)) blocks.push({ kind: 'bullet', text: raw.replace(BULLET, '').trim() });
+    else if (isHeading(line)) {
+      blocks.push({ kind: 'heading', text: line.replace(/:$/, '').toUpperCase() });
+      certificates = CERTIFICATES.test(line);
+    } else if (BULLET.test(raw)) blocks.push({ kind: 'bullet', text: raw.replace(BULLET, '').trim() });
     else {
-      const entry = ENTRY.exec(line);
+      const entry = ENTRY.exec(line) ?? (certificates ? TRAILING_YEAR.exec(line) : null);
       if (entry && /\d/.test(entry[2])) blocks.push({ kind: 'entry', title: entry[1], dates: entry[2] });
       else blocks.push({ kind: 'text', text: line });
     }

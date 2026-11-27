@@ -14,6 +14,8 @@ export interface Run {
 export interface ContactItem {
   kind: ContactKind;
   text: string;
+  /** The text without "https://", "www." and a trailing slash, used when the line is too long. */
+  short: string;
   href?: string;
 }
 
@@ -36,21 +38,120 @@ export interface ClassicCv {
 const SECTION =
   /^(professional |work |career )?(summary|profile|about me|experience|employment|employment history|work history|education|skills|technical skills|key skills|skills & interests|projects|certifications|certificates|languages|interests|awards|awards & scholarships|volunteering|volunteering & leadership|publications|references|zusammenfassung|profil|kurzprofil|berufserfahrung|erfahrung|praxiserfahrung|ausbildung|bildung|kenntnisse|fähigkeiten|kompetenzen|projekte|sprachen|zertifikate|interessen)\s*:?$/i;
 const SUMMARY = /^(professional |career )?(summary|profile|about me|zusammenfassung|profil|kurzprofil)$/i;
+/**
+ * Headings that aren't in SECTION or in capitals: up to two words before a section word, then
+ * optionally "& …" ("Selected Projects", "Certificates & Further Training").
+ */
+const LOOSE_SECTION =
+  /^(?:[\p{L}-]+ ){0,2}(summary|profile|experience|employment|education|studies|skills|competencies|expertise|projects|certifications|certificates|further training|trainings|courses|languages|interests|awards|scholarships|honou?rs|volunteering|leadership|publications|references|zusammenfassung|profil|kurzprofil|berufserfahrung|erfahrung|praxiserfahrung|ausbildung|bildung|studium|kenntnisse|fähigkeiten|kompetenzen|projekte|sprachen|zertifikate|weiterbildungen?|fortbildungen?|interessen|ehrenamt)(?: ?(?:&|and|und|\/) ?[^\d,@]{1,30})?:?$/iu;
 const SKILLS = /skill|kenntnisse|fähigkeit|kompetenz|languages|sprachen|interest|interessen/i;
-const CERTIFICATES = /certif|zertifikat/i;
+export const CERTIFICATES = /certif|zertifikat|training|weiterbildung|fortbildung|course|kurse/i;
 const BULLET = /^\s*[-•*–▪●]\s+/;
 const ENTRY = /^(.*\S)\s{2,}(\S.{0,34})$/;
+/** A certificate line whose year (or date range) ends it with a single space before it. */
+export const TRAILING_YEAR =
+  /^(.*\S)\s+\(?((?:(?:\d{1,2}[./]\s?|[A-Za-zäöü]{3,9}\.? )?(?:19|20)\d{2})(?:\s*[–-]\s*(?:(?:\d{1,2}[./]\s?|[A-Za-zäöü]{3,9}\.? )?(?:19|20)\d{2}|present|heute|now))?)\)?$/i;
 const LABEL = /^([^:]{1,40}):\s+(\S.*)$/;
+/** A long sentence-like line: the summary, never part of the header. */
+export const isProse = (line: string) =>
+  line.length > 60 && !/@|https?:|www\.|linkedin|github|\s[·|•]\s/i.test(line);
 const SEPARATOR = /\s+[·|•]\s+/;
 const EMAIL = /^[\w.+-]+@[\w-]+(\.[\w-]+)+$/;
 const PHONE = /^\+?[\d\s()/.-]{6,}$/;
 const URL = /(https?:\/\/\S+|www\.\S+|(linkedin\.com|github\.com|gitlab\.com|xing\.com)\/\S*|[\w.+-]+@[\w-]+(\.[\w-]+)+)/gi;
 const ORDER: ContactKind[] = ['location', 'email', 'phone', 'linkedin', 'github', 'link'];
 
-function isHeading(line: string): boolean {
+export function isHeading(line: string): boolean {
   if (line.length > 40 || line.endsWith('.')) return false;
   if (SECTION.test(line)) return true;
+  if (/^\p{Lu}/u.test(line) && LOOSE_SECTION.test(line)) return true;
   return /\p{L}/u.test(line) && line.length >= 4 && line === line.toUpperCase();
+}
+
+/** Splits "a, b (x, y); c · d" into items, never inside parentheses. */
+function skillItems(text: string): string[] {
+  const items: string[] = [];
+  let depth = 0;
+  let current = '';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '(' || ch === '[') depth++;
+    if (ch === ')' || ch === ']') depth = Math.max(0, depth - 1);
+    const middot = (ch === '·' || ch === '•' || ch === '|') && text[i - 1] === ' ';
+    if (depth === 0 && (ch === ',' || ch === ';' || middot)) {
+      items.push(current.trim());
+      current = '';
+    } else current += ch;
+  }
+  items.push(current.trim());
+  return items.filter(Boolean);
+}
+
+/**
+ * Merges skill groups with the same label ("AI & LLM: …" twice) into the first one and drops
+ * repeated items in each group. Lines that need no change stay exactly as they are.
+ */
+export function mergeSkillLines(lines: string[]): string[] {
+  const out: (string | null)[] = [];
+  const groups = new Map<string, { index: number; prefix: string; label: string; items: string[]; changed: boolean }>();
+  for (const line of lines) {
+    const prefix = BULLET.exec(line)?.[0] ?? '';
+    const label = LABEL.exec(line.slice(prefix.length).trim());
+    if (!label) {
+      out.push(line);
+      continue;
+    }
+    const key = label[1].trim().toLowerCase().replace(/\s+/g, ' ');
+    const group = groups.get(key) ?? { index: out.length, prefix, label: label[1].trim(), items: [], changed: false };
+    if (!groups.has(key)) {
+      groups.set(key, group);
+      out.push(line);
+    } else {
+      group.changed = true;
+      out.push(null);
+    }
+    for (const item of skillItems(label[2])) {
+      if (group.items.some((known) => known.toLowerCase() === item.toLowerCase())) group.changed = true;
+      else group.items.push(item);
+    }
+  }
+  for (const group of groups.values()) {
+    if (group.changed) out[group.index] = `${group.prefix}${group.label}: ${group.items.join(', ')}`;
+  }
+  return out.filter((line): line is string => line !== null);
+}
+
+/** mergeSkillLines for every skills section of a CV text's lines. */
+function mergeSkillSections(lines: string[]): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i].trim();
+    out.push(lines[i++]);
+    if (!line || !isHeading(line) || !SKILLS.test(line)) continue;
+    const start = i;
+    while (i < lines.length && !(lines[i].trim() && isHeading(lines[i].trim()))) i++;
+    out.push(...mergeSkillLines(lines.slice(start, i)));
+  }
+  return out;
+}
+
+/** Joins a summary's wrapped lines into paragraphs: an empty line or a bullet starts a new one. */
+function summaryParagraphs(lines: string[]): string[] {
+  const paragraphs: string[] = [];
+  let current = '';
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line || BULLET.test(raw)) {
+      if (current) paragraphs.push(current);
+      current = '';
+      if (line) paragraphs.push(line.replace(BULLET, ''));
+      continue;
+    }
+    current = !current ? line : /\p{L}-$/u.test(current) ? current + line : `${current} ${line}`;
+  }
+  if (current) paragraphs.push(current);
+  return paragraphs;
 }
 
 export function contactKind(item: string): ContactKind {
@@ -71,11 +172,16 @@ export function contactItem(item: string): ContactItem {
   if (labeled && !/^(https?|www.*)$/i.test(labeled[1])) {
     let kind = contactKind(labeled[2]);
     if (kind === 'location' || kind === 'phone') kind = 'link';
-    return { kind, text: labeled[1].trim(), href: href(labeled[2]) };
+    return { kind, text: labeled[1].trim(), short: labeled[1].trim(), href: href(labeled[2]) };
   }
   const kind = contactKind(item);
-  return { kind, text: item, href: kind === 'location' || kind === 'phone' ? undefined : href(item) };
+  const link = kind !== 'location' && kind !== 'phone';
+  return { kind, text: item, short: link ? shortLink(item) : item, href: link ? href(item) : undefined };
 }
+
+/** "https://www.linkedin.com/in/rayen/" → "linkedin.com/in/rayen". */
+export const shortLink = (link: string) =>
+  link.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '');
 
 const isContactLine = (line: string) => line.split(SEPARATOR).some((item) => contactItem(item.trim()).kind !== 'location');
 
@@ -101,13 +207,14 @@ export function runs(text: string, bold = false): Run[] {
 }
 
 export function parseClassic(text: string): ClassicCv {
-  const lines = text.replace(/\t/g, '    ').split(/\r\n?|\n/);
+  const lines = mergeSkillSections(text.replace(/\t/g, '    ').split(/\r\n?|\n/));
   let i = 0;
   while (i < lines.length && !lines[i].trim()) i++;
   const name = i < lines.length ? lines[i++].trim() : '';
   let title = '';
   const items: string[] = [];
-  for (let n = 0; n < 3 && i < lines.length && lines[i].trim() && !isHeading(lines[i].trim()); n++, i++) {
+  // The header ends at the first prose line: that is the summary, which must never be cut.
+  for (let n = 0; n < 3 && i < lines.length && lines[i].trim() && !isHeading(lines[i].trim()) && !isProse(lines[i].trim()); n++, i++) {
     const line = lines[i].trim();
     if (!title && !items.length && !isContactLine(line)) title = line;
     else items.push(...line.split(SEPARATOR).map((item) => item.trim()).filter(Boolean));
@@ -116,15 +223,18 @@ export function parseClassic(text: string): ClassicCv {
     .map(contactItem)
     .sort((a, b) => ORDER.indexOf(a.kind) - ORDER.indexOf(b.kind));
 
-  // A summary as the first section goes right below the header, without a heading.
-  const summary: Run[][] = [];
+  // A summary (with its heading, or the text before the first heading) goes right below the
+  // header, without a heading; its wrapped lines are joined so it is justified as one paragraph.
   while (i < lines.length && !lines[i].trim()) i++;
-  if (i < lines.length && SUMMARY.test(lines[i].trim().replace(/:$/, ''))) {
-    for (i++; i < lines.length && !isHeading(lines[i].trim()); i++) {
-      const line = lines[i].trim();
-      if (line) summary.push(runs(line.replace(BULLET, '')));
+  const summaryLines: string[] = [];
+  if (i < lines.length) {
+    const first = lines[i].trim();
+    if (SUMMARY.test(first.replace(/:$/, ''))) i++;
+    if (SUMMARY.test(first.replace(/:$/, '')) || !isHeading(first)) {
+      for (; i < lines.length && !isHeading(lines[i].trim()); i++) summaryLines.push(lines[i]);
     }
   }
+  const summary: Run[][] = summaryParagraphs(summaryLines).map((paragraph) => runs(paragraph));
 
   const blocks: ClassicBlock[] = [];
   let section = '';
@@ -143,7 +253,7 @@ export function parseClassic(text: string): ClassicCv {
       continue;
     }
     const certificates = CERTIFICATES.test(section);
-    const entry = ENTRY.exec(line);
+    const entry = ENTRY.exec(line) ?? (certificates ? TRAILING_YEAR.exec(line) : null);
     const label = LABEL.exec(line);
     if (BULLET.test(raw)) {
       blocks.push({ kind: 'bullet', runs: runs(raw.replace(BULLET, '').trim()) });
